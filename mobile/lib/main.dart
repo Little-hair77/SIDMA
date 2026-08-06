@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import './views/tela_captura.dart';
 
 void main() {
   runApp(const MyApp());
