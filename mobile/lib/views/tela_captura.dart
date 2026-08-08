@@ -24,7 +24,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
       source: ImageSource.camera,
       imageQuality: 80, // Comprime levemente para não pesar no envio (3G/4G rural)
     );
-
+  
     if (foto != null) {
       setState(() {
         _imagem = File(foto.path);
