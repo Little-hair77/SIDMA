@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
@@ -11,7 +11,8 @@ class TelaCaptura extends StatefulWidget {
 }
 
 class _TelaCapturaState extends State<TelaCaptura> {
-  File? _imagem;
+  Uint8List? _imagem;
+  String? _nomeArquivo;
   bool _estaCarregando = false;
   String _resultadoIA = '';
 
@@ -24,10 +25,12 @@ class _TelaCapturaState extends State<TelaCaptura> {
       source: ImageSource.camera,
       imageQuality: 80, // Comprime levemente para não pesar no envio (3G/4G rural)
     );
-  
+
     if (foto != null) {
+      final bytes = await foto.readAsBytes();
       setState(() {
-        _imagem = File(foto.path);
+        _imagem = bytes;
+        _nomeArquivo = foto.name;
         _resultadoIA = ''; // Limpa o resultado anterior, se houver
       });
     }
@@ -42,7 +45,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
     });
 
     // Chama o serviço que configuramos com o Dio
-    final resposta = await _apiService.enviarAnaliseLeite(_imagem!);
+    final resposta = await _apiService.enviarAnaliseLeite(_imagem!, _nomeArquivo ?? 'amostra.jpg');
 
     setState(() {
       _estaCarregando = false;
@@ -80,7 +83,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                 child: _imagem != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.file(_imagem!, fit: BoxFit.cover),
+                        child: Image.memory(_imagem!, fit: BoxFit.cover),
                       )
                     : const Column(
                         mainAxisAlignment: MainAxisAlignment.center,

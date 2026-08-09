@@ -16,7 +16,7 @@ def diagnosticar_leite(request):
         return JsonResponse({
             'status': 'sucesso',
             'resultado': resultado_ia,
-            'confiança': f"{confianca}%",
+            'confianca': f"{confianca}%",
             'mensagem': 'Análise processada com sucesso (Simulação).'
         })
     return JsonResponse({'status': 'erro', 'mensagem': 'Requisição Inválida.'}, status=400)

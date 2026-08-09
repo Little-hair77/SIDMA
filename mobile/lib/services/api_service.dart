@@ -1,10 +1,10 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 class ApiService {
   // Será substituido pelo IP da sua máquina local ou servidor onde o Django rodará
   // 
-  final String _baseUrl = "http://10.0.2.2:8000/api/";
+  final String _baseUrl = "http://127.0.0.1:8000/api/";
   final Dio _dio = Dio();
 
   ApiService() {
@@ -13,14 +13,12 @@ class ApiService {
     _dio.options.receiveTimeout = const Duration(seconds: 15); // 15s para responder
   }
 
-  Future<Map<String, dynamic>?> enviarAnaliseLeite(File imagemFile) async {    
+  Future<Map<String, dynamic>?> enviarAnaliseLeite(Uint8List imagemBytes, String fileName) async {
     try {
-      // Obtém o nome do arquivo para estruturar no FormData
-      String fileName = imagemFile.path.split('/').last;
-      // Cria os dados do formulário com o arquivo de imagem
+      // Cria os dados do formulário com os bytes da imagem (funciona em web e mobile)
       FormData formData = FormData.fromMap({
-        "imagem": await MultipartFile.fromFile(
-          imagemFile.path,
+        "imagem": MultipartFile.fromBytes(
+          imagemBytes,
           filename: fileName,
         ),
         // Será adicionado os campos extras, como id_animal, se quiser
