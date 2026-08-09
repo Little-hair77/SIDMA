@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'analises', 
 ]
 
@@ -126,3 +128,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS - libera o app Flutter para acessar a API durante o desenvolvimento
 CORS_ALLOW_ALL_ORIGINS = True  
+
+# Autenticação via JWT (DRF)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# Client ID do Google Cloud Console (vamos preencher no passo do Flutter)
+GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com'
