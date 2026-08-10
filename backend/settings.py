@@ -139,5 +139,5 @@ REST_FRAMEWORK = {
     ),
 }
 
-# Client ID do Google Cloud Console (vamos preencher no passo do Flutter)
-GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com'
+# Client ID do Google Cloud Console 
+GOOGLE_CLIENT_ID = '286956469225-sc8ji78jvpllpr7qjfiu7sv8ak0i0e3h.apps.googleusercontent.com'
