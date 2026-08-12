@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import './services/api_service.dart';
 import './views/tela_login.dart';
 import './views/tela_captura.dart';
 
-void main() {
+void main() async {
+  // Garante que os widgets do Flutter estejam prontos antes de rodar comandos assíncronos
+  WidgetsFlutterBinding.ensureInitialized();
+  // Carrega os dados da data/hora em Português Brasil
+  await initializeDateFormatting('pt_BR', null);
+
   runApp(const MyApp());
 }
 

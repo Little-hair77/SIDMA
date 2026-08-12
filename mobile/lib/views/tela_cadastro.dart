@@ -21,6 +21,12 @@ class _TelaCadastroState extends State<TelaCadastro> {
   bool _senhaVisivel = false;
   String? _erro;
 
+  // DEFINIÇÃO DA PALETA DE CORES VÍVIDAS (IDÊNTICA À TELA DE LOGIN)
+  static const Color corAzulPrincipal = Color(0xFF0D6EFD); 
+  static const Color corVerdePrincipal = Color(0xFF74C319); 
+  static const Color corTextoPrimario = Color(0xFF1E293B); 
+  static const Color corFundo = Colors.white; 
+
   @override
   void dispose() {
     _nomeController.dispose();
@@ -38,128 +44,260 @@ class _TelaCadastroState extends State<TelaCadastro> {
       _erro = null;
     });
 
-    final resultado = await _apiService.registrar(
-      _nomeController.text.trim(),
-      _emailController.text.trim(),
-      _senhaController.text,
-    );
-
-    if (!mounted) return;
-
-    if (resultado['sucesso'] == true) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const TelaDashboard()),
+    try {
+      final resultado = await _apiService.registrar(
+        _nomeController.text.trim(),
+        _emailController.text.trim(),
+        _senhaController.text,
       );
-    } else {
+
+      if (!mounted) return;
+
+      if (resultado['sucesso'] == true) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const TelaDashboard()),
+        );
+      } else {
+        setState(() {
+          _erro = resultado['mensagem'];
+          _carregando = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _erro = resultado['mensagem'];
+        _erro = 'Ocorreu um erro ao criar a conta. Tente novamente.';
         _carregando = false;
       });
     }
   }
 
+  // Helper para criar o estilo dos campos de texto (idêntico à Tela de Login)
+  InputDecoration _estiloCampo({required String rotulo, required IconData iconePrefixo, Widget? iconeSufixo}) {
+    return InputDecoration(
+      labelText: rotulo,
+      labelStyle: const TextStyle(color: Colors.grey),
+      prefixIcon: Icon(iconePrefixo, color: corAzulPrincipal),
+      suffixIcon: iconeSufixo,
+      filled: true,
+      fillColor: Colors.grey[100],
+      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: corAzulPrincipal, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.teal[50],
-      appBar: AppBar(
-        title: const Text('Criar conta'),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
+    return Theme(
+      data: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: corAzulPrincipal,
+          primary: corAzulPrincipal,
+          secondary: corVerdePrincipal,
+          background: corFundo,
+        ),
+        // textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextFormField(
-                    controller: _nomeController,
-                    decoration: InputDecoration(
-                      labelText: 'Nome completo',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (valor) {
-                      if (valor == null || valor.trim().isEmpty) return 'Informe seu nome';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'E-mail',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (valor) {
-                      if (valor == null || valor.trim().isEmpty) return 'Informe seu e-mail';
-                      if (!valor.contains('@')) return 'E-mail inválido';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  TextFormField(
-                    controller: _senhaController,
-                    obscureText: !_senhaVisivel,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(_senhaVisivel ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
+      child: Scaffold(
+        backgroundColor: corFundo,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // --- CABEÇALHO (IDÊNTICO À TELA DE LOGIN) ---
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Image.asset(
+                          'assets/images/logoSIDMA-2.png', 
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (valor) {
-                      if (valor == null || valor.length < 8) return 'Mínimo de 8 caracteres';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  TextFormField(
-                    controller: _confirmarSenhaController,
-                    obscureText: !_senhaVisivel,
-                    decoration: InputDecoration(
-                      labelText: 'Confirmar senha',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (valor) {
-                      if (valor != _senhaController.text) return 'As senhas não coincidem';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  if (_carregando)
-                    const Center(child: CircularProgressIndicator())
-                  else
-                    ElevatedButton(
-                      onPressed: _criarConta,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      
+                      Text(
+                        'SIDMA',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: corAzulPrincipal,
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                      child: const Text('Criar conta'),
-                    ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Sistema Inteligente de Auxílio\nao Diagnóstico de Mastite',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.black54,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 48), // Espaçamento antes do form
 
-                  if (_erro != null) ...[
-                    const SizedBox(height: 16),
-                    Text(_erro!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-                  ],
-                ],
+                      // --- CAMPOS DE ENTRADA (ESTILIZADOS) ---
+                      TextFormField(
+                        controller: _nomeController,
+                        style: const TextStyle(color: corTextoPrimario),
+                        decoration: _estiloCampo(
+                          rotulo: 'Nome completo profissional',
+                          iconePrefixo: Icons.person_outline,
+                        ),
+                        validator: (valor) {
+                          if (valor == null || valor.trim().isEmpty) return 'Informe seu nome';
+                          if (valor.trim().split(' ').length < 2) return 'Informe nome e sobrenome';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 18),
+
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: corTextoPrimario),
+                        decoration: _estiloCampo(
+                          rotulo: 'E-mail',
+                          iconePrefixo: Icons.email_outlined,
+                        ),
+                        validator: (valor) {
+                          if (valor == null || valor.trim().isEmpty) return 'Informe seu e-mail';
+                          if (!valor.contains('@')) return 'Formato de e-mail inválido';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 18),
+
+                      TextFormField(
+                        controller: _senhaController,
+                        obscureText: !_senhaVisivel,
+                        style: const TextStyle(color: corTextoPrimario),
+                        decoration: _estiloCampo(
+                          rotulo: 'Senha (mín. 8 caracteres)',
+                          iconePrefixo: Icons.lock_outline,
+                          iconeSufixo: IconButton(
+                            icon: Icon(
+                              _senhaVisivel ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
+                          ),
+                        ),
+                        validator: (valor) {
+                          if (valor == null || valor.isEmpty) return 'Informe sua senha';
+                          if (valor.length < 8) return 'A senha deve ter pelo menos 8 caracteres';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 18),
+
+                      TextFormField(
+                        controller: _confirmarSenhaController,
+                        obscureText: !_senhaVisivel, // Segue a mesma visibilidade da senha
+                        style: const TextStyle(color: corTextoPrimario),
+                        decoration: _estiloCampo(
+                          rotulo: 'Confirmar senha',
+                          iconePrefixo: Icons.lock_reset_outlined,
+                        ),
+                        validator: (valor) {
+                          if (valor != _senhaController.text) return 'As senhas não coincidem';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32), // Espaçamento maior antes do botão ação
+
+                      // --- BOTÃO DE AÇÃO (VERDE VIBRANTE) ---
+                      if (_carregando)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        )
+                      else ...[
+                        ElevatedButton(
+                          onPressed: _criarConta,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: corVerdePrincipal, 
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 56),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text(
+                            'CRIAR CONTA',
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, letterSpacing: 1),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // --- VOLTAR PARA LOGINO) ---
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Já tem uma conta?', style: TextStyle(color: Colors.black54)),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              style: TextButton.styleFrom(foregroundColor: corAzulPrincipal),
+                              child: const Text(
+                                'Entrar agora',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      // --- ÁREA DE ERRO ---
+                      if (_erro != null) ...[
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.redAccent, width: 0.5),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _erro!,
+                                  style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                                  textAlign: TextAlign.start,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

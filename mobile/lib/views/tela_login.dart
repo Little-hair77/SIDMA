@@ -222,7 +222,7 @@ class _TelaLoginState extends State<TelaLogin> {
                         keyboardType: TextInputType.emailAddress,
                         style: const TextStyle(color: corTextoPrimario),
                         decoration: _estiloCampo(
-                          rotulo: 'E-mail profissional',
+                          rotulo: 'E-mail',
                           iconePrefixo: Icons.email_outlined,
                         ),
                         validator: (valor) {
