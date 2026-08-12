@@ -10,6 +10,8 @@ class ApiService {
 
   static const _chaveAccessToken = 'access_token';
   static const _chaveRefreshToken = 'refresh_token';
+  static const _chaveUsuarioEmail = 'usuario_email';
+  static const _chaveUsuarioNome = 'usuario_nome';
 
   ApiService() {
     _dio.options.baseUrl = _baseUrl;
@@ -58,14 +60,61 @@ class ApiService {
       );
 
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
-        await _storage.write(key: _chaveAccessToken, value: response.data['access']);
-        await _storage.write(key: _chaveRefreshToken, value: response.data['refresh']);
+        await _salvarSessao(response.data);
         return true;
       }
       return false;
     } on DioException catch (e) {
       print("Erro no login com Google: ${e.message}");
       return false;
+    }
+  }
+
+  // Login tradicional por e-mail e senha
+  Future<Map<String, dynamic>> fazerLogin(String email, String senha) async {
+    try {
+      final response = await _dio.post(
+        "auth/login/",
+        data: {"email": email, "senha": senha},
+      );
+
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        await _salvarSessao(response.data);
+        return {'sucesso': true};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao entrar.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  // Cadastro de nova conta (nome, e-mail, senha) — já loga automaticamente ao final
+  Future<Map<String, dynamic>> registrar(String nome, String email, String senha) async {
+    try {
+      final response = await _dio.post(
+        "auth/registrar/",
+        data: {"nome": nome, "email": email, "senha": senha},
+      );
+
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        await _salvarSessao(response.data);
+        return {'sucesso': true};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao criar conta.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  Future<void> _salvarSessao(Map<String, dynamic> dados) async {
+    await _storage.write(key: _chaveAccessToken, value: dados['access']);
+    await _storage.write(key: _chaveRefreshToken, value: dados['refresh']);
+    final usuario = dados['usuario'];
+    if (usuario != null) {
+      await _storage.write(key: _chaveUsuarioEmail, value: usuario['email'] ?? '');
+      await _storage.write(key: _chaveUsuarioNome, value: usuario['nome'] ?? '');
     }
   }
 
@@ -93,9 +142,17 @@ class ApiService {
     return token != null;
   }
 
+  Future<Map<String, String>> obterUsuarioSalvo() async {
+    final email = await _storage.read(key: _chaveUsuarioEmail) ?? '';
+    final nome = await _storage.read(key: _chaveUsuarioNome) ?? '';
+    return {'email': email, 'nome': nome};
+  }
+
   Future<void> logout() async {
     await _storage.delete(key: _chaveAccessToken);
     await _storage.delete(key: _chaveRefreshToken);
+    await _storage.delete(key: _chaveUsuarioEmail);
+    await _storage.delete(key: _chaveUsuarioNome);
   }
 
   Future<Map<String, dynamic>?> enviarAnaliseLeite(Uint8List imagemBytes, String fileName) async {
@@ -106,7 +163,7 @@ class ApiService {
           imagemBytes,
           filename: fileName,
         ),
-        // Será adicionado os campos extras, como id_animal
+        // Será adicionado os campos extras, como id_animal, se quiser
       });
 
       // Faz as requisições POST para o endpoint que será mapeado no Django
