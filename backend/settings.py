@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt', 
+    'account', # App das contas
     'analises', # App das análises
+    'rebanho', # App dos rebanhos
 ]
 
 MIDDLEWARE = [
