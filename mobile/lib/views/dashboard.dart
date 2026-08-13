@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'tela_captura.dart';
-import 'tela_historico.dart';
-import 'tela_login.dart';
+import 'captura.dart';
+import 'historico.dart';
+import 'login.dart';
 
 class TelaDashboard extends StatefulWidget {
   const TelaDashboard({Key? key}) : super(key: key);
@@ -106,7 +106,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                 children: [
                   // --- CABEÇALHO DE BOAS VINDAS ---
                   Text(
-                    'Olá, $_nomeUsuario 👋',
+                    'Olá, $_nomeUsuario ',
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,

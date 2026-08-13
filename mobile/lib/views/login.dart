@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import 'dashboard.dart';
-import 'tela_cadastro.dart';
+import 'cadastro.dart';
 
 const String _webClientId =
     '286956469225-sc8ji78jvpllpr7qjfiu7sv8ak0i0e3h.apps.googleusercontent.com';
