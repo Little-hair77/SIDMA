@@ -44,3 +44,41 @@ def registrar_usuario(request):
     usuario = User.objects.create_user(username=email, email=email, password=senha, first_name=nome)
     return Response(resposta_com_token(usuario))
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_usuario(request):
+    email = (request.data.get('email') or '').strip().lower()
+    senha = request.data.get('senha') or ''
+
+    usuario = aauthenticate(username=email, password=senha)
+    if usuario is None:
+        return Response({'status': 'erro', 'mensagem': 'E-mail ou Senha inválidos.'}, status=401)
+
+    return Response(resposta_com_token(usuario))
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_login(request):
+    """Recebe o ID token o Google (enviado pelo flutter), valida,
+    cria/recupera o usuário e devolve tokens JWT do sistema."""
+    token = request.data.get('id_token')
+    if not token:
+        return Response({'status': 'erro', 'mensagem': 'id_token não informado.'}, status=400)
+
+    try:
+        info = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+    except ValueError:
+        return Response({'status': 'erro', 'mensagem': 'Token do Google inválido.'}, status=401)
+
+    email = info.get('email')
+    nome = info.get('name', '')
+
+    if not email:
+        return Response({'status': 'erro', 'mensagem': 'Não foi possível obter o e-mail da conta Google.'}, status=400)
+
+    usuario, _ = User.objects.get_or_create(
+        username=email,
+        defaults={'email': email, 'first_name': nome},
+    )
+
+    return Response(resposta_com_token(usuario))
