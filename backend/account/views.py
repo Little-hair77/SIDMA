@@ -22,3 +22,25 @@ def resposta_com_token(usuario):
         'refresh' : str(refresh),
         'usuario' : {'email': usuario.email, 'nome': usuario.first_name},
     }
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def registrar_usuario(request):
+    nome = (request.data.get('nome') or '').strip()
+    email = (request.data.get('email') or '').strip().lower()
+    senha = request.data.get('senha') or ''
+
+    if not email or not senha:
+        return Response({'status': 'erro', 'mensagem': 'E-mail e senha são obrigatórios.'}, status=400)
+
+    if User.objects.filter(username=email).exists():
+        return Response({'status': 'erro', 'mensagem': 'Já existe uma conta com esse e-mail.'}, status=400)
+
+    try:
+        validate_password(senha)
+    except DjangoValidationError as e:
+        return Response({'status': 'erro', 'mensagem': ' '.join(e.messages)}, status=400)
+
+    usuario = User.objects.create_user(username=email, email=email, password=senha, first_name=nome)
+    return Response(resposta_com_token(usuario))
+
