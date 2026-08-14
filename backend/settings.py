@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt', 
-    'account', # App das contas
+    'auth', # App de autenticação
     'analises', # App das análises
     'rebanho', # App dos rebanhos
 ]
