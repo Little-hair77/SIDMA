@@ -1,94 +1,27 @@
 import random
 
-from django.conf import settings
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as DjangoValidationError
-
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Analise
+from rebanho.models import Animal
 
 
-def _resposta_com_tokens(usuario):
-    """Monta a resposta padrão com tokens JWT + dados do usuário,
-    reaproveitada pelo login Google, cadastro e login tradicional."""
-    refresh = RefreshToken.for_user(usuario)
+def serializar_analise(a, request):
     return {
-        'status': 'sucesso',
-        'access': str(refresh.access_token),
-        'refresh': str(refresh),
-        'usuario': {'email': usuario.email, 'nome': usuario.first_name},
+        'id': a.id,
+        'resultado': a.resultado,
+        'confianca': f"{a.confianca}%",
+        'imagem_url': request.build_absolute_uri(a.imagem.url),
+        'criado_em': a.criado_em.isoformat(),
+        'observacoes': a.observacoes or '',
+        'animal': {
+            'id': a.animal.id,
+            'brinco': a.animal.brinco,
+            'nome': a.animal.nome,
+        } if a.animal else None,
     }
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def registrar_usuario(request):
-    nome = (request.data.get('nome') or '').strip()
-    email = (request.data.get('email') or '').strip().lower()
-    senha = request.data.get('senha') or ''
-
-    if not email or not senha:
-        return Response({'status': 'erro', 'mensagem': 'E-mail e senha são obrigatórios.'}, status=400)
-
-    if User.objects.filter(username=email).exists():
-        return Response({'status': 'erro', 'mensagem': 'Já existe uma conta com esse e-mail.'}, status=400)
-
-    try:
-        validate_password(senha)
-    except DjangoValidationError as e:
-        return Response({'status': 'erro', 'mensagem': ' '.join(e.messages)}, status=400)
-
-    usuario = User.objects.create_user(username=email, email=email, password=senha, first_name=nome)
-    return Response(_resposta_com_tokens(usuario))
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_usuario(request):
-    email = (request.data.get('email') or '').strip().lower()
-    senha = request.data.get('senha') or ''
-
-    usuario = authenticate(username=email, password=senha)
-    if usuario is None:
-        return Response({'status': 'erro', 'mensagem': 'E-mail ou senha inválidos.'}, status=401)
-
-    return Response(_resposta_com_tokens(usuario))
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def google_login(request):
-    """Recebe o ID token do Google (enviado pelo Flutter), valida,
-    cria/recupera o usuário e devolve tokens JWT do nosso sistema."""
-    token = request.data.get('id_token')
-    if not token:
-        return Response({'status': 'erro', 'mensagem': 'id_token não informado.'}, status=400)
-
-    try:
-        info = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
-    except ValueError:
-        return Response({'status': 'erro', 'mensagem': 'Token do Google inválido.'}, status=401)
-
-    email = info.get('email')
-    nome = info.get('name', '')
-
-    if not email:
-        return Response({'status': 'erro', 'mensagem': 'Não foi possível obter o e-mail da conta Google.'}, status=400)
-
-    usuario, _ = User.objects.get_or_create(
-        username=email,
-        defaults={'email': email, 'first_name': nome},
-    )
-
-    return Response(_resposta_com_tokens(usuario))
 
 
 @api_view(['POST'])
@@ -98,6 +31,11 @@ def diagnosticar_leite(request):
         return Response({'status': 'erro', 'mensagem': 'Requisição Inválida.'}, status=400)
 
     imagem_recebida = request.FILES['imagem']
+
+    animal = None
+    animal_id = request.data.get('animal_id')
+    if animal_id:
+        animal = Animal.objects.filter(id=animal_id, usuario=request.user).first()
 
     # Simulação mock (enquanto o modelo de IA não está pronto)
     resultado_ia = random.choice([
@@ -109,34 +47,60 @@ def diagnosticar_leite(request):
 
     analise = Analise.objects.create(
         usuario=request.user,
+        animal=animal,
         imagem=imagem_recebida,
         resultado=resultado_ia,
         confianca=confianca,
     )
 
-    return Response({
-        'status': 'sucesso',
-        'id': analise.id,
-        'resultado': analise.resultado,
-        'confianca': f"{analise.confianca}%",
-        'imagem_url': request.build_absolute_uri(analise.imagem.url),
-        'criado_em': analise.criado_em.isoformat(),
-        'mensagem': 'Análise processada com sucesso (Simulação).'
-    })
+    resposta = serializar_analise(analise, request)
+    resposta['status'] = 'sucesso'
+    resposta['mensagem'] = 'Análise processada com sucesso (Simulação).'
+    return Response(resposta)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listar_historico(request):
-    analises = Analise.objects.filter(usuario=request.user)[:100]
-    dados = [
-        {
-            'id': a.id,
-            'resultado': a.resultado,
-            'confianca': f"{a.confianca}%",
-            'imagem_url': request.build_absolute_uri(a.imagem.url),
-            'criado_em': a.criado_em.isoformat(),
-        }
-        for a in analises
-    ]
+    analises = Analise.objects.filter(usuario=request.user)
+
+    resultado_filtro = request.query_params.get('resultado')
+    if resultado_filtro:
+        analises = analises.filter(resultado=resultado_filtro)
+
+    from django.utils.dateparse import parse_date
+
+    data_inicio = request.query_params.get('data_inicio')
+    if data_inicio:
+        analises = analises.filter(criado_em__date__gte=parse_date(data_inicio))
+
+    data_fim = request.query_params.get('data_fim')
+    if data_fim:
+        analises = analises.filter(criado_em__date__lte=parse_date(data_fim))
+
+    animal_id = request.query_params.get('animal_id')
+    if animal_id:
+        analises = analises.filter(animal_id=animal_id)
+
+    analises = analises[:200]
+    dados = [serializar_analise(a, request) for a in analises]
     return Response({'status': 'sucesso', 'analises': dados})
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def analise_detalhe(request, analise_id):
+    try:
+        analise = Analise.objects.get(id=analise_id, usuario=request.user)
+    except Analise.DoesNotExist:
+        return Response({'status': 'erro', 'mensagem': 'Análise não encontrada.'}, status=404)
+
+    if request.method == 'PATCH':
+        if 'observacoes' in request.data:
+            analise.observacoes = request.data.get('observacoes')
+        if 'animal_id' in request.data:
+            novo_animal_id = request.data.get('animal_id')
+            analise.animal = Animal.objects.filter(id=novo_animal_id, usuario=request.user).first() if novo_animal_id else None
+        analise.save()
+
+    return Response({'status': 'sucesso', 'analise': serializar_analise(analise, request)})

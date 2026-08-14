@@ -13,6 +13,13 @@ class Analise(models.Model):
         on_delete=models.CASCADE,
         related_name='analises',
     )
+    animal = models.ForeignKey(
+        'rebanho.Animal',
+        on_delete=models.SET_NULL,
+        related_name='analises',
+        blank=True,
+        null=True,
+    )
     imagem = models.ImageField(upload_to='amostras/%Y/%m/%d/')
     resultado = models.CharField(max_length=64, choices=Resultado.choices)
     confianca = models.FloatField(help_text="Percentual de confiança da IA (0 a 100)")
