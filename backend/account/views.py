@@ -1,6 +1,6 @@
 from django.conf import settings
 from google.oauth2 import id_token
-from google.auth.transport import request as google_requests
+from google.auth.transport import requests as google_requests
 from django.contrib.auth.models import User
 from django.contrib.auth import aauthenticate
 from django.contrib.auth.password_validation import validate_password
