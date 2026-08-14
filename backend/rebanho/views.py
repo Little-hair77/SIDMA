@@ -17,7 +17,7 @@ def serializar_animal(a):
         'total_analises': a.analises.cout(),
     }
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def animais(request):
     if request.method == 'GET':
@@ -41,3 +41,27 @@ def animais(request):
         data_nascimento = parse_date(data_nascimento_raw) if data_nascimento_raw else None,
     )
     return Response({'status': 'sucesso', 'animal': serializar_animal(animal)})
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def animal_detalhes(request, animal_id):
+    try:
+        animal = Animal.objects.get(id=animal_id, usuario=request.user)
+    except Animal.DoesNotExist:
+        return Response({'status': 'erro', 'mensagem': 'Animal não encontrado.'}, status=404)
+
+    if request.method == 'GET':
+        return Response({'status': 'sucesso', 'animal': serializar_animal(animal)})
+
+    if request.method == 'PUT':
+        animal.brinco = (request.data.get('brinco') or animal.brinco).strip()
+        animal.nome = (request.data.get('nome') or '').strip()
+        animal.raca = (request.data.get('raca') or '').strip()
+        data_nascimento_raw = request.data.get('data_nascimento')
+        animal.data_nascimento = parse_date(data_nascimento_raw) if data_nascimento_raw else None
+        animal.save()
+        return Response({'status': 'sucesso', 'animal': serializar_animal(animal)})
+
+    # DELETE
+    animal.delete()
+    return Response({'status': 'sucesso'})
