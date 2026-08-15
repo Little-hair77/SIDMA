@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import './services/api_service.dart';
 import 'views/login.dart';
-import 'views/captura.dart';
+import 'views/dashboard.dart';
 
 void main() async {
   // Garante que os widgets do Flutter estejam prontos antes de rodar comandos assíncronos
@@ -21,7 +21,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SIDMA',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D6EFD)),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         useMaterial3: true,
       ),
       home: const TelaInicial(),
@@ -44,7 +45,7 @@ class TelaInicial extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         final logado = snapshot.data ?? false;
-        return logado ? const TelaCaptura() : const TelaLogin();
+        return logado ? const TelaDashboard() : const TelaLogin();
       },
     );
   }
