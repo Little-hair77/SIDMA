@@ -155,7 +155,7 @@ class ApiService {
     await _storage.delete(key: _chaveUsuarioNome);
   }
 
-  Future<Map<String, dynamic>?> enviarAnaliseLeite(Uint8List imagemBytes, String fileName) async {
+  Future<Map<String, dynamic>?> enviarAnaliseLeite(Uint8List imagemBytes, String fileName, {int? animalId}) async {
     try {
       // Cria os dados do formulário com os bytes da imagem (funciona em web e mobile)
       FormData formData = FormData.fromMap({
@@ -163,7 +163,7 @@ class ApiService {
           imagemBytes,
           filename: fileName,
         ),
-        // Será adicionado os campos extras, como id_animal, se quiser
+        if (animalId != null) "animal_id": animalId,
       });
 
       // Faz as requisições POST para o endpoint que será mapeado no Django
@@ -199,6 +199,119 @@ class ApiService {
     } on DioException catch (e) {
       print("Erro ao buscar histórico: ${e.message}");
       return null;
+    }
+  }
+
+  Future<List<dynamic>?> buscarHistoricoFiltrado({String? resultado, String? dataInicio, String? dataFim, int? animalId}) async {
+    try {
+      final params = <String, dynamic>{};
+      if (resultado != null) params['resultado'] = resultado;
+      if (dataInicio != null) params['data_inicio'] = dataInicio;
+      if (dataFim != null) params['data_fim'] = dataFim;
+      if (animalId != null) params['animal_id'] = animalId;
+
+      final response = await _dio.get("historico/", queryParameters: params);
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return response.data['analises'] as List<dynamic>;
+      }
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao buscar histórico filtrado: ${e.message}");
+      return null;
+    }
+  }
+
+  // --- Detalhe de Análise ---
+
+  Future<Map<String, dynamic>?> buscarDetalheAnalise(int id) async {
+    try {
+      final response = await _dio.get("analises/$id/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return response.data['analise'];
+      }
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao buscar detalhe da análise: ${e.message}");
+      return null;
+    }
+  }
+
+  Future<bool> atualizarAnalise(int id, {String? observacoes, int? animalId, bool desvincularAnimal = false}) async {
+    try {
+      final dados = <String, dynamic>{};
+      if (observacoes != null) dados['observacoes'] = observacoes;
+      if (desvincularAnimal) {
+        dados['animal_id'] = null;
+      } else if (animalId != null) {
+        dados['animal_id'] = animalId;
+      }
+
+      final response = await _dio.patch("analises/$id/", data: dados);
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      print("Erro ao atualizar análise: ${e.message}");
+      return false;
+    }
+  }
+
+  // --- Animais ---
+
+  Future<List<dynamic>?> listarAnimais() async {
+    try {
+      final response = await _dio.get("animais/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return response.data['animais'] as List<dynamic>;
+      }
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao listar animais: ${e.message}");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> criarAnimal(String brinco, String nome, String raca, String? dataNascimento) async {
+    try {
+      final response = await _dio.post("animais/", data: {
+        "brinco": brinco,
+        "nome": nome,
+        "raca": raca,
+        if (dataNascimento != null) "data_nascimento": dataNascimento,
+      });
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'sucesso': true, 'animal': response.data['animal']};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao cadastrar animal.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  Future<Map<String, dynamic>> atualizarAnimal(int id, String brinco, String nome, String raca, String? dataNascimento) async {
+    try {
+      final response = await _dio.put("animais/$id/", data: {
+        "brinco": brinco,
+        "nome": nome,
+        "raca": raca,
+        if (dataNascimento != null) "data_nascimento": dataNascimento,
+      });
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'sucesso': true};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao atualizar animal.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  Future<bool> excluirAnimal(int id) async {
+    try {
+      final response = await _dio.delete("animais/$id/");
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      print("Erro ao excluir animal: ${e.message}");
+      return false;
     }
   }
 }
