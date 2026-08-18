@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  // Será substituido pelo IP da sua máquina local ou servidor onde o Django rodará
+  // Será substituido pelo IP da máquina local ou servidor onde o Django rodará
   final String _baseUrl = "http://127.0.0.1:8000/api/";
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -15,11 +15,9 @@ class ApiService {
 
   ApiService() {
     _dio.options.baseUrl = _baseUrl;
-    _dio.options.connectTimeout = const Duration(seconds: 15); // 15s para conectar
-    _dio.options.receiveTimeout = const Duration(seconds: 15); // 15s para responder
+    _dio.options.connectTimeout = const Duration(seconds: 15); 
+    _dio.options.receiveTimeout = const Duration(seconds: 15); 
 
-    // Interceptor: anexa automaticamente o token JWT em toda requisição
-    // e tenta renovar o access token se expirar (401).
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -269,7 +267,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> criarAnimal(String brinco, String nome, String raca, String? dataNascimento) async {
+  Future<Map<String, dynamic>> cadastrarAnimal(String brinco, String nome, String raca, String? dataNascimento) async {
     try {
       final response = await _dio.post("animais/", data: {
         "brinco": brinco,

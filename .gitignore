@@ -1,0 +1,58 @@
+# ============================================
+# SIDMA — .gitignore (Django + Flutter)
+# ============================================
+
+# ---------- Python / Django ----------
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+*.sqlite3
+backend/media/
+backend/staticfiles/
+*.log
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+
+# ---------- Segredos / configuração local ----------
+.env
+*.env.local
+
+# ---------- Flutter / Dart ----------
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/pubspec.lock
+
+# Android
+mobile/android/.gradle/
+mobile/android/captures/
+mobile/android/gradlew
+mobile/android/gradlew.bat
+mobile/android/local.properties
+mobile/android/**/GeneratedPluginRegistrant.java
+
+# iOS
+mobile/ios/Flutter/ephemeral/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+
+# Web
+mobile/web/flutter_service_worker.js
+
+# Desktop (Windows/Linux/macOS) — artefatos gerados
+mobile/windows/flutter/ephemeral/
+mobile/linux/flutter/ephemeral/
+mobile/macos/Flutter/ephemeral/
+
+# ---------- Editor / SO ----------
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db

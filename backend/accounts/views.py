@@ -2,7 +2,7 @@ from django.conf import settings
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from django.contrib.auth.models import User
-from django.contrib.auth import aauthenticate
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
@@ -50,7 +50,7 @@ def login_usuario(request):
     email = (request.data.get('email') or '').strip().lower()
     senha = request.data.get('senha') or ''
 
-    usuario = aauthenticate(username=email, password=senha)
+    usuario = authenticate(username=email, password=senha)
     if usuario is None:
         return Response({'status': 'erro', 'mensagem': 'E-mail ou Senha inválidos.'}, status=401)
 

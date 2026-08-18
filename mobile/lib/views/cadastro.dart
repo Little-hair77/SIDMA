@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'dashboard.dart';
+import '../navigation/nav.dart';
 
 class TelaCadastro extends StatefulWidget {
   const TelaCadastro({Key? key}) : super(key: key);
@@ -55,7 +55,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
 
       if (resultado['sucesso'] == true) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const TelaDashboard()),
+          MaterialPageRoute(builder: (_) => const TelaPrincipal()),
         );
       } else {
         setState(() {
@@ -195,7 +195,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         obscureText: !_senhaVisivel,
                         style: const TextStyle(color: corTextoPrimario),
                         decoration: _estiloCampo(
-                          rotulo: 'Senha (mín. 8 caracteres)',
+                          rotulo: 'Senha',
                           iconePrefixo: Icons.lock_outline,
                           iconeSufixo: IconButton(
                             icon: Icon(
@@ -228,7 +228,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                       ),
                       const SizedBox(height: 32), // Espaçamento maior antes do botão ação
 
-                      // --- BOTÃO DE AÇÃO (VERDE VIBRANTE) ---
+                      // --- BOTÃO DE AÇÃO ---
                       if (_carregando)
                         const Padding(
                           padding: EdgeInsets.all(16.0),

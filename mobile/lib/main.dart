@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import './services/api_service.dart';
+import './navigation/nav.dart';
 import 'views/login.dart';
-import 'views/dashboard.dart';
 
 void main() async {
   // Garante que os widgets do Flutter estejam prontos antes de rodar comandos assíncronos
@@ -45,7 +45,7 @@ class TelaInicial extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         final logado = snapshot.data ?? false;
-        return logado ? const TelaDashboard() : const TelaLogin();
+        return logado ? const TelaPrincipal() : const TelaLogin();
       },
     );
   }

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
+import 'scanner_qr.dart';
 
 class TelaCaptura extends StatefulWidget {
   const TelaCaptura({Key? key}) : super(key: key);
@@ -19,6 +20,9 @@ class _TelaCapturaState extends State<TelaCaptura> {
   Map<String, dynamic>? _resultadoIA;
   String? _erroAcesso;
 
+  List<dynamic> _animais = [];
+  dynamic _animalSelecionado;
+
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
 
@@ -27,6 +31,46 @@ class _TelaCapturaState extends State<TelaCaptura> {
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corFundo = Color(0xFFF8FAFC);
   static const Color corTextoPrimario = Color(0xFF1E293B);
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarAnimais();
+  }
+
+  Future<void> _carregarAnimais() async {
+    final lista = await _apiService.listarAnimais();
+    if (mounted) setState(() => _animais = lista ?? []);
+  }
+
+  Future<void> _escanearAnimal() async {
+    final valorLido = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const TelaScannerQr()),
+    );
+    if (valorLido == null) return;
+
+    final partes = valorLido.split('|');
+    dynamic animalEncontrado;
+    if (partes.length == 3 && partes[0] == 'SIDMA-ANIMAL') {
+      final idLido = int.tryParse(partes[1]);
+      animalEncontrado = _animais.firstWhere((a) => a['id'] == idLido, orElse: () => null);
+    } else {
+      animalEncontrado = _animais.firstWhere((a) => a['brinco'] == valorLido, orElse: () => null);
+    }
+
+    if (!mounted) return;
+
+    if (animalEncontrado != null) {
+      setState(() => _animalSelecionado = animalEncontrado);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Animal identificado: ${animalEncontrado['brinco']}')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum animal cadastrado corresponde a esse código.')),
+      );
+    }
+  }
 
   // Função para abrir a câmera
   Future<void> _tirarFoto() async {
@@ -61,7 +105,11 @@ class _TelaCapturaState extends State<TelaCaptura> {
       _erroAcesso = null;
     });
 
-    final resposta = await _apiService.enviarAnaliseLeite(_imagem!, _nomeArquivo ?? 'amostra.jpg');
+    final resposta = await _apiService.enviarAnaliseLeite(
+      _imagem!,
+      _nomeArquivo ?? 'amostra.jpg',
+      animalId: _animalSelecionado?['id'],
+    );
 
     setState(() {
       _estaCarregando = false;
@@ -121,6 +169,50 @@ class _TelaCapturaState extends State<TelaCaptura> {
               const Text(
                 'Posicione a amostra de leite em um local bem iluminado e evite sombras para garantir a precisão da Inteligência Artificial.',
                 style: TextStyle(color: Colors.black54, fontSize: 15, height: 1.4),
+              ),
+              const SizedBox(height: 24),
+
+              // --- SELEÇÃO DE ANIMAL (OPCIONAL) ---
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.pets, color: corVerdePrincipal),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<dynamic>(
+                          isExpanded: true,
+                          value: _animalSelecionado,
+                          hint: const Text('Vincular a um animal (opcional)', style: TextStyle(color: Colors.black54)),
+                          items: _animais.map<DropdownMenuItem<dynamic>>((a) {
+                            return DropdownMenuItem(
+                              value: a,
+                              child: Text(
+                                a['nome']?.isNotEmpty == true ? '${a['nome']} (${a['brinco']})' : a['brinco'],
+                                style: const TextStyle(color: corTextoPrimario),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (valor) => setState(() => _animalSelecionado = valor),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.qr_code_scanner, color: corAzulPrincipal),
+                      tooltip: 'Escanear QR Code do animal',
+                      onPressed: _escanearAnimal,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
 

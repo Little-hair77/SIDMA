@@ -13,8 +13,8 @@ def serializar_animal(a):
         'brinco': a.brinco,
         'nome': a.nome,
         'raca': a.raca,
-        'data_nascimento': a.data_nascimento.isformat() if a.data_nascimento else Nome,
-        'total_analises': a.analises.cout(),
+        'data_nascimento': a.data_nascimento.isoformat() if a.data_nascimento else None,
+        'total_analises': a.analises.count(),
     }
 
 @api_view(['GET', 'POST'])

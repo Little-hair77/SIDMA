@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import 'captura.dart';
 import 'historico.dart';
 import 'login.dart';
+import 'detalhe_analise.dart';
 
 class TelaDashboard extends StatefulWidget {
   const TelaDashboard({Key? key}) : super(key: key);
@@ -18,10 +19,10 @@ class _TelaDashboardState extends State<TelaDashboard> {
   String _nomeUsuario = '';
   List<dynamic> _analises = [];
 
-  // DEFINIÇÃO DA PALETA DE CORES VÍVIDAS (IDENTIDADE SIDMA)
+  // DEFINIÇÃO DA PALETA DE CORES VÍVIDAS 
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corVerdePrincipal = Color(0xFF74C319);
-  static const Color corFundo = Color(0xFFF8FAFC); // Slate 50 - Fundo super limpo
+  static const Color corFundo = Color(0xFFF8FAFC);
   static const Color corTextoPrimario = Color(0xFF1E293B);
 
   @override
@@ -74,36 +75,15 @@ class _TelaDashboardState extends State<TelaDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: corFundo,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent, // Evita que o Flutter escureça a barra ao rolar
-        elevation: 1, // Sombra muito sutil
-        shadowColor: Colors.black12,
-        title: const Text(
-          'SIDMA',
-          style: TextStyle(
-            color: corAzulPrincipal,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
-            fontSize: 24,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black54),
-            tooltip: 'Sair',
-            onPressed: _sair,
-          ),
-        ],
-      ),
-      body: _carregando
-          ? const Center(child: CircularProgressIndicator(color: corAzulPrincipal))
-          : RefreshIndicator(
-              color: corAzulPrincipal,
-              onRefresh: _carregarDados,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                children: [
+      body: SafeArea(
+        child: _carregando
+            ? const Center(child: CircularProgressIndicator(color: corAzulPrincipal))
+            : RefreshIndicator(
+                color: corAzulPrincipal,
+                onRefresh: _carregarDados,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  children: [
                   // --- CABEÇALHO DE BOAS VINDAS ---
                   Text(
                     'Olá, $_nomeUsuario ',
@@ -220,17 +200,22 @@ class _TelaDashboardState extends State<TelaDashboard> {
                       ),
                     )
                   else
-                    ..._analises.take(5).map((a) => _CartaoAnalise(analise: a)),
+                    ..._analises.take(5).map((a) => GestureDetector(
+                          onTap: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => TelaDetalheAnalise(analiseId: a['id'])),
+                            );
+                            _carregarDados();
+                          },
+                          child: _CartaoAnalise(analise: a),
+                        )),
                 ],
               ),
             ),
+      ),
     );
   }
 }
-
-// ============================================================================
-// COMPONENTES (WIDGETS EXTRAÍDOS)
-// ============================================================================
 
 class _CartaoResumo extends StatelessWidget {
   final String titulo;
@@ -265,7 +250,6 @@ class _CartaoResumo extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Ícone dentro de um círculo colorido suave
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -378,7 +362,6 @@ class _CartaoAnalise extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Etiqueta Visual (Badge) do Status
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -417,7 +400,7 @@ class _CartaoAnalise extends StatelessWidget {
             ),
           ),
           
-          // Seta indicativa de clique (se você for implementar navegação para detalhes depois)
+          // Seta indicativa de clique 
           Icon(Icons.chevron_right, color: Colors.grey.shade400),
         ],
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
-import 'dashboard.dart';
+import '../navigation/nav.dart';
 import 'cadastro.dart';
 
 const String _webClientId =
@@ -47,7 +47,7 @@ class _TelaLoginState extends State<TelaLogin> {
   void _irParaDashboard() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const TelaDashboard()),
+      MaterialPageRoute(builder: (_) => const TelaPrincipal()),
     );
   }
 
