@@ -106,9 +106,18 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           leading: CircleAvatar(
+                            radius: 25, // Tamanho ideal para listas
                             backgroundColor: corVerdePrincipal.withOpacity(0.12),
-                            child: Icon(Icons.pets, color: corVerdePrincipal),
+                            // Carrega a imagem da URL que vem do Django, se existir
+                            backgroundImage: animal['foto'] != null 
+                                ? NetworkImage(animal['foto']) 
+                                : null,
+                            // Se não tiver foto, exibe o ícone padrão
+                            child: animal['foto'] == null
+                                ? const Icon(Icons.pets, color: corVerdePrincipal)
+                                : null,
                           ),
+
                           title: Text(
                             animal['nome']?.isNotEmpty == true ? animal['nome'] : 'Brinco ${animal['brinco']}',
                             style: const TextStyle(fontWeight: FontWeight.bold, color: corTextoPrimario),

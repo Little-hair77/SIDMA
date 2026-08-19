@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
@@ -109,7 +108,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               sexo: _sexoSelected,
               peso: _pesoController.text.trim(),
               observacoes: _observacoesController.text.trim(),
-              fotoBytes: _fotoAnimalBytes, // <-- Adicionada a tag nomeada antes do valor
+              fotoBytes: _fotoAnimalBytes, 
             )
           : await _apiService.cadastrarAnimal(
               _brincoController.text.trim(), 
@@ -119,7 +118,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               sexo: _sexoSelected,
               peso: _pesoController.text.trim(),
               observacoes: _observacoesController.text.trim(),
-              fotoBytes: _fotoAnimalBytes, // <-- Adicionada a tag nomeada antes do valor
+              fotoBytes: _fotoAnimalBytes, 
             );
     
       if (!mounted) return;
@@ -185,7 +184,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.azulPrincipal),
                 title: const Text('Tirar Foto da Câmera'),
                 onTap: () {
                   Navigator.pop(context);
@@ -193,7 +192,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.image_search_outlined),
+                leading: const Icon(Icons.image_search_outlined, color: AppColors.azulPrincipal),
                 title: const Text('Escolher da Galeria'),
                 onTap: () {
                   Navigator.pop(context);
@@ -281,31 +280,68 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- SEÇÃO LOGO IDENTIDADE VISUAL ---
-                Container(
-                  width: double.infinity,
-                  color: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Center(
-                    child: Image.asset(
-                      'assets/logoSIDMA-1.png', 
-                      height: 65,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.pets,
-                        size: 50,
-                        color: AppColors.azulPrincipal,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
+                
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      
+                      // --- ÁREA DA FOTO DO ANIMAL ---
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.only(top: 24, bottom: 24),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: _mostrarOpcoesFoto,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: AppColors.azulPrincipal.withOpacity(0.2), width: 4),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 80, 
+                                      backgroundColor: AppColors.azulPrincipal.withOpacity(0.05),
+                                      backgroundImage: _fotoAnimalBytes != null ? MemoryImage(_fotoAnimalBytes!) : null,
+                                      child: _fotoAnimalBytes == null
+                                          ? const Icon(Icons.pets, size: 65, color: AppColors.azulPrincipal)
+                                          : null,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 4,
+                                    right: 4,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.verdePrincipal,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 3), // Borda para destacar o botão
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      child: const Icon(Icons.camera_alt, size: 24, color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _fotoAnimalBytes == null ? 'Adicionar Foto do Animal' : 'Alterar Foto',
+                              style: const TextStyle(color: AppColors.azulPrincipal, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Toque no círculo acima para abrir a câmera ou galeria.\nIsso facilita a identificação visual rápida no rebanho.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+
                       // --- IDENTIFICAÇÃO ---
                       _buildSeccionTitle('Identificação do Animal'),
                       Card(
@@ -356,7 +392,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                 controller: _racaController,
                                 label: 'Raça / Linhagem *',
                                 hint: 'Ex: Nelore, Gir, Guzerá',
-                                prefixIcon: Icons.category_outlined, // Teste de Icon
+                                prefixIcon: Icons.category_outlined,
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Insira a raça' : null,
                               ),
                               const SizedBox(height: 16),
