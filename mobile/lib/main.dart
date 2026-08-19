@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'SIDMA',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D6EFD)),
@@ -31,7 +32,6 @@ class MyApp extends StatelessWidget {
 }
 
 // Decide, ao abrir o app, se o usuário já está logado (vai direto para a captura)
-
 class TelaInicial extends StatelessWidget {
   const TelaInicial({super.key});
 
