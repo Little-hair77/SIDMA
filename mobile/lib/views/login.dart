@@ -308,16 +308,16 @@ class _TelaLoginState extends State<TelaLogin> {
                         // Botão Google Profissional
                         OutlinedButton.icon(
                           onPressed: _entrarComGoogle,
-                          // Idealmente, use a logo oficial do Google aqui. 
-                          // Vou manter o Icon padrão para o código rodar, mas mudei a cor.
-                          icon: const Icon(Icons.login_outlined, color: corAzulPrincipal), 
+                          icon: Image.asset('assets/images/logoGoogle.png',
+                          height: 18,
+                          fit: BoxFit.contain,),
                           label: const Text(
                             'Continuar com Google',
                             style: TextStyle(fontSize: 16, color: corTextoPrimario, fontWeight: FontWeight.w600),
                           ),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(double.infinity, 56),
-                            side: BorderSide(color: Colors.grey[300]!), // Borda cinza clara sutil
+                            side: BorderSide(color: Colors.grey[300]!), 
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),

@@ -1,9 +1,25 @@
 import 'dart:typed_data';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  final String _baseUrl = "http://127.0.0.1:8000/api/";
+  // Detecta automaticamente o endereço correto do backend conforme a plataforma:
+  // - Web: 127.0.0.1 (o navegador roda na própria máquina onde o Django está)
+  // - Emulador Android: 10.0.2.2 (alias especial que aponta para o localhost do PC hospedeiro)
+  // - iOS simulator / outros: 127.0.0.1
+  //
+  // ATENÇÃO: se for testar em um CELULAR FÍSICO (não emulador), troque o valor abaixo
+  // pelo IP da sua máquina na rede local (ex: "http://192.168.0.15:8000/api/"),
+  // descoberto com `ipconfig` no PowerShell — com o celular na mesma rede Wi-Fi do PC.
+  static String _resolverBaseUrl() {
+    if (kIsWeb) return "http://127.0.0.1:8000/api/";
+    if (Platform.isAndroid) return "http://10.0.2.2:8000/api/";
+    return "http://127.0.0.1:8000/api/";
+  }
+
+  final String _baseUrl = _resolverBaseUrl();
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
