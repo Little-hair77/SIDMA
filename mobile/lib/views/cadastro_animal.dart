@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import '../core/cores.dart'; 
 
@@ -22,6 +25,10 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
   late final TextEditingController _observacoesController;
   
   DateTime? _dataNascimento;
+
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _fotoAnimalBytes;
+
   String _sexoSelected = 'Fêmea'; // Padrão para rebanho bovino
 
   bool _carregando = false;
@@ -99,17 +106,24 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               _nomeController.text.trim(), 
               _racaController.text.trim(), 
               dataFormatada,
+              sexo: _sexoSelected,
+              peso: _pesoController.text.trim(),
+              observacoes: _observacoesController.text.trim(),
+              fotoBytes: _fotoAnimalBytes, // <-- Adicionada a tag nomeada antes do valor
             )
           : await _apiService.cadastrarAnimal(
               _brincoController.text.trim(), 
               _nomeController.text.trim(), 
               _racaController.text.trim(), 
               dataFormatada,
+              sexo: _sexoSelected,
+              peso: _pesoController.text.trim(),
+              observacoes: _observacoesController.text.trim(),
+              fotoBytes: _fotoAnimalBytes, // <-- Adicionada a tag nomeada antes do valor
             );
-
+    
       if (!mounted) return;
 
-      // Simplificado: Como 'resultado' já é garantidamente um Map, testamos apenas o valor.
       if (resultado['sucesso'] == true) {
         setState(() => _carregando = false);
         Navigator.of(context).pop();
@@ -126,6 +140,81 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
         _carregando = false;
       });
     }
+  }
+
+  Future<void> _alterarFoto(ImageSource fonte) async {
+    try {
+      final XFile? arquivo = await _picker.pickImage(
+        source: fonte,
+        imageQuality: 70,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (arquivo != null) {
+        final bytes = await arquivo.readAsBytes();
+        setState(() {
+          _fotoAnimalBytes = bytes;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao selecionar imagem do animal.')),
+      );
+    }
+  }
+
+  // Opções anexar ou tirar foto
+  void _mostrarOpcoesFoto() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Foto do Animal',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Tirar Foto da Câmera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _alterarFoto(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.image_search_outlined),
+                title: const Text('Escolher da Galeria'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _alterarFoto(ImageSource.gallery);
+                },
+              ),
+              if (_fotoAnimalBytes != null)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  title: const Text('Remover Foto', style: TextStyle(color: Colors.redAccent)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _fotoAnimalBytes = null);
+                  },
+                ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // Widget auxiliar para estilizar os inputs profissionais

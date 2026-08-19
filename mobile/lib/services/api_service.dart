@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  // Será substituido pelo IP da máquina local ou servidor onde o Django rodará
   final String _baseUrl = "http://127.0.0.1:8000/api/";
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -31,7 +30,6 @@ class ApiService {
           if (error.response?.statusCode == 401) {
             final renovou = await _tentarRenovarToken();
             if (renovou) {
-              // Repete a requisição original com o novo token
               final novaOpcoes = error.requestOptions;
               final novoToken = await _storage.read(key: _chaveAccessToken);
               novaOpcoes.headers['Authorization'] = 'Bearer $novoToken';
@@ -49,14 +47,9 @@ class ApiService {
     );
   }
 
-  // Envia o ID token do Google para o backend e guarda os tokens JWT retornados
   Future<bool> fazerLoginGoogle(String idToken) async {
     try {
-      final response = await _dio.post(
-        "auth/google/",
-        data: {"id_token": idToken},
-      );
-
+      final response = await _dio.post("auth/google/", data: {"id_token": idToken});
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
         await _salvarSessao(response.data);
         return true;
@@ -68,14 +61,9 @@ class ApiService {
     }
   }
 
-  // Login tradicional por e-mail e senha
   Future<Map<String, dynamic>> fazerLogin(String email, String senha) async {
     try {
-      final response = await _dio.post(
-        "auth/login/",
-        data: {"email": email, "senha": senha},
-      );
-
+      final response = await _dio.post("auth/login/", data: {"email": email, "senha": senha});
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
         await _salvarSessao(response.data);
         return {'sucesso': true};
@@ -87,14 +75,9 @@ class ApiService {
     }
   }
 
-  // Cadastro de nova conta (nome, e-mail, senha) — já loga automaticamente ao final
   Future<Map<String, dynamic>> registrar(String nome, String email, String senha) async {
     try {
-      final response = await _dio.post(
-        "auth/registrar/",
-        data: {"nome": nome, "email": email, "senha": senha},
-      );
-
+      final response = await _dio.post("auth/registrar/", data: {"nome": nome, "email": email, "senha": senha});
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
         await _salvarSessao(response.data);
         return {'sucesso': true};
@@ -119,12 +102,8 @@ class ApiService {
   Future<bool> _tentarRenovarToken() async {
     final refreshToken = await _storage.read(key: _chaveRefreshToken);
     if (refreshToken == null) return false;
-
     try {
-      final response = await Dio().post(
-        "${_baseUrl}token/refresh/",
-        data: {"refresh": refreshToken},
-      );
+      final response = await Dio().post("${_baseUrl}token/refresh/", data: {"refresh": refreshToken});
       if (response.statusCode == 200) {
         await _storage.write(key: _chaveAccessToken, value: response.data['access']);
         return true;
@@ -155,31 +134,15 @@ class ApiService {
 
   Future<Map<String, dynamic>?> enviarAnaliseLeite(Uint8List imagemBytes, String fileName, {int? animalId}) async {
     try {
-      // Cria os dados do formulário com os bytes da imagem (funciona em web e mobile)
       FormData formData = FormData.fromMap({
-        "imagem": MultipartFile.fromBytes(
-          imagemBytes,
-          filename: fileName,
-        ),
+        "imagem": MultipartFile.fromBytes(imagemBytes, filename: fileName),
         if (animalId != null) "animal_id": animalId,
       });
-
-      // Faz as requisições POST para o endpoint que será mapeado no Django
-      Response response = await _dio.post(
-        "diagnosticar/",
-        data: formData,
-      );
-
-      if (response.statusCode == 200) {
-        return response.data; // Retorna o JSON estruturado enviado pelo Django
-      }
+      Response response = await _dio.post("diagnosticar/", data: formData);
+      if (response.statusCode == 200) return response.data;
       return null;
     } on DioException catch (e) {
-      // Tratamento de erros de rede específicos do Dio
       print("Erro na requisição Dio: ${e.message}");
-      if (e.type == DioExceptionType.connectionTimeout) {
-        print("Erro: Tempo limite de conexão esgotado. Verifique o sinal de internet.");
-      }
       return null;
     } catch (e) {
       print("Erro inesperado: $e");
@@ -190,9 +153,7 @@ class ApiService {
   Future<List<dynamic>?> buscarHistorico() async {
     try {
       final response = await _dio.get("historico/");
-      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
-        return response.data['analises'] as List<dynamic>;
-      }
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['analises'];
       return null;
     } on DioException catch (e) {
       print("Erro ao buscar histórico: ${e.message}");
@@ -209,9 +170,7 @@ class ApiService {
       if (animalId != null) params['animal_id'] = animalId;
 
       final response = await _dio.get("historico/", queryParameters: params);
-      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
-        return response.data['analises'] as List<dynamic>;
-      }
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['analises'];
       return null;
     } on DioException catch (e) {
       print("Erro ao buscar histórico filtrado: ${e.message}");
@@ -219,14 +178,10 @@ class ApiService {
     }
   }
 
-  // --- Detalhe de Análise ---
-
   Future<Map<String, dynamic>?> buscarDetalheAnalise(int id) async {
     try {
       final response = await _dio.get("analises/$id/");
-      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
-        return response.data['analise'];
-      }
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['analise'];
       return null;
     } on DioException catch (e) {
       print("Erro ao buscar detalhe da análise: ${e.message}");
@@ -238,11 +193,8 @@ class ApiService {
     try {
       final dados = <String, dynamic>{};
       if (observacoes != null) dados['observacoes'] = observacoes;
-      if (desvincularAnimal) {
-        dados['animal_id'] = null;
-      } else if (animalId != null) {
-        dados['animal_id'] = animalId;
-      }
+      if (desvincularAnimal) dados['animal_id'] = null;
+      else if (animalId != null) dados['animal_id'] = animalId;
 
       final response = await _dio.patch("analises/$id/", data: dados);
       return response.statusCode == 200;
@@ -252,14 +204,10 @@ class ApiService {
     }
   }
 
-  // --- Animais ---
-
   Future<List<dynamic>?> listarAnimais() async {
     try {
       final response = await _dio.get("animais/");
-      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
-        return response.data['animais'] as List<dynamic>;
-      }
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['animais'];
       return null;
     } on DioException catch (e) {
       print("Erro ao listar animais: ${e.message}");
@@ -267,14 +215,25 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> cadastrarAnimal(String brinco, String nome, String raca, String? dataNascimento) async {
+  // --- MÉTODOS DE ANIMAIS COM FORMDATA ---
+
+  Future<Map<String, dynamic>> cadastrarAnimal(String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, Uint8List? fotoBytes}) async {
     try {
-      final response = await _dio.post("animais/", data: {
+      FormData formData = FormData.fromMap({
         "brinco": brinco,
         "nome": nome,
         "raca": raca,
+        "sexo": sexo,
         if (dataNascimento != null) "data_nascimento": dataNascimento,
+        if (peso != null && peso.isNotEmpty) "peso": peso,
+        if (observacoes != null && observacoes.isNotEmpty) "observacoes": observacoes,
       });
+
+      if (fotoBytes != null) {
+        formData.files.add(MapEntry("foto", MultipartFile.fromBytes(fotoBytes, filename: "foto_animal_$brinco.jpg")));
+      }
+
+      final response = await _dio.post("animais/", data: formData);
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
         return {'sucesso': true, 'animal': response.data['animal']};
       }
@@ -285,14 +244,24 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> atualizarAnimal(int id, String brinco, String nome, String raca, String? dataNascimento) async {
+  Future<Map<String, dynamic>> atualizarAnimal(int id, String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, Uint8List? fotoBytes}) async {
     try {
-      final response = await _dio.put("animais/$id/", data: {
+      FormData formData = FormData.fromMap({
         "brinco": brinco,
         "nome": nome,
         "raca": raca,
+        "sexo": sexo,
         if (dataNascimento != null) "data_nascimento": dataNascimento,
+        if (peso != null && peso.isNotEmpty) "peso": peso,
+        if (observacoes != null && observacoes.isNotEmpty) "observacoes": observacoes,
       });
+
+      if (fotoBytes != null) {
+        formData.files.add(MapEntry("foto", MultipartFile.fromBytes(fotoBytes, filename: "foto_animal_$brinco.jpg")));
+      }
+
+      final response = await _dio.put("animais/$id/", data: formData);
+      
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
         return {'sucesso': true};
       }

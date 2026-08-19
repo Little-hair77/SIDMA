@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-# Create your models here.
 class Animal(models.Model):
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -12,6 +11,16 @@ class Animal(models.Model):
     nome = models.CharField(max_length=100, blank=True)
     raca = models.CharField(max_length=100, blank=True)
     data_nascimento = models.DateField(blank=True, null=True)
+    
+    sexo = models.CharField(
+        max_length=10, 
+        choices=[('Fêmea', 'Fêmea'), ('Macho', 'Macho')], 
+        default='Fêmea'
+    )
+    peso = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    observacoes = models.TextField(null=True, blank=True)
+    foto = models.ImageField(upload_to='fotos_animais/', null=True, blank=True)
+
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
