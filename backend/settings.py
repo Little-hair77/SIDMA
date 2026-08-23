@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'accounts', # App de autenticação
     'analises', # App das análises
     'rebanho', # App dos rebanhos
+    'tratamento', # App dos tratamentos e período de carência
 ]
 
 MIDDLEWARE = [
