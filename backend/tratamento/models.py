@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Animal(models.Model):
+class Tratamento(models.Model):
     """Registra um período de tratamento (ex: antibiótico) e a 
     data até quando o leite deve ficar em carência"""
     animal = models.ForeignKey('rebanho.Animal', on_delete=models.CASCADE, related_name='tratamentos')
