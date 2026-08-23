@@ -32,4 +32,4 @@ class Animal(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.brinco} - {self.nome}" if self.nome else self.brinco
+        return f"{self.brinco} - {self.nome}" if self.nome else self.brincov
