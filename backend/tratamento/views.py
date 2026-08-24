@@ -25,7 +25,7 @@ def tratamentos(request, animal_id):
     except Animal.DoesNotExist:
         return Response({'status': 'erro', 'mensagem': 'Animal não encontrado.'},status=404)
 
-    if request_method == 'GET':
+    if request.method == 'GET':
         lista = animal.tratamentos.all()
         return Response({'status': 'sucesso', 'tratamentos': [serializar_tratamento(t) for t in lista]})
 
@@ -33,7 +33,7 @@ def tratamentos(request, animal_id):
     data_inicio_raw = request.data.get('data_inicio')
     data_fim_raw = request.data.get('data_fim_carencia')
 
-    if not data_fim_raw or not data_fim_raw:
+    if not data_inicio_raw or not data_fim_raw:
         return Response({'status': 'erro', 'mensagem': 'Informe a data de início e a data de fim da carência.'})
 
     tratamento = Tratamento.objects.create(
