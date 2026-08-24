@@ -205,18 +205,49 @@ class ApiService {
     }
   }
 
-  Future<bool> atualizarAnalise(int id, {String? observacoes, int? animalId, bool desvincularAnimal = false}) async {
+  Future<bool> atualizarAnalise(int id, {String? observacoes, int? animalId, bool desvincularAnimal = false, int? ccsLaboratorial, bool limparCcs = false}) async {
     try {
       final dados = <String, dynamic>{};
       if (observacoes != null) dados['observacoes'] = observacoes;
       if (desvincularAnimal) dados['animal_id'] = null;
       else if (animalId != null) dados['animal_id'] = animalId;
+      if (limparCcs) dados['ccs_laboratorial'] = null;
+      else if (ccsLaboratorial != null) dados['ccs_laboratorial'] = ccsLaboratorial;
 
       final response = await _dio.patch("analises/$id/", data: dados);
       return response.statusCode == 200;
     } on DioException catch (e) {
       print("Erro ao atualizar análise: ${e.message}");
       return false;
+    }
+  }
+
+  Future<List<dynamic>?> listarTratamentos(int animalId) async {
+    try {
+      final response = await _dio.get("animais/$animalId/tratamentos/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['tratamentos'];
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao listar tratamentos: ${e.message}");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> registrarTratamento(int animalId, String medicamento, String dataInicio, String dataFimCarencia, String observacoes) async {
+    try {
+      final response = await _dio.post("animais/$animalId/tratamentos/", data: {
+        "medicamento": medicamento,
+        "data_inicio": dataInicio,
+        "data_fim_carencia": dataFimCarencia,
+        "observacoes": observacoes,
+      });
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'sucesso': true};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao registrar tratamento.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
     }
   }
 
@@ -231,7 +262,7 @@ class ApiService {
     }
   }
 
-  // --- MÉTODOS DE ANIMAIS COM FORMDATA ---
+  // - MÉTODOS DE ANIMAIS COM FORMDATA 
 
   Future<Map<String, dynamic>> cadastrarAnimal(String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, Uint8List? fotoBytes}) async {
     try {

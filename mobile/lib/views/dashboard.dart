@@ -20,7 +20,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
   String _nomeUsuario = '';
   List<dynamic> _analises = [];
 
-  // PALETA DE CORES 
+  // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
   static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);

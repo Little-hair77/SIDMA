@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'cadastro_animal.dart';
-// import 'tela_tratamentos.dart'; // Futura tela de tratamentos
+import 'registrar_tratamento.dart';
+import '../services/api_service.dart';
 
 class TelaDetalheAnimal extends StatefulWidget {
   final Map<String, dynamic> animal;
@@ -12,7 +16,7 @@ class TelaDetalheAnimal extends StatefulWidget {
 }
 
 class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
-  // Paleta AgTech baseada na imagem de referência
+  // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
   static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
@@ -20,11 +24,82 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
   static const Color corTextoPrimario = Color(0xFF1E293B);
 
   late Map<String, dynamic> _animal;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
     _animal = widget.animal;
+  }
+
+  Future<void> _confirmarExclusao() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir animal'),
+        content: const Text('Tem certeza? As análises já feitas não serão apagadas, mas deixarão de estar vinculadas a esse animal.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Excluir', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      final sucesso = await _apiService.excluirAnimal(_animal['id']);
+      if (sucesso && mounted) Navigator.of(context).pop(true);
+    }
+  }
+
+  Future<void> _exportarFichaPdf() async {
+    final documento = pw.Document();
+    final ultimaAnalise = _animal['ultima_analise'];
+    final emCarencia = _animal['em_carencia'] == true;
+
+    documento.addPage(
+      pw.Page(
+        build: (contexto) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text('SIDMA — Ficha do Animal', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 4),
+            pw.Text('Gerado em: ${DateTime.now().day.toString().padLeft(2, '0')}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().year}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            pw.Divider(),
+            pw.SizedBox(height: 8),
+            _linhaPdf('Brinco', _animal['brinco']?.toString() ?? 'N/I'),
+            _linhaPdf('Nome', _animal['nome']?.toString().isNotEmpty == true ? _animal['nome'] : 'Sem nome'),
+            _linhaPdf('Raça', _animal['raca']?.toString() ?? 'N/I'),
+            _linhaPdf('Sexo', _animal['sexo']?.toString() ?? 'N/I'),
+            _linhaPdf('Peso', _animal['peso'] != null ? '${_animal['peso']} Kg' : 'N/I'),
+            _linhaPdf('Data de nascimento', _animal['data_nascimento'] ?? 'N/I'),
+            _linhaPdf('Total de análises', '${_animal['total_analises'] ?? 0}'),
+            _linhaPdf('Situação de carência', emCarencia ? 'Em carência até ${_animal['carencia_ate']}' : 'Sem restrição'),
+            _linhaPdf('Última análise', ultimaAnalise != null ? '${ultimaAnalise['resultado']} (${ultimaAnalise['confianca']}) em ${ultimaAnalise['criado_em']}' : 'Nenhuma análise registrada'),
+            if (_animal['observacoes']?.toString().isNotEmpty == true) ...[
+              pw.SizedBox(height: 12),
+              pw.Text('Observações', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              pw.Text(_animal['observacoes']),
+            ],
+            pw.SizedBox(height: 24),
+            pw.Text('Documento gerado pelo SIDMA — Sistema Inteligente de Auxílio ao Diagnóstico de Mastite.', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+          ],
+        ),
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (formato) async => documento.save());
+  }
+
+  pw.Widget _linhaPdf(String rotulo, String valor) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Row(
+        children: [
+          pw.SizedBox(width: 150, child: pw.Text(rotulo, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+          pw.Expanded(child: pw.Text(valor)),
+        ],
+      ),
+    );
   }
 
   // Lógica para calcular a idade em dias
@@ -35,6 +110,18 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
     
     final diferencaDias = DateTime.now().difference(dataNascimento).inDays;
     return '$diferencaDias dias'; 
+  }
+
+  String _formatarData(String? dataIso) {
+    final data = DateTime.tryParse(dataIso ?? '');
+    if (data == null) return '';
+    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
+  }
+
+  String _formatarDataSimples(String? dataIso) {
+    final data = DateTime.tryParse(dataIso ?? '');
+    if (data == null) return '';
+    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -49,7 +136,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
           SliverToBoxAdapter(
             child: Stack(
               children: [
-                // --- HEADER VERDE ---
+                // - HEADER 
                 Container(
                   height: 180,
                   width: double.infinity,
@@ -83,7 +170,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                   ),
                 ),
 
-                // --- CARD DE DETALHES 
+                // - CARD DE DETALHES 
                 Padding(
                   padding: const EdgeInsets.only(top: 110, left: 16, right: 16, bottom: 40),
                   child: Container(
@@ -99,7 +186,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- LINHA 1 - FOTO E DADOS PRINCIPAIS ---
+                          // - LINHA 1 - FOTO E DADOS PRINCIPAIS 
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -151,7 +238,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                     Row(
                                       children: [
                                         Expanded(child: _TextoInfo(rotulo: 'Idade', valor: _calcularIdade(_animal['data_nascimento']))),
-                                        const Expanded(child: _TextoInfo(rotulo: 'Lactações', valor: '3 vezes')), // Placeholder p/ TCC
+                                        Expanded(child: _TextoInfo(rotulo: 'Análises', valor: '${_animal['total_analises'] ?? 0} exame(s)')),
                                       ],
                                     ),
                                     const SizedBox(height: 16),
@@ -161,10 +248,10 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                       spacing: 6,
                                       runSpacing: 6,
                                       children: [
-                                        const _Badge(texto: '117 DEL', corFundo: corAzulPrincipal, corTexto: Colors.white), // Placeholder p/ TCC
                                         if (_animal['peso'] != null)
                                           _Badge(texto: '${_animal['peso']} Kg', corFundo: Colors.grey.shade400, corTexto: Colors.white),
-                                        const _Badge(texto: 'Coberta em Lactação', corFundo: corAzulPrincipal, corTexto: Colors.white), // Placeholder p/ TCC
+                                        if (_animal['sexo'] != null)
+                                          _Badge(texto: _animal['sexo'], corFundo: corAzulPrincipal, corTexto: Colors.white),
                                         
                                         if (emCarencia)
                                           const _Badge(texto: 'CARÊNCIA', corFundo: Colors.redAccent, corTexto: Colors.white, icone: Icons.warning),
@@ -183,17 +270,20 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                             child: Divider(height: 1, thickness: 1),
                           ),
 
-                          // --- LINHA 2 - DADOS REPRODUTIVOS E CLÍNICOS (Simulados para densidade visual) ---
+                          // - LINHA 2 - ÚLTIMA ANÁLISE E CARÊNCIA 
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _TextoInfo(rotulo: 'Último parto', valor: '20/01/2026\n117 dias atrás'),
-                                    SizedBox(height: 12),
-                                    _TextoInfo(rotulo: 'Exame IA SIDMA', valor: '04/06/2026\nSaudável'),
+                                    _TextoInfo(
+                                      rotulo: 'Última análise',
+                                      valor: _animal['ultima_analise'] != null
+                                          ? '${_formatarData(_animal['ultima_analise']['criado_em'])}\n${_animal['ultima_analise']['resultado']}'
+                                          : 'Nenhuma análise ainda',
+                                    ),
                                   ],
                                 ),
                               ),
@@ -201,24 +291,19 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const _TextoInfo(rotulo: 'Inseminada', valor: '05/05/2026\n12 dias atrás'),
+                                    _TextoInfo(rotulo: 'Análises totais', valor: '${_animal['total_analises'] ?? 0} exame(s)'),
                                     const SizedBox(height: 12),
-                                    _TextoInfo(rotulo: 'Análises Totais', valor: '${_animal['total_analises'] ?? 0} exames'),
-                                  ],
-                                ),
-                              ),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _TextoInfo(rotulo: 'Previsão Parto', valor: '09/02/2027'),
+                                    _TextoInfo(
+                                      rotulo: 'Situação de carência',
+                                      valor: emCarencia ? 'Até ${_formatarDataSimples(_animal['carencia_ate'])}' : 'Sem restrição',
+                                    ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
 
-                          // --- OBSERVAÇÕES REAIS DO BACKEND ---
+                          // - OBSERVAÇÕES REAIS DO BACKEND
                           if (_animal['observacoes'] != null && _animal['observacoes'].toString().isNotEmpty) ...[
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 16),
@@ -240,25 +325,25 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                             child: Divider(height: 1, thickness: 1),
                           ),
 
-                          // --- LINHA 3 - BOTÕES DE AÇÃO ---
+                          // - LINHA 3 - BOTÕES DE AÇÃO 
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Ícones Lixeira e Imprimir (Esquerda)
+                              // Ícones Lixeira e Imprimir 
                               Row(
                                 children: [
                                   _BotaoQuadrado(
                                     icone: Icons.delete_outline,
                                     cor: Colors.red.shade50,
                                     corIcone: Colors.redAccent,
-                                    onTap: () {}, // TODO: Delete lógica
+                                    onTap: _confirmarExclusao,
                                   ),
                                   const SizedBox(width: 8),
                                   _BotaoQuadrado(
                                     icone: Icons.print_outlined,
                                     cor: Colors.grey.shade200,
                                     corIcone: Colors.grey.shade700,
-                                    onTap: () {}, // TODO: PDF lógica
+                                    onTap: _exportarFichaPdf,
                                   ),
                                 ],
                               ),
@@ -266,7 +351,16 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                               Row(
                                 children: [
                                   ElevatedButton.icon(
-                                    onPressed: () {}, // Navegar para TelaTratamentos
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => TelaRegistrarTratamento(
+                                            animalId: _animal['id'],
+                                            nomeAnimal: _animal['nome']?.toString().isNotEmpty == true ? _animal['nome'] : _animal['brinco'],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     icon: const Icon(Icons.medical_services, size: 16, color: Colors.white),
                                     label: const Text('Tratamentos\ne Pesagem', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
                                     style: ElevatedButton.styleFrom(
@@ -311,7 +405,6 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
               padding: const EdgeInsets.only(bottom: 40.0),
               child: Column(
                 children: [
-                  // Logo do app com opacidade reduzida (estilo marca d'água)
                   Opacity(
                     opacity: 0.35,
                     child: Image.asset(

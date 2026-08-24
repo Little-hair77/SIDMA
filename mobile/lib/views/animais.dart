@@ -20,7 +20,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
   bool _carregando = true;
   final TextEditingController _buscaController = TextEditingController();
 
-  // PALETA DE CORES
+  // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);

@@ -19,7 +19,8 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
   bool _carregando = true;
   bool _salvando = false;
   bool _alterado = false;
-
+  
+  //Paleta de Cores
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corFundo = Color(0xFFF8FAFC);

@@ -26,7 +26,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
 
-  // DEFINIÇÃO DA PALETA DE CORES 
+  // Paleta de Cores
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corFundo = Color(0xFFF8FAFC);

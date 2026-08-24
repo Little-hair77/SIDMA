@@ -21,7 +21,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   bool _senhaVisivel = false;
   String? _erro;
 
-  // DEFINIÇÃO DA PALETA DE CORES VÍVIDAS (IDÊNTICA À TELA DE LOGIN)
+  // Paleta de Cores
   static const Color corAzulPrincipal = Color(0xFF0D6EFD); 
   static const Color corVerdePrincipal = Color(0xFF74C319); 
   static const Color corTextoPrimario = Color(0xFF1E293B); 

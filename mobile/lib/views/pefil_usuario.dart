@@ -21,7 +21,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   String _email = 'Carregando...';
   bool _carregandoDados = true;
 
-  // - PALETA DE CORES
+  // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
   static const Color corVerdePrincipal = Color(0xFF74C319);
 

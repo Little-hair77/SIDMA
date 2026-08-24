@@ -31,7 +31,7 @@ class _TelaLoginState extends State<TelaLogin> {
     serverClientId: kIsWeb ? null : _webClientId,
   );
 
-  // DEFINIÇÃO DA PALETA DE CORES VÍVIDAS BASEADA NA LOGO
+  // Paleta de Cores
   static const Color corAzulPrincipal = Color(0xFF0D6EFD); 
   static const Color corVerdePrincipal = Color(0xFF74C319); 
   static const Color corTextoPrimario = Color(0xFF1E293B); 

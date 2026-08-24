@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import './services/api_service.dart';
-import './navigation/nav.dart';
-import 'views/login.dart';
+import './views/splash.dart';
 
 void main() async {
   // Garante que os widgets do Flutter estejam prontos antes de rodar comandos assíncronos
@@ -26,27 +24,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         useMaterial3: true,
       ),
-      home: const TelaInicial(),
-    );
-  }
-}
-
-// Decide, ao abrir o app, se o usuário já está logado (vai direto para a captura)
-class TelaInicial extends StatelessWidget {
-  const TelaInicial({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final apiService = ApiService();
-    return FutureBuilder<bool>(
-      future: apiService.estaLogado(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        final logado = snapshot.data ?? false;
-        return logado ? const TelaPrincipal() : const TelaLogin();
-      },
+      home: const TelaSplash(),
     );
   }
 }

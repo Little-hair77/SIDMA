@@ -20,6 +20,17 @@ def calcular_alerta_reincidencia(a):
     return suspeitas >= 2
 
 
+def obter_ultima_analise(a):
+    ultima = a.analises.order_by('-criado_em').first()
+    if not ultima:
+        return None
+    return {
+        'resultado': ultima.resultado,
+        'confianca': f"{ultima.confianca}%",
+        'criado_em': ultima.criado_em.isoformat(),
+    }
+
+
 def serializar_animal(request, a):
     em_carencia, carencia_ate = calcular_carencia(a)
     return {
@@ -36,6 +47,7 @@ def serializar_animal(request, a):
         'em_carencia': em_carencia,
         'carencia_ate': carencia_ate.isoformat() if carencia_ate else None,
         'alerta_reincidencia': calcular_alerta_reincidencia(a),
+        'ultima_analise': obter_ultima_analise(a),
     }
 
 
