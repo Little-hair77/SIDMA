@@ -21,6 +21,10 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   String _email = 'Carregando...';
   bool _carregandoDados = true;
 
+  // - PALETA DE CORES
+  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
+  static const Color corVerdePrincipal = Color(0xFF74C319);
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +33,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
 
   Future<void> _buscarDadosUsuario() async {
     final dados = await _apiService.obterUsuarioSalvo();
+    if (!mounted) return;
     setState(() {
       _nome = dados['nome']?.isNotEmpty == true ? dados['nome']! : 'Usuário SIDMA';
       _email = dados['email']?.isNotEmpty == true ? dados['email']! : 'E-mail não informado';
@@ -47,9 +52,10 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
 
       if (arquivo != null) {
         final bytes = await arquivo.readAsBytes();
-        UsuarioEstado.atualizarFoto(bytes); // Atualiza o estado global
+        UsuarioEstado.atualizarFoto(bytes); 
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro ao selecionar imagem.')),
       );
@@ -76,7 +82,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.azulPrincipal),
+                leading: const Icon(Icons.camera_alt_outlined, color: corVerdeEscuro),
                 title: const Text('Tirar Foto'),
                 onTap: () {
                   Navigator.pop(context);
@@ -84,7 +90,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.image_search_outlined, color: AppColors.azulPrincipal),
+                leading: const Icon(Icons.image_search_outlined, color: corVerdeEscuro),
                 title: const Text('Escolher da Galeria'),
                 onTap: () {
                   Navigator.pop(context);
@@ -121,130 +127,263 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.fundo,
+      
+      // APP BAR 
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        shadowColor: Colors.black12,
+        backgroundColor: corVerdeEscuro,
+        foregroundColor: Colors.white,
+        elevation: 0,
         title: const Text(
           'Meu Perfil',
-          style: TextStyle(color: AppColors.textoPrimario, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(32),
+          ),
+        ),
       ),
+      
       body: _carregandoDados
-          ? const Center(child: CircularProgressIndicator(color: AppColors.azulPrincipal))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                children: [
-                  // --- AVATAR INTERATIVO COM VALUENOTIFIER ---
-                  ValueListenableBuilder<Uint8List?>(
-                    valueListenable: UsuarioEstado.fotoPerfilNotifier,
-                    builder: (context, fotoBytes, child) {
-                      return Stack(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 4),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              radius: 64,
-                              backgroundColor: AppColors.azulPrincipal.withOpacity(0.1),
-                              backgroundImage: fotoBytes != null ? MemoryImage(fotoBytes) : null,
-                              child: fotoBytes == null
-                                  ? const Icon(Icons.person, size: 64, color: AppColors.azulPrincipal)
-                                  : null,
+          ? const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
+          : CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      // Marca d'água de fundo
+                      Positioned.fill(
+                        child: Center(
+                          child: Opacity(
+                            opacity: 0.04,
+                            child: Image.asset(
+                              'assets/images/logoSIDMA-2.png',
+                              width: 250,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),
                             ),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 4,
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: AppColors.verdePrincipal,
-                              child: IconButton(
-                                icon: const Icon(Icons.edit, size: 16, color: Colors.white),
-                                onPressed: _mostrarOpcoesFoto,
+                        ),
+                      ),
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                        child: Column(
+                          children: [
+                            ValueListenableBuilder<Uint8List?>(
+                              valueListenable: UsuarioEstado.fotoPerfilNotifier,
+                              builder: (context, fotoBytes, child) {
+                                return Stack(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 4),
+                                        boxShadow: [
+                                          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
+                                        ],
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: 56, 
+                                        backgroundColor: corVerdeEscuro.withOpacity(0.1),
+                                        backgroundImage: fotoBytes != null ? MemoryImage(fotoBytes) : null,
+                                        child: fotoBytes == null
+                                            ? const Icon(Icons.person, size: 56, color: corVerdeEscuro)
+                                            : null,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 4,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2), // Borda para separar da foto
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: 18,
+                                          backgroundColor: corVerdePrincipal,
+                                          child: IconButton(
+                                            icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                                            onPressed: _mostrarOpcoesFoto,
+                                            padding: EdgeInsets.zero,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 20),
+
+                            // - DADOS DO USUÁRIO 
+                            Text(
+                              _nome,
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textoPrimario),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _email,
+                              style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // - CARD DE INFORMAÇÕES E CONFIGURAÇÕES
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                                ],
+                                border: Border.all(color: Colors.grey.shade100),
+                              ),
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      children: [
+                                        _buildInfoTile(Icons.assignment_ind_outlined, 'Cargo/Função', 'Produtor / Gestor'),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          child: Divider(height: 16, thickness: 0.5),
+                                        ),
+                                        _buildInfoTile(Icons.verified_user_outlined, 'Nível de Acesso', 'Administrador'),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(16),
+                                        bottomRight: Radius.circular(16),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _buildAcaoMenu(Icons.notifications_none, 'Notificações', onTap: () {}),
+                                        _buildAcaoMenu(Icons.security, 'Segurança e Senha', onTap: () {}),
+                                        _buildAcaoMenu(Icons.help_outline, 'Suporte SIDMA', onTap: () {}),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
+                            
+                            const SizedBox(height: 32),
 
-                  // --- DADOS DO USUÁRIO ---
-                  Text(
-                    _nome,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textoPrimario),
+                            // - BOTÃO LOGOUT
+                            OutlinedButton.icon(
+                              onPressed: _efetuarLogout,
+                              icon: const Icon(Icons.logout_outlined, color: Colors.redAccent),
+                              label: const Text(
+                                'SAIR DO APLICATIVO',
+                                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: Colors.red.shade50,
+                                minimumSize: const Size(double.infinity, 56),
+                                side: const BorderSide(color: Colors.redAccent, width: 1.2),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 40),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _email,
-                    style: const TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 36),
-
-                  // --- CARD DE INFORMAÇÕES ADICIONAIS DO PROJETO ---
-                  Card(
-                    color: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey.shade200),
-                    ),
+                ),
+                
+                // RODAPÉ (FOOTER)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.only(bottom: 24.0),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildInfoTile(Icons.assignment_ind_outlined, 'Cargo', 'Técnico Agrícola / Veterinário'),
-                          const Divider(height: 24, thickness: 0.5),
-                          _buildInfoTile(Icons.verified_user_outlined, 'Nível de Acesso', 'Administrador do Rebanho'),
+                          Text(
+                            'SIDMA • VERSÃO 1.0.0',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Gestão Sanitária Inteligente',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 11,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
-
-                  // --- BOTÃO LOGOUT ---
-                  OutlinedButton.icon(
-                    onPressed: _efetuarLogout,
-                    icon: const Icon(Icons.logout_outlined, color: Colors.redAccent),
-                    label: const Text(
-                      'LOGOUT',
-                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 56),
-                      side: const BorderSide(color: Colors.redAccent, width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }
 
+  // Widget auxiliar para os dados do topo do card
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.azulPrincipal.withOpacity(0.7)),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: corVerdeEscuro.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: corVerdeEscuro, size: 20),
+        ),
         const SizedBox(width: 16),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.black45)),
+            Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textoPrimario)),
+            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textoPrimario)),
           ],
         ),
       ],
+    );
+  }
+
+  // Widget auxiliar para os menus da base do card
+  Widget _buildAcaoMenu(IconData icon, String titulo, {required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey.shade600, size: 20),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                titulo,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textoPrimario),
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

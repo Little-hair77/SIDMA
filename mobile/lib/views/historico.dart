@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; 
 import '../services/api_service.dart';
+import 'detalhe_analise.dart'; 
 
 class TelaHistorico extends StatefulWidget {
   const TelaHistorico({Key? key}) : super(key: key);
@@ -14,7 +15,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   List<dynamic> _analises = [];
   bool _carregando = true;
 
-  // DEFINIÇÃO DA PALETA DE CORES (IDÊNTICA AO DASHBOARD)
+  // - PALETA DE CORES 
+  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
+  static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corFundo = Color(0xFFF8FAFC);
   static const Color corTextoPrimario = Color(0xFF1E293B);
@@ -29,7 +32,6 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     setState(() => _carregando = true);
     final historico = await _apiService.buscarHistorico();
     
-    // Opcional: Garantir que a lista venha ordenada da mais recente para a mais antiga
     if (historico != null) {
       historico.sort((a, b) {
         DateTime dataA = DateTime.tryParse(a['criado_em'] ?? '') ?? DateTime.now();
@@ -38,21 +40,20 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       });
     }
 
+    if (!mounted) return;
     setState(() {
       _analises = historico ?? [];
       _carregando = false;
     });
   }
 
-  // --- LÓGICA DE AGRUPAMENTO POR MÊS/ANO ---
+  // - LÓGICA DE AGRUPAMENTO POR MÊS/ANO 
   Map<String, List<dynamic>> _agruparAnalises() {
     Map<String, List<dynamic>> mapaAgrupado = {};
     
     for (var analise in _analises) {
       DateTime data = DateTime.tryParse(analise['criado_em'] ?? '') ?? DateTime.now();
-      // Formata como "Mês Ano" (ex: "Agosto 2026")
       String mesAno = DateFormat('MMMM yyyy', 'pt_BR').format(data);
-      // Capitaliza a primeira letra do mês
       mesAno = mesAno[0].toUpperCase() + mesAno.substring(1);
 
       if (!mapaAgrupado.containsKey(mesAno)) {
@@ -65,71 +66,98 @@ class _TelaHistoricoState extends State<TelaHistorico> {
 
   @override
   Widget build(BuildContext context) {
-    // Agrupa os dados antes de renderizar
     final analisesAgrupadas = _agruparAnalises();
 
     return Scaffold(
       backgroundColor: corFundo,
+      
+      // APP BAR VERDE ARREDONDADO
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 1,
-        shadowColor: Colors.black12,
-        iconTheme: const IconThemeData(color: corAzulPrincipal),
+        backgroundColor: corVerdeEscuro,
+        foregroundColor: Colors.white,
+        elevation: 0,
         title: const Text(
           'Histórico Completo',
-          style: TextStyle(
-            color: corTextoPrimario,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(32),
           ),
         ),
       ),
-      body: _carregando
-          ? const Center(child: CircularProgressIndicator(color: corAzulPrincipal))
-          : _analises.isEmpty
-              ? _ConstruirEstadoVazio()
-              : RefreshIndicator(
-                  color: corAzulPrincipal,
-                  onRefresh: _carregar,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    itemCount: analisesAgrupadas.length,
-                    itemBuilder: (context, index) {
-                      // Extrai a chave (Mês/Ano) e a lista de análises correspondente
-                      String mesChave = analisesAgrupadas.keys.elementAt(index);
-                      List<dynamic> analisesDoMes = analisesAgrupadas[mesChave]!;
+      
+      // CORPO COM MARCA D'ÁGUA
+      body: Stack(
+        children: [
+          Center(
+            child: Opacity(
+              opacity: 0.04, 
+              child: Image.asset(
+                'assets/images/logoSIDMA-2.png',
+                width: 250,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),
+              ),
+            ),
+          ),
+          
+          _carregando
+              ? const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
+              : _analises.isEmpty
+                  ? const _ConstruirEstadoVazio()
+                  : RefreshIndicator(
+                      color: corVerdePrincipal,
+                      onRefresh: _carregar,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        itemCount: analisesAgrupadas.length,
+                        itemBuilder: (context, index) {
+                          // Extrai a chave (Mês/Ano) e a lista de análises correspondente
+                          String mesChave = analisesAgrupadas.keys.elementAt(index);
+                          List<dynamic> analisesDoMes = analisesAgrupadas[mesChave]!;
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // --- CABEÇALHO DO GRUPO (MÊS) ---
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16, bottom: 12),
-                            child: Text(
-                              mesChave,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: corAzulPrincipal,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // - CABEÇALHO DO GRUPO (MÊS)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16, bottom: 12),
+                                child: Text(
+                                  mesChave,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: corVerdeEscuro, 
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          // --- LISTA DE ITENS DO MÊS ---
-                          ...analisesDoMes.map((a) => _CartaoHistoricoDetalhado(analise: a)).toList(),
-                        ],
-                      );
-                    },
-                  ),
-                ),
+                              // - LISTA DE ITENS DO MÊS
+                              ...analisesDoMes.map((a) => GestureDetector(
+                                onTap: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => TelaDetalheAnalise(analiseId: a['id'])),
+                                  );
+                                  _carregar(); // Atualiza caso algo mude na tela de detalhes
+                                },
+                                child: _CartaoHistoricoDetalhado(analise: a),
+                              )).toList(),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+        ],
+      ),
     );
   }
 }
 
-// ============================================================================
-// WIDGET ESTADO VAZIO (PROFISSIONAL)
-// ============================================================================
+// WIDGET ESTADO VAZIO
 class _ConstruirEstadoVazio extends StatelessWidget {
+  const _ConstruirEstadoVazio({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -153,9 +181,7 @@ class _ConstruirEstadoVazio extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// CARTÃO DE HISTÓRICO (REUTILIZANDO A LÓGICA DE STATUS DO DASHBOARD)
-// ============================================================================
+// CARTÃO DE HISTÓRICO 
 class _CartaoHistoricoDetalhado extends StatelessWidget {
   final dynamic analise;
 
@@ -214,9 +240,9 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // Alinha os itens no topo
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Thumbnail da Imagem (um pouco maior que no dashboard)
+          // Thumbnail da Imagem 
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
@@ -271,8 +297,7 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Opcional: ID da Vaca/Brinco se você adicionar isso no futuro
-                    // Text('#Brinco: 104', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                    Icon(Icons.chevron_right, color: Colors.grey.shade300, size: 20),
                   ],
                 ),
                 const SizedBox(height: 8),
