@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'cadastro_animal.dart';
 import 'qrCode_animal.dart';
-import 'detalhe_animal.dart'; 
+import 'detalhe_animal.dart';
+import 'registrar_tratamento.dart';
 
 class TelaAnimais extends StatefulWidget {
   const TelaAnimais({Key? key}) : super(key: key);
-
   @override
   State<TelaAnimais> createState() => _TelaAnimaisState();
 }
 
 class _TelaAnimaisState extends State<TelaAnimais> {
   final ApiService _apiService = ApiService();
-  
+
   List<dynamic> _animais = [];
-  List<dynamic> _animaisFiltrados = []; 
-  
+  List<dynamic> _animaisFiltrados = [];
+
   bool _carregando = true;
   final TextEditingController _buscaController = TextEditingController();
 
   // Paleta de Cores
-  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
+  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corFundo = Color(0xFFF4F6F8);
@@ -43,11 +43,15 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     setState(() => _carregando = true);
     final lista = await _apiService.listarAnimais();
     if (!mounted) return;
+
+    final termoAtual = _buscaController.text;
+
     setState(() {
       _animais = lista ?? [];
-      _animaisFiltrados = _animais; 
       _carregando = false;
     });
+
+    _filtrarAnimais(termoAtual);
   }
 
   void _filtrarAnimais(String termo) {
@@ -55,7 +59,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
       setState(() => _animaisFiltrados = _animais);
       return;
     }
-    
+
     final termoBusca = termo.toLowerCase();
     setState(() {
       _animaisFiltrados = _animais.where((animal) {
@@ -71,7 +75,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Animal?', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Tem certeza que deseja remover o animal brinco ${animal['brinco']} do rebanho? Todo o histórico de análises será perdido.'),
+        content: Text('Tem certeza que deseja remover o animal brinco ${animal['brinco']} do rebanho? O histórico de análises não será apagado, apenas deixará de estar vinculado a esse animal.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -88,23 +92,45 @@ class _TelaAnimaisState extends State<TelaAnimais> {
 
     if (confirmar == true) {
       setState(() => _carregando = true);
-      // await _apiService.excluirAnimal(animal['id']);
-      await Future.delayed(const Duration(milliseconds: 500)); 
-      _carregar();
-      
+
+      final sucesso = await _apiService.excluirAnimal(animal['id']);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Animal removido com sucesso.'), backgroundColor: Colors.redAccent),
-      );
+
+      if (sucesso) {
+        await _carregar();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Animal removido com sucesso.'), backgroundColor: Colors.redAccent),
+        );
+      } else {
+        setState(() => _carregando = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível excluir o animal. Tente novamente.'), backgroundColor: Colors.redAccent),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Lógica de Agrupamento de Animais
+    List<dynamic> listaTratamento = [];
+    List<dynamic> listaAlerta = [];
+    List<dynamic> listaSaudaveis = [];
+
+    for (var animal in _animaisFiltrados) {
+      if (animal['em_carencia'] == true) {
+        listaTratamento.add(animal);
+      } else if (animal['alerta_reincidencia'] == true) {
+        listaAlerta.add(animal);
+      } else {
+        listaSaudaveis.add(animal);
+      }
+    }
+
     return Scaffold(
       backgroundColor: corFundo,
-      
-      // APP BAR VERDE ARREDONDADO (Design System)
       appBar: AppBar(
         backgroundColor: corVerdeEscuro,
         foregroundColor: Colors.white,
@@ -120,7 +146,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           ),
         ),
       ),
-      
       floatingActionButton: FloatingActionButton(
         backgroundColor: corVerdePrincipal,
         onPressed: () async {
@@ -131,12 +156,11 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      
       body: Stack(
         children: [
           Center(
             child: Opacity(
-              opacity: 0.04, 
+              opacity: 0.04,
               child: Image.asset(
                 'assets/images/logoSIDMA-2.png',
                 width: 250,
@@ -145,9 +169,9 @@ class _TelaAnimaisState extends State<TelaAnimais> {
               ),
             ),
           ),
-          
           Column(
             children: [
+              // - BARRA DE BUSCA 
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: TextField(
@@ -184,7 +208,8 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                   ),
                 ),
               ),
-
+              
+              // - LISTA AGRUPADA
               Expanded(
                 child: _carregando
                     ? const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
@@ -195,119 +220,191 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                             : RefreshIndicator(
                                 color: corVerdePrincipal,
                                 onRefresh: _carregar,
-                                child: ListView.builder(
+                                child: ListView(
                                   padding: const EdgeInsets.all(16),
-                                  itemCount: _animaisFiltrados.length,
-                                  itemBuilder: (context, index) {
-                                    final animal = _animaisFiltrados[index];
-                                    
-                                    final bool emCarencia = animal['em_carencia'] == true;
-                                    final bool alertaReincidencia = animal['alerta_reincidencia'] == true;
-
-                                    return Container(
-                                      margin: const EdgeInsets.only(bottom: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
-                                        ],
-                                        border: Border.all(color: Colors.grey.shade100),
-                                      ),
-                                      child: ListTile(
-                                        contentPadding: const EdgeInsets.only(left: 16, right: 8, top: 8, bottom: 8),
-                                        
-                                        leading: CircleAvatar(
-                                          radius: 26, 
-                                          backgroundColor: corFundo,
-                                          backgroundImage: animal['foto'] != null 
-                                              ? NetworkImage(animal['foto']) 
-                                              : null,
-                                          child: animal['foto'] == null
-                                              ? const Icon(Icons.pets, color: Colors.grey)
-                                              : null,
-                                        ),
-
-                                        title: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                animal['nome']?.isNotEmpty == true ? animal['nome'] : 'Brinco ${animal['brinco']}',
-                                                style: const TextStyle(fontWeight: FontWeight.bold, color: corTextoPrimario, fontSize: 16),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            if (emCarencia || alertaReincidencia)
-                                              const Padding(
-                                                padding: EdgeInsets.only(left: 8.0),
-                                                child: Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 20),
-                                              ),
-                                          ],
-                                        ),
-                                        
-                                        subtitle: Padding(
-                                          padding: const EdgeInsets.only(top: 4.0),
-                                          child: Text(
-                                            'Brinco: ${animal['brinco']} · ${animal['total_analises'] ?? 0} análise(s)',
-                                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                                          ),
-                                        ),
-                                        
-                                        trailing: PopupMenuButton<String>(
-                                          icon: const Icon(Icons.more_vert, color: Colors.grey),
-                                          color: Colors.white,
-                                          surfaceTintColor: Colors.white,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                          onSelected: (value) async {
-                                            if (value == 'visualizar') {
-                                              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaDetalheAnimal(animal: animal)));
-                                              _carregar();
-                                            } else if (value == 'editar') {
-                                              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaCadastroAnimal(animal: animal)));
-                                              _carregar();
-                                            } else if (value == 'qrcode') {
-                                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaQrCodeAnimal(animal: animal)));
-                                            } else if (value == 'excluir') {
-                                              _confirmarExclusao(animal);
-                                            }
-                                          },
-                                          itemBuilder: (BuildContext context) => [
-                                            const PopupMenuItem(
-                                              value: 'visualizar',
-                                              child: Row(children: [Icon(Icons.visibility_outlined, size: 20, color: corAzulPrincipal), SizedBox(width: 12), Text('Ver Ficha')]),
-                                            ),
-                                            const PopupMenuItem(
-                                              value: 'editar',
-                                              child: Row(children: [Icon(Icons.edit_outlined, size: 20, color: Colors.black87), SizedBox(width: 12), Text('Editar')]),
-                                            ),
-                                            const PopupMenuItem(
-                                              value: 'qrcode',
-                                              child: Row(children: [Icon(Icons.qr_code, size: 20, color: Colors.black87), SizedBox(width: 12), Text('QR Code')]),
-                                            ),
-                                            const PopupMenuDivider(),
-                                            const PopupMenuItem(
-                                              value: 'excluir',
-                                              child: Row(children: [Icon(Icons.delete_outline, size: 20, color: Colors.redAccent), SizedBox(width: 12), Text('Excluir', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))]),
-                                            ),
-                                          ],
-                                        ),
-                                        
-                                        onTap: () async {
-                                          await Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (_) => TelaDetalheAnimal(animal: animal)),
-                                          );
-                                          _carregar(); 
-                                        },
-                                      ),
-                                    );
-                                  },
+                                  children: [
+                                    if (listaTratamento.isNotEmpty) ...[
+                                      _buildSectionHeader('Em Tratamento', Colors.redAccent),
+                                      ...listaTratamento.map((a) => _buildAnimalCard(a)).toList(),
+                                      const SizedBox(height: 16),
+                                    ],
+                                    if (listaAlerta.isNotEmpty) ...[
+                                      _buildSectionHeader('Em Análise / Alerta', Colors.orange),
+                                      ...listaAlerta.map((a) => _buildAnimalCard(a)).toList(),
+                                      const SizedBox(height: 16),
+                                    ],
+                                    if (listaSaudaveis.isNotEmpty) ...[
+                                      _buildSectionHeader('Rebanho Saudável', corVerdeEscuro),
+                                      ...listaSaudaveis.map((a) => _buildAnimalCard(a)).toList(),
+                                    ],
+                                  ],
                                 ),
                               ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // COMPONENTES VISUAIS AUXILIARES
+  /// Constrói o título de cada sessão/bloco com a fonte colorida 
+  Widget _buildSectionHeader(String titulo, Color cor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        titulo,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: cor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  /// Constrói o card completo e estilizado do animal
+  Widget _buildAnimalCard(dynamic animal) {
+    final bool emCarencia = animal['em_carencia'] == true;
+    final bool alertaReincidencia = animal['alerta_reincidencia'] == true;
+
+    // Definição dinâmica de cores com base no status do animal
+    final Color corBorda = emCarencia ? Colors.redAccent : (alertaReincidencia ? Colors.orange : Colors.transparent);
+    final Color corFundoTag = emCarencia ? Colors.red.shade50 : (alertaReincidencia ? Colors.orange.shade50 : Colors.green.shade50);
+    final Color corTextoTag = emCarencia ? Colors.red.shade700 : (alertaReincidencia ? Colors.orange.shade800 : Colors.green.shade700);
+    final String textoTag = emCarencia ? 'Em Tratamento' : (alertaReincidencia ? 'Alerta / Reincidência' : 'Saudável');
+    final IconData iconeTag = emCarencia ? Icons.medical_information : (alertaReincidencia ? Icons.warning_amber_rounded : Icons.check_circle_outline);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
+        ],
+        // Borda lateral inteligente que acende a cor do status
+        border: Border(
+          left: BorderSide(color: corBorda != Colors.transparent ? corBorda : Colors.grey.shade200, width: corBorda != Colors.transparent ? 5 : 1),
+          top: BorderSide(color: Colors.grey.shade200, width: 1),
+          right: BorderSide(color: Colors.grey.shade200, width: 1),
+          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 12, right: 4, top: 8, bottom: 8),
+        leading: CircleAvatar(
+          radius: 26,
+          backgroundColor: corFundo,
+          backgroundImage: animal['foto'] != null ? NetworkImage(animal['foto']) : null,
+          child: animal['foto'] == null ? const Icon(Icons.pets, color: Colors.grey) : null,
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                animal['nome']?.isNotEmpty == true ? animal['nome'] : 'Brinco ${animal['brinco']}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: corTextoPrimario, fontSize: 16),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (emCarencia || alertaReincidencia)
+              const Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 20),
+              ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              'Brinco: ${animal['brinco']} · ${animal['total_analises'] ?? 0} análise(s)',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            // - ETIQUETA (BADGE)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: corFundoTag,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(iconeTag, size: 14, color: corTextoTag),
+                  const SizedBox(width: 4),
+                  Text(
+                    textoTag,
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: corTextoTag),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        // Menu de três pontos 
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.grey),
+          color: Colors.white,
+          surfaceTintColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          onSelected: (value) async {
+            if (value == 'visualizar') {
+              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaDetalheAnimal(animal: animal)));
+              _carregar();
+            } else if (value == 'tratamento') {
+              await Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => TelaRegistrarTratamento(
+                  animalId: animal['id'],
+                  nomeAnimal: animal['nome']?.toString().isNotEmpty == true ? animal['nome'] : animal['brinco'],
+                ),
+              ));
+              _carregar();
+            } else if (value == 'editar') {
+              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaCadastroAnimal(animal: animal)));
+              _carregar();
+            } else if (value == 'qrcode') {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaQrCodeAnimal(animal: animal)));
+            } else if (value == 'excluir') {
+              _confirmarExclusao(animal);
+            }
+          },
+          itemBuilder: (BuildContext context) => [
+            const PopupMenuItem(
+              value: 'visualizar',
+              child: Row(children: [Icon(Icons.visibility_outlined, size: 20, color: corAzulPrincipal), SizedBox(width: 12), Text('Ver Ficha')]),
+            ),
+            const PopupMenuItem(
+              value: 'tratamento',
+              child: Row(children: [Icon(Icons.medical_services_outlined, size: 20, color: corVerdeEscuro), SizedBox(width: 12), Text('Registrar Tratamento')]),
+            ),
+            const PopupMenuItem(
+              value: 'editar',
+              child: Row(children: [Icon(Icons.edit_outlined, size: 20, color: Colors.black87), SizedBox(width: 12), Text('Editar')]),
+            ),
+            const PopupMenuItem(
+              value: 'qrcode',
+              child: Row(children: [Icon(Icons.qr_code, size: 20, color: Colors.black87), SizedBox(width: 12), Text('QR Code')]),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'excluir',
+              child: Row(children: [Icon(Icons.delete_outline, size: 20, color: Colors.redAccent), SizedBox(width: 12), Text('Excluir', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))]),
+            ),
+          ],
+        ),
+        onTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => TelaDetalheAnimal(animal: animal)),
+          );
+          _carregar();
+        },
       ),
     );
   }
