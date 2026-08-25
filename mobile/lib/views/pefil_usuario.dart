@@ -281,7 +281,6 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                             // - BOTÃO LOGOUT
                             OutlinedButton.icon(
                               onPressed: _efetuarLogout,
-                              icon: const Icon(Icons.logout_outlined, color: Colors.redAccent),
                               label: const Text(
                                 'SAIR DO APLICATIVO',
                                 style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, letterSpacing: 0.5),

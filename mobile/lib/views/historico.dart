@@ -34,8 +34,8 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     
     if (historico != null) {
       historico.sort((a, b) {
-        DateTime dataA = DateTime.tryParse(a['criado_em'] ?? '') ?? DateTime.now();
-        DateTime dataB = DateTime.tryParse(b['criado_em'] ?? '') ?? DateTime.now();
+        DateTime dataA = DateTime.tryParse(a['criado_em']?.toString() ?? '') ?? DateTime.now();
+        DateTime dataB = DateTime.tryParse(b['criado_em']?.toString() ?? '') ?? DateTime.now();
         return dataB.compareTo(dataA);
       });
     }
@@ -52,7 +52,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     Map<String, List<dynamic>> mapaAgrupado = {};
     
     for (var analise in _analises) {
-      DateTime data = DateTime.tryParse(analise['criado_em'] ?? '') ?? DateTime.now();
+      DateTime data = DateTime.tryParse(analise['criado_em']?.toString() ?? '') ?? DateTime.now();
       String mesAno = DateFormat('MMMM yyyy', 'pt_BR').format(data);
       mesAno = mesAno[0].toUpperCase() + mesAno.substring(1);
 
@@ -71,7 +71,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     return Scaffold(
       backgroundColor: corFundo,
       
-      // APP BAR VERDE ARREDONDADO
+      // APP BAR 
       appBar: AppBar(
         backgroundColor: corVerdeEscuro,
         foregroundColor: Colors.white,
@@ -88,7 +88,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
         ),
       ),
       
-      // CORPO COM MARCA D'ÁGUA
+      // MARCA D'ÁGUA
       body: Stack(
         children: [
           Center(
@@ -114,7 +114,6 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         itemCount: analisesAgrupadas.length,
                         itemBuilder: (context, index) {
-                          // Extrai a chave (Mês/Ano) e a lista de análises correspondente
                           String mesChave = analisesAgrupadas.keys.elementAt(index);
                           List<dynamic> analisesDoMes = analisesAgrupadas[mesChave]!;
 
@@ -129,7 +128,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: corVerdeEscuro, 
+                                    color: Color.fromARGB(255, 10, 51, 187), 
                                   ),
                                 ),
                               ),
@@ -139,7 +138,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                                   await Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => TelaDetalheAnalise(analiseId: a['id'])),
                                   );
-                                  _carregar(); // Atualiza caso algo mude na tela de detalhes
+                                  _carregar(); 
                                 },
                                 child: _CartaoHistoricoDetalhado(analise: a),
                               )).toList(),
@@ -181,35 +180,33 @@ class _ConstruirEstadoVazio extends StatelessWidget {
   }
 }
 
-// CARTÃO DE HISTÓRICO 
+// CARTÃO DE HISTÓRICO
 class _CartaoHistoricoDetalhado extends StatelessWidget {
   final dynamic analise;
 
   const _CartaoHistoricoDetalhado({required this.analise});
 
+  // - CORES PARA A DIV INTEIRA 
   Map<String, dynamic> get _statusConfig {
-    final resultado = (analise['resultado'] as String).toLowerCase();
+    final resultado = (analise['resultado']?.toString() ?? '').toLowerCase();
     
     if (resultado.contains('possível') || resultado.contains('suspeita') || resultado.contains('mastite')) {
       return {
-        'corTexto': Colors.red.shade700,
-        'corFundo': Colors.red.shade50,
+        'corFundo': Colors.redAccent.shade400, 
         'icone': Icons.error_outline,
-        'label': 'Suspeita'
+        'label': 'Suspeita Detectada'
       };
     } else if (resultado.contains('adicional') || resultado.contains('atenção')) {
       return {
-        'corTexto': Colors.orange.shade800,
-        'corFundo': Colors.orange.shade50,
+        'corFundo': Colors.orange.shade600, 
         'icone': Icons.warning_amber_rounded,
-        'label': 'Atenção'
+        'label': 'Atenção Necessária'
       };
     } else {
       return {
-        'corTexto': Colors.green.shade700,
-        'corFundo': Colors.green.shade50,
+        'corFundo': const Color.fromARGB(255, 29, 177, 86), // Verde Escuro do App
         'icone': Icons.check_circle_outline,
-        'label': 'Saudável'
+        'label': 'Laudo Saudável'
       };
     }
   }
@@ -223,50 +220,60 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = _statusConfig;
+    final corBase = config['corFundo'] as Color;
+    
+    // Tratamento seguro da URL
+    final String imageUrl = analise['imagem_url']?.toString() ?? '';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16), 
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: corBase, 
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: corBase.withOpacity(0.4), 
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Thumbnail da Imagem 
+          // Thumbnail da Imagem com borda branca para destacar no fundo colorido
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Colors.white, width: 2), 
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                analise['imagem_url'] ?? '',
-                width: 72,
-                height: 72,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  width: 72,
-                  height: 72,
-                  color: Colors.grey.shade50,
-                  child: Icon(Icons.science, color: Colors.grey.shade300, size: 32),
-                ),
-              ),
+              borderRadius: BorderRadius.circular(10),
+              child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    width: 76,
+                    height: 76,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 76,
+                      height: 76,
+                      color: Colors.white.withOpacity(0.2),
+                      child: const Icon(Icons.science, color: Colors.white, size: 32),
+                    ),
+                  )
+                : Container(
+                    width: 76,
+                    height: 76,
+                    color: Colors.white.withOpacity(0.2),
+                    child: const Icon(Icons.science, color: Colors.white, size: 32),
+                  ),
             ),
           ),
           const SizedBox(width: 16),
           
-          // Dados Textuais e Badge
+          // Dados Textuais (Tudo em Branco)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,49 +281,52 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Badge de Status
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: config['corFundo'],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                    // Status em texto e ícone
+                    Expanded(
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(config['icone'], size: 14, color: config['corTexto']),
-                          const SizedBox(width: 4),
-                          Text(
-                            config['label'],
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: config['corTexto'],
+                          Icon(config['icone'], size: 18, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              config['label'],
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, 
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: Colors.grey.shade300, size: 20),
+                    const Icon(Icons.chevron_right, color: Colors.white70, size: 24),
                   ],
                 ),
-                const SizedBox(height: 8),
+                
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Divider(color: Colors.white30, height: 1, thickness: 1),
+                ),
+                
                 Text(
                   'Confiança: ${analise['confianca'] ?? 'N/A'}',
                   style: const TextStyle(
-                    fontSize: 14, 
-                    color: _TelaHistoricoState.corTextoPrimario, 
+                    fontSize: 15, 
+                    color: Colors.white, 
                     fontWeight: FontWeight.bold
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                    const Icon(Icons.access_time, size: 14, color: Colors.white70),
                     const SizedBox(width: 4),
                     Text(
                       _formatarDataHora(analise['criado_em']),
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: const TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
