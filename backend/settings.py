@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt', 
     'accounts', # App de autenticação
+    'alertas', # App dos alertas do rebanho
     'analises', # App das análises
     'rebanho', # App dos rebanhos
     'tratamento', # App dos tratamentos e período de carência
