@@ -22,6 +22,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
   
   // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
+  static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corFundo = Color(0xFFF4F6F8);
@@ -59,7 +60,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
     
     if (resultadoLower.contains('possível') || resultadoLower.contains('suspeita') || resultadoLower.contains('mastite')) {
       return {
-        'corFundo': Colors.redAccent, 
+        'corFundo': const Color.fromARGB(211, 255, 0, 51), 
         'corTexto': Colors.white,
         'icone': Icons.warning_amber_rounded,
         'titulo': 'ALERTA: Suspeita Detectada',
@@ -67,7 +68,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
       };
     } else if (resultadoLower.contains('adicional') || resultadoLower.contains('atenção')) {
       return {
-        'corFundo': Colors.orange.shade600, 
+        'corFundo': const Color.fromARGB(190, 253, 200, 24), 
         'corTexto': Colors.white,
         'icone': Icons.info_outline,
         'titulo': 'ATENÇÃO: Requer Cuidados',
@@ -75,7 +76,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
       };
     } else {
       return {
-        'corFundo': corVerdeEscuro, 
+        'corFundo': const Color.fromARGB(190, 71, 190, 117), 
         'corTexto': Colors.white,
         'icone': Icons.check_circle_outline,
         'titulo': 'LAUDO NORMAL: Saudável',
@@ -220,7 +221,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                             height: 240,
                             width: double.infinity,
                             decoration: const BoxDecoration(
-                              color: corVerdeEscuro,
+                              color: corVerdeClaro,
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(32),
                                 bottomRight: Radius.circular(32),

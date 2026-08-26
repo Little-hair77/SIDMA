@@ -142,7 +142,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                   width: double.infinity,
                   padding: const EdgeInsets.only(top: 50, left: 16, right: 16),
                   decoration: const BoxDecoration(
-                    color: corVerdeEscuro,
+                    color: corVerdeClaro,
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(32),
                       bottomRight: Radius.circular(32),

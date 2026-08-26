@@ -22,6 +22,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
 
   // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
+  static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corVerdePrincipal = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corFundo = Color(0xFFF4F6F8);
@@ -114,7 +115,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
 
   @override
   Widget build(BuildContext context) {
-    // Lógica de Agrupamento de Animais
     List<dynamic> listaTratamento = [];
     List<dynamic> listaAlerta = [];
     List<dynamic> listaSaudaveis = [];
@@ -132,7 +132,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     return Scaffold(
       backgroundColor: corFundo,
       appBar: AppBar(
-        backgroundColor: corVerdeEscuro,
+        backgroundColor: corVerdeClaro,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -171,7 +171,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           ),
           Column(
             children: [
-              // - BARRA DE BUSCA 
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: TextField(
@@ -208,8 +207,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                   ),
                 ),
               ),
-              
-              // - LISTA AGRUPADA
               Expanded(
                 child: _carregando
                     ? const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
@@ -224,17 +221,17 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                                   padding: const EdgeInsets.all(16),
                                   children: [
                                     if (listaTratamento.isNotEmpty) ...[
-                                      _buildSectionHeader('Em Tratamento', Colors.redAccent),
+                                      _buildSectionHeader('Em Tratamento', Colors.redAccent, 'Animais com período de carência ativo'),
                                       ...listaTratamento.map((a) => _buildAnimalCard(a)).toList(),
                                       const SizedBox(height: 16),
                                     ],
                                     if (listaAlerta.isNotEmpty) ...[
-                                      _buildSectionHeader('Em Análise / Alerta', Colors.orange),
+                                      _buildSectionHeader('Em Análise / Alerta', Colors.orange, 'Atenção necessária ou reincidência'),
                                       ...listaAlerta.map((a) => _buildAnimalCard(a)).toList(),
                                       const SizedBox(height: 16),
                                     ],
                                     if (listaSaudaveis.isNotEmpty) ...[
-                                      _buildSectionHeader('Rebanho Saudável', corVerdeEscuro),
+                                      _buildSectionHeader('Rebanho Saudável', corVerdeEscuro, 'Sem anomalias recentes registradas'),
                                       ...listaSaudaveis.map((a) => _buildAnimalCard(a)).toList(),
                                     ],
                                   ],
@@ -248,29 +245,38 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     );
   }
 
-  // COMPONENTES VISUAIS AUXILIARES
-  /// Constrói o título de cada sessão/bloco com a fonte colorida 
-  Widget _buildSectionHeader(String titulo, Color cor) {
+  Widget _buildSectionHeader(String titulo, Color cor, String subtitulo) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 4),
-      child: Text(
-        titulo,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: cor,
-          letterSpacing: 0.5,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            titulo,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: cor,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitulo,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  /// Constrói o card completo e estilizado do animal
   Widget _buildAnimalCard(dynamic animal) {
     final bool emCarencia = animal['em_carencia'] == true;
     final bool alertaReincidencia = animal['alerta_reincidencia'] == true;
 
-    // Definição dinâmica de cores com base no status do animal
     final Color corBorda = emCarencia ? Colors.redAccent : (alertaReincidencia ? Colors.orange : Colors.transparent);
     final Color corFundoTag = emCarencia ? Colors.red.shade50 : (alertaReincidencia ? Colors.orange.shade50 : Colors.green.shade50);
     final Color corTextoTag = emCarencia ? Colors.red.shade700 : (alertaReincidencia ? Colors.orange.shade800 : Colors.green.shade700);
@@ -285,7 +291,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
         ],
-        // Borda lateral inteligente que acende a cor do status
         border: Border(
           left: BorderSide(color: corBorda != Colors.transparent ? corBorda : Colors.grey.shade200, width: corBorda != Colors.transparent ? 5 : 1),
           top: BorderSide(color: Colors.grey.shade200, width: 1),
@@ -327,7 +332,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 8),
-            // - ETIQUETA (BADGE)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -348,7 +352,6 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             ),
           ],
         ),
-        // Menu de três pontos 
         trailing: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.grey),
           color: Colors.white,

@@ -47,7 +47,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
               MaterialPageRoute(builder: (_) => const TelaCaptura()),
             );
           },
-          backgroundColor: AppColors.verdePrincipal,
+          backgroundColor: const Color.fromARGB(255, 29, 177, 86),
           foregroundColor: Colors.white,
           elevation: 4,
           shape: const CircleBorder(), 

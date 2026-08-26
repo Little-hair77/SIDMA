@@ -36,7 +36,8 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
 
   // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
-  static const Color corVerdePrincipal = Color(0xFF74C319);
+  static const Color corVerdeClaro = Color(0xFF74C319);
+  static const Color corAzulPrincipal = Color(0xFF0D6EFD); 
   static const Color corFundo = Color(0xFFF4F6F8);
   static const Color corTextoPrimario = Color(0xFF1E293B);
 
@@ -75,7 +76,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: corVerdeEscuro, 
+              primary: corAzulPrincipal, 
               onPrimary: Colors.white,
               onSurface: corTextoPrimario,
             ),
@@ -102,7 +103,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
           ? '${_dataNascimento!.year.toString().padLeft(4, '0')}-${_dataNascimento!.month.toString().padLeft(2, '0')}-${_dataNascimento!.day.toString().padLeft(2, '0')}'
           : null;
 
-      // Executa a chamada da API
       final resultado = _editando
           ? await _apiService.atualizarAnimal(
               widget.animal['id'], 
@@ -169,7 +169,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     }
   }
 
-  // Opções anexar ou tirar foto
   void _mostrarOpcoesFoto() {
     showModalBottomSheet(
       context: context,
@@ -190,7 +189,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: corVerdeEscuro),
+                leading: const Icon(Icons.camera_alt_outlined, color: corAzulPrincipal),
                 title: const Text('Tirar Foto da Câmera'),
                 onTap: () {
                   Navigator.pop(context);
@@ -198,7 +197,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.image_search_outlined, color: corVerdeEscuro),
+                leading: const Icon(Icons.image_search_outlined, color: corAzulPrincipal),
                 title: const Text('Escolher da Galeria'),
                 onTap: () {
                   Navigator.pop(context);
@@ -212,7 +211,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                   onTap: () {
                     Navigator.pop(context);
                     setState(() => _fotoAnimalBytes = null);
-                    // Lógica adicional para remover foto da API pode ser necessária aqui no futuro
                   },
                 ),
               const SizedBox(height: 12),
@@ -223,7 +221,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     );
   }
 
-  // Widget auxiliar para estilizar os inputs
+  // - COMPONENTE: TEXTFIELD NEUTRO COM FOCO AZUL
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -240,18 +238,18 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(prefixIcon, color: corVerdeEscuro.withOpacity(0.7)), // Ícone verde
+        prefixIcon: Icon(prefixIcon, color: corAzulPrincipal.withOpacity(0.7)),
         filled: true,
         fillColor: Colors.white,
         labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
-        floatingLabelStyle: const TextStyle(color: corVerdeEscuro, fontWeight: FontWeight.bold),
+        floatingLabelStyle: const TextStyle(color: corAzulPrincipal, fontWeight: FontWeight.bold),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: corVerdeEscuro, width: 1.5), // Borda verde no foco
+          borderSide: const BorderSide(color: corAzulPrincipal, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -272,7 +270,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
       
       // - APP BAR VERDE ARREDONDADO 
       appBar: AppBar(
-        backgroundColor: corVerdeEscuro,
+        backgroundColor: corVerdeClaro,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
@@ -330,19 +328,19 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                       Container(
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: corVerdeEscuro.withOpacity(0.2), width: 4),
+                                          border: Border.all(color: corAzulPrincipal.withOpacity(0.2), width: 4),
                                           boxShadow: [
                                             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
                                           ],
                                         ),
                                         child: CircleAvatar(
                                           radius: 65, 
-                                          backgroundColor: corVerdeEscuro.withOpacity(0.05),
+                                          backgroundColor: corAzulPrincipal.withOpacity(0.05),
                                           backgroundImage: _fotoAnimalBytes != null 
                                               ? MemoryImage(_fotoAnimalBytes!) 
                                               : (widget.animal?['foto'] != null ? NetworkImage(widget.animal!['foto']) : null) as ImageProvider?,
                                           child: _fotoAnimalBytes == null && widget.animal?['foto'] == null
-                                              ? const Icon(Icons.pets, size: 55, color: corVerdeEscuro)
+                                              ? const Icon(Icons.pets, size: 55, color: corAzulPrincipal)
                                               : null,
                                         ),
                                       ),
@@ -351,7 +349,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                         right: 0,
                                         child: Container(
                                           decoration: BoxDecoration(
-                                            color: corVerdePrincipal,
+                                            color: corAzulPrincipal,
                                             shape: BoxShape.circle,
                                             border: Border.all(color: Colors.white, width: 3), 
                                           ),
@@ -365,7 +363,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                 const SizedBox(height: 16),
                                 Text(
                                   _fotoAnimalBytes == null && widget.animal?['foto'] == null ? 'Adicionar Foto do Animal' : 'Alterar Foto',
-                                  style: const TextStyle(color: corVerdeEscuro, fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: const TextStyle(color: corAzulPrincipal, fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
@@ -432,24 +430,24 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                   ),
                                   const SizedBox(height: 16),
                                   
-                                  // Dropdown de Sexo
+                                  // Dropdown de Sexo interativo
                                   DropdownButtonFormField<String>(
                                     value: _sexoSelected,
                                     style: const TextStyle(color: corTextoPrimario, fontSize: 15),
                                     decoration: InputDecoration(
                                       labelText: 'Sexo *',
-                                      prefixIcon: Icon(Icons.transgender, color: corVerdeEscuro.withOpacity(0.7)),
+                                      prefixIcon: Icon(Icons.transgender, color: corAzulPrincipal.withOpacity(0.7)),
                                       filled: true,
                                       fillColor: Colors.white,
                                       labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
-                                      floatingLabelStyle: const TextStyle(color: corVerdeEscuro, fontWeight: FontWeight.bold),
+                                      floatingLabelStyle: const TextStyle(color: corAzulPrincipal, fontWeight: FontWeight.bold),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(color: Colors.grey.shade200),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: corVerdeEscuro, width: 1.5),
+                                        borderSide: const BorderSide(color: corAzulPrincipal, width: 1.5),
                                       ),
                                     ),
                                     items: ['Fêmea', 'Macho'].map((String value) {
@@ -505,7 +503,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                         children: [
                                           Row(
                                             children: [
-                                              Icon(Icons.calendar_today_outlined, color: corVerdeEscuro.withOpacity(0.7)),
+                                              Icon(Icons.calendar_today_outlined, color: corAzulPrincipal.withOpacity(0.7)),
                                               const SizedBox(width: 12),
                                               const Text('Data de Nascimento', style: TextStyle(fontSize: 14, color: corTextoPrimario)),
                                             ],
@@ -513,7 +511,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                             decoration: BoxDecoration(
-                                              color: _dataNascimento != null ? corVerdeEscuro.withOpacity(0.1) : Colors.grey[100],
+                                              color: _dataNascimento != null ? corAzulPrincipal.withOpacity(0.1) : Colors.grey[100],
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
@@ -522,7 +520,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                                   : "${_dataNascimento!.day.toString().padLeft(2, '0')}/${_dataNascimento!.month.toString().padLeft(2, '0')}/${_dataNascimento!.year}",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                color: _dataNascimento != null ? corVerdeEscuro : Colors.grey[600],
+                                                color: _dataNascimento != null ? corAzulPrincipal : Colors.grey[600],
                                                 fontSize: 13,
                                               ),
                                             ),
@@ -581,7 +579,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: corVerdeEscuro,
+                                backgroundColor: corAzulPrincipal,
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size(double.infinity, 56),
                                 elevation: 2,

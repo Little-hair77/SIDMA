@@ -15,10 +15,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   List<dynamic> _analises = [];
   bool _carregando = true;
 
-  // Paleta de Cores 
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
+  static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corVerdePrincipal = Color(0xFF74C319);
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corFundo = Color(0xFFF8FAFC);
   static const Color corTextoPrimario = Color(0xFF1E293B);
 
@@ -47,7 +46,6 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     });
   }
 
-  // - LÓGICA DE AGRUPAMENTO POR MÊS/ANO 
   Map<String, List<dynamic>> _agruparAnalises() {
     Map<String, List<dynamic>> mapaAgrupado = {};
     
@@ -71,9 +69,8 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     return Scaffold(
       backgroundColor: corFundo,
       
-      // APP BAR 
       appBar: AppBar(
-        backgroundColor: corVerdeEscuro,
+        backgroundColor: corVerdeClaro,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -88,7 +85,6 @@ class _TelaHistoricoState extends State<TelaHistorico> {
         ),
       ),
       
-      // MARCA D'ÁGUA
       body: Stack(
         children: [
           Center(
@@ -120,7 +116,6 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // - CABEÇALHO DO GRUPO (MÊS)
                               Padding(
                                 padding: const EdgeInsets.only(top: 16, bottom: 12),
                                 child: Text(
@@ -128,19 +123,18 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Color.fromARGB(255, 10, 51, 187), 
+                                    color: corVerdeEscuro, 
                                   ),
                                 ),
                               ),
-                              // - LISTA DE ITENS DO MÊS
-                              ...analisesDoMes.map((a) => GestureDetector(
-                                onTap: () async {
+                              ...analisesDoMes.map((a) => _CartaoHistoricoDetalhado(
+                                analise: a,
+                                aoClicar: () async {
                                   await Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => TelaDetalheAnalise(analiseId: a['id'])),
                                   );
                                   _carregar(); 
                                 },
-                                child: _CartaoHistoricoDetalhado(analise: a),
                               )).toList(),
                             ],
                           );
@@ -153,7 +147,6 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   }
 }
 
-// WIDGET ESTADO VAZIO
 class _ConstruirEstadoVazio extends StatelessWidget {
   const _ConstruirEstadoVazio({Key? key}) : super(key: key);
 
@@ -180,31 +173,30 @@ class _ConstruirEstadoVazio extends StatelessWidget {
   }
 }
 
-// CARTÃO DE HISTÓRICO
 class _CartaoHistoricoDetalhado extends StatelessWidget {
   final dynamic analise;
+  final VoidCallback aoClicar;
 
-  const _CartaoHistoricoDetalhado({required this.analise});
+  const _CartaoHistoricoDetalhado({required this.analise, required this.aoClicar});
 
-  // - CORES PARA A DIV INTEIRA 
   Map<String, dynamic> get _statusConfig {
-    final resultado = (analise['resultado']?.toString() ?? '').toLowerCase();
+    final resultado = (analise['resultado']?.toString() ?? 'Desconhecido').toLowerCase();
     
     if (resultado.contains('possível') || resultado.contains('suspeita') || resultado.contains('mastite')) {
       return {
-        'corFundo': Colors.redAccent.shade400, 
+        'corFundo': const Color.fromARGB(190, 255, 0, 51), 
         'icone': Icons.error_outline,
         'label': 'Suspeita Detectada'
       };
     } else if (resultado.contains('adicional') || resultado.contains('atenção')) {
       return {
-        'corFundo': Colors.orange.shade600, 
+        'corFundo': const Color.fromARGB(190, 253, 200, 24), 
         'icone': Icons.warning_amber_rounded,
         'label': 'Atenção Necessária'
       };
     } else {
       return {
-        'corFundo': const Color.fromARGB(255, 29, 177, 86), // Verde Escuro do App
+        'corFundo': const Color.fromARGB(190, 71, 190, 117),
         'icone': Icons.check_circle_outline,
         'label': 'Laudo Saudável'
       };
@@ -221,15 +213,11 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = _statusConfig;
     final corBase = config['corFundo'] as Color;
-    
-    // Tratamento seguro da URL
     final String imageUrl = analise['imagem_url']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16), 
       decoration: BoxDecoration(
-        color: corBase, 
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -239,101 +227,92 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Thumbnail da Imagem com borda branca para destacar no fundo colorido
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white, width: 2), 
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: imageUrl.isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 76,
-                      height: 76,
-                      color: Colors.white.withOpacity(0.2),
-                      child: const Icon(Icons.science, color: Colors.white, size: 32),
-                    ),
-                  )
-                : Container(
-                    width: 76,
-                    height: 76,
-                    color: Colors.white.withOpacity(0.2),
-                    child: const Icon(Icons.science, color: Colors.white, size: 32),
-                  ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          
-          // Dados Textuais (Tudo em Branco)
-          Expanded(
-            child: Column(
+      child: Material(
+        color: corBase,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: aoClicar,
+          hoverColor: Colors.black12,
+          splashColor: Colors.black26,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Status em texto e ícone
-                    Expanded(
-                      child: Row(
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white54, width: 2), 
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.science, color: Colors.white, size: 32),
+                        )
+                      : const Icon(Icons.science, color: Colors.white, size: 32),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Icon(config['icone'], size: 18, color: Colors.white),
+                          Icon(config['icone'], size: 20, color: Colors.white),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               config['label'],
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white, 
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const Icon(Icons.chevron_right, color: Colors.white70, size: 24),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Confiança: ${analise['confianca'] ?? 'N/A'}',
+                        style: const TextStyle(
+                          fontSize: 14, 
+                          color: Colors.white, 
+                          fontWeight: FontWeight.w600
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time, size: 14, color: Colors.white70),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatarDataHora(analise['criado_em']),
+                            style: const TextStyle(fontSize: 12, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 
                 const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Divider(color: Colors.white30, height: 1, thickness: 1),
-                ),
-                
-                Text(
-                  'Confiança: ${analise['confianca'] ?? 'N/A'}',
-                  style: const TextStyle(
-                    fontSize: 15, 
-                    color: Colors.white, 
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.white70),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatarDataHora(analise['criado_em']),
-                      style: const TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500),
-                    ),
-                  ],
+                  padding: EdgeInsets.only(top: 24),
+                  child: Icon(Icons.chevron_right, color: Colors.white70, size: 28),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

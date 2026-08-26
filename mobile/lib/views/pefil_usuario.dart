@@ -23,6 +23,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
 
   // Paleta de Cores
   static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
+  static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corVerdePrincipal = Color(0xFF74C319);
 
   @override
@@ -123,6 +124,31 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
     );
   }
 
+  Future<void> _confirmarLogout() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair do Aplicativo?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Tem certeza que deseja sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      _efetuarLogout();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,7 +156,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
       
       // APP BAR 
       appBar: AppBar(
-        backgroundColor: corVerdeEscuro,
+        backgroundColor: corVerdeClaro,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -200,7 +226,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 2), // Borda para separar da foto
+                                          border: Border.all(color: Colors.white, width: 2), 
                                         ),
                                         child: CircleAvatar(
                                           radius: 18,
@@ -269,27 +295,17 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                         _buildAcaoMenu(Icons.notifications_none, 'Notificações', onTap: () {}),
                                         _buildAcaoMenu(Icons.security, 'Segurança e Senha', onTap: () {}),
                                         _buildAcaoMenu(Icons.help_outline, 'Suporte SIDMA', onTap: () {}),
+                                        const Divider(height: 1, thickness: 0.5),
+                                        _buildAcaoMenu(
+                                          Icons.exit_to_app, 
+                                          'Sair', 
+                                          corPersonalizada: Colors.redAccent, 
+                                          onTap: _confirmarLogout
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                            
-                            const SizedBox(height: 32),
-
-                            // - BOTÃO LOGOUT
-                            OutlinedButton.icon(
-                              onPressed: _efetuarLogout,
-                              label: const Text(
-                                'SAIR DO APLICATIVO',
-                                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: Colors.red.shade50,
-                                minimumSize: const Size(double.infinity, 56),
-                                side: const BorderSide(color: Colors.redAccent, width: 1.2),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                               ),
                             ),
                             
@@ -364,22 +380,22 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   }
 
   // Widget auxiliar para os menus da base do card
-  Widget _buildAcaoMenu(IconData icon, String titulo, {required VoidCallback onTap}) {
+  Widget _buildAcaoMenu(IconData icon, String titulo, {required VoidCallback onTap, Color? corPersonalizada}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: Colors.grey.shade600, size: 20),
+            Icon(icon, color: corPersonalizada ?? Colors.grey.shade600, size: 20),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 titulo,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textoPrimario),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: corPersonalizada ?? AppColors.textoPrimario),
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 20),
+            Icon(Icons.chevron_right, color: corPersonalizada?.withOpacity(0.5) ?? Colors.grey.shade400, size: 20),
           ],
         ),
       ),

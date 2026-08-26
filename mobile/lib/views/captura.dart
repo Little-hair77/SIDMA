@@ -16,7 +16,6 @@ class _TelaCapturaState extends State<TelaCaptura> {
   String? _nomeArquivo;
   bool _estaCarregando = false;
   
-  // Alterado: Agora guardamos o mapa completo da resposta para criar uma UI mais rica
   Map<String, dynamic>? _resultadoIA;
   String? _erroAcesso;
 
@@ -27,8 +26,10 @@ class _TelaCapturaState extends State<TelaCaptura> {
   final ApiService _apiService = ApiService();
 
   // Paleta de Cores
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
+  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
+  static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corVerdePrincipal = Color(0xFF74C319);
+  static const Color corAzulPrincipal = Color(0xFF0D6EFD); 
   static const Color corFundo = Color(0xFFF8FAFC);
   static const Color corTextoPrimario = Color(0xFF1E293B);
 
@@ -63,16 +64,21 @@ class _TelaCapturaState extends State<TelaCaptura> {
     if (animalEncontrado != null) {
       setState(() => _animalSelecionado = animalEncontrado);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Animal identificado: ${animalEncontrado['brinco']}')),
+        SnackBar(
+          content: Text('Animal identificado: ${animalEncontrado['brinco']}'),
+          backgroundColor: corVerdeEscuro,
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nenhum animal cadastrado corresponde a esse código.')),
+        const SnackBar(
+          content: Text('Nenhum animal cadastrado corresponde a esse código.'),
+          backgroundColor: Colors.orange,
+        ),
       );
     }
   }
 
-  // Função para abrir a câmera
   Future<void> _tirarFoto() async {
     try {
       final XFile? foto = await _picker.pickImage(
@@ -96,7 +102,6 @@ class _TelaCapturaState extends State<TelaCaptura> {
     }
   }
 
-  // Função para enviar a foto para a API
   Future<void> _analisarAmostra() async {
     if (_imagem == null) return;
 
@@ -121,17 +126,17 @@ class _TelaCapturaState extends State<TelaCaptura> {
     });
   }
 
-  // Helper para definir as cores do resultado
+  // - LÓGICA DE CORES PARA O RESULTADO 
   Map<String, dynamic> get _configResultado {
     if (_resultadoIA == null) return {};
     final resultadoStr = (_resultadoIA!['resultado'] as String).toLowerCase();
     
-    if (resultadoStr.contains('possível') || resultadoStr.contains('suspeita')) {
-      return {'corBase': Colors.red, 'icone': Icons.error_outline, 'titulo': 'ALERTA'};
+    if (resultadoStr.contains('possível') || resultadoStr.contains('suspeita') || resultadoStr.contains('mastite')) {
+      return {'corBase': Colors.redAccent.shade400, 'icone': Icons.error_outline, 'titulo': 'ALERTA DETECTADO'};
     } else if (resultadoStr.contains('adicional') || resultadoStr.contains('atenção')) {
-      return {'corBase': Colors.orange, 'icone': Icons.warning_amber_rounded, 'titulo': 'ATENÇÃO'};
+      return {'corBase': Colors.orange.shade600, 'icone': Icons.warning_amber_rounded, 'titulo': 'ATENÇÃO NECESSÁRIA'};
     } else {
-      return {'corBase': Colors.green, 'icone': Icons.check_circle_outline, 'titulo': 'SAUDÁVEL'};
+      return {'corBase': corVerdeEscuro, 'icone': Icons.check_circle_outline, 'titulo': 'LAUDO SAUDÁVEL'};
     }
   }
 
@@ -139,201 +144,221 @@ class _TelaCapturaState extends State<TelaCaptura> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: corFundo,
+      
+      // APP BAR 
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 1,
-        shadowColor: Colors.black12,
-        iconTheme: const IconThemeData(color: corAzulPrincipal),
+        backgroundColor: corVerdeClaro,
+        foregroundColor: Colors.white,
+        elevation: 0,
         title: const Text(
           'Nova Análise',
-          style: TextStyle(
-            color: corTextoPrimario,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(32),
           ),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // --- INSTRUÇÕES ---
-              const Text(
-                'Captura de Amostra',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: corTextoPrimario),
+      
+      body: Stack(
+        children: [
+          // MARCA D'ÁGUA
+          Center(
+            child: Opacity(
+              opacity: 0.04,
+              child: Image.asset(
+                'assets/images/logoSIDMA-2.png',
+                width: 250,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Posicione a amostra de leite em um local bem iluminado e evite sombras para garantir a precisão da Inteligência Artificial.',
-                style: TextStyle(color: Colors.black54, fontSize: 15, height: 1.4),
-              ),
-              const SizedBox(height: 24),
+            ),
+          ),
 
-              // --- SELEÇÃO DE ANIMAL (OPCIONAL) ---
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade200),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.pets, color: corVerdePrincipal),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<dynamic>(
-                          isExpanded: true,
-                          value: _animalSelecionado,
-                          hint: const Text('Vincular a um animal (opcional)', style: TextStyle(color: Colors.black54)),
-                          items: _animais.map<DropdownMenuItem<dynamic>>((a) {
-                            return DropdownMenuItem(
-                              value: a,
-                              child: Text(
-                                a['nome']?.isNotEmpty == true ? '${a['nome']} (${a['brinco']})' : a['brinco'],
-                                style: const TextStyle(color: corTextoPrimario),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // - INSTRUÇÕES
+                  const Text(
+                    'Captura de Amostra',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: corTextoPrimario),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Posicione a amostra de leite em um local bem iluminado e evite sombras para garantir a precisão da Inteligência Artificial.',
+                    style: TextStyle(color: Colors.black54, fontSize: 15, height: 1.4),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // - SELEÇÃO DE ANIMAL
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.pets, color: corAzulPrincipal),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<dynamic>(
+                              isExpanded: true,
+                              value: _animalSelecionado,
+                              hint: const Text('Vincular a um animal (opcional)', style: TextStyle(color: Colors.black54)),
+                              items: _animais.map<DropdownMenuItem<dynamic>>((a) {
+                                return DropdownMenuItem(
+                                  value: a,
+                                  child: Text(
+                                    a['nome']?.isNotEmpty == true ? '${a['nome']} (${a['brinco']})' : a['brinco'],
+                                    style: const TextStyle(color: corTextoPrimario),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (valor) => setState(() => _animalSelecionado = valor),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.qr_code_scanner, color: corAzulPrincipal), // Retornado ao Azul
+                          tooltip: 'Escanear QR Code do animal',
+                          onPressed: _escanearAnimal,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // - ÁREA DE EXIBIÇÃO DA IMAGEM 
+                  Container(
+                    height: 320,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _imagem != null ? corAzulPrincipal.withOpacity(0.3) : Colors.grey.shade300,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                      ],
+                    ),
+                    child: _imagem != null
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(18),
+                                child: Image.memory(_imagem!, fit: BoxFit.cover),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (valor) => setState(() => _animalSelecionado = valor),
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.black54,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.refresh, color: Colors.white),
+                                    onPressed: _tirarFoto,
+                                    tooltip: 'Tirar nova foto',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: corAzulPrincipal.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.camera_alt_outlined, size: 48, color: corAzulPrincipal),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Nenhuma amostra capturada',
+                                style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Toque no botão abaixo para abrir a câmera',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // - MENSAGEM DE ERRO 
+                  if (_erroAcesso != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50, 
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                      ),
+                      child: Text(_erroAcesso!, style: TextStyle(color: Colors.red.shade700), textAlign: TextAlign.center),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // - AÇÕES / ESTADO DE CARREGAMENTO / RESULTADO
+                  if (_estaCarregando)
+                    _ConstruirEstadoProcessamento()
+                  else if (_resultadoIA != null)
+                    _ConstruirCartaoResultado()
+                  else ...[
+                    if (_imagem == null)
+                      OutlinedButton.icon(
+                        onPressed: _tirarFoto,
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('ABRIR CÂMERA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: corAzulPrincipal, // Retornado ao Azul Interativo
+                          side: const BorderSide(color: corAzulPrincipal, width: 2),
+                          minimumSize: const Size(double.infinity, 56),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.qr_code_scanner, color: corAzulPrincipal),
-                      tooltip: 'Escanear QR Code do animal',
-                      onPressed: _escanearAnimal,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              // --- ÁREA DE EXIBIÇÃO DA IMAGEM ---
-              Container(
-                height: 320,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: _imagem != null ? corAzulPrincipal.withOpacity(0.3) : Colors.grey.shade300,
-                    width: 2,
-                    // Se não tiver imagem, simula um tracejado (visualmente representado por borda mais clara)
-                  ),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: _imagem != null
-                    ? Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Image.memory(_imagem!, fit: BoxFit.cover),
-                          ),
-                          // Botão sobreposto para refazer a foto facilmente
-                          Positioned(
-                            top: 12,
-                            right: 12,
-                            child: CircleAvatar(
-                              backgroundColor: Colors.black54,
-                              child: IconButton(
-                                icon: const Icon(Icons.refresh, color: Colors.white),
-                                onPressed: _tirarFoto,
-                                tooltip: 'Tirar nova foto',
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: corAzulPrincipal.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.camera_alt_outlined, size: 48, color: corAzulPrincipal),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Nenhuma amostra capturada',
-                            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Toque no botão abaixo para abrir a câmera',
-                            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-                          ),
-                        ],
+                    if (_imagem != null)
+                      ElevatedButton.icon(
+                        onPressed: _analisarAmostra,
+                        icon: const Icon(Icons.memory),
+                        label: const Text('ANALISAR COM IA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: corVerdePrincipal, 
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 56),
+                          elevation: 4,
+                          shadowColor: corVerdePrincipal.withOpacity(0.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
                       ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 32),
-
-              // --- MENSAGEM DE ERRO ---
-              if (_erroAcesso != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-                  child: Text(_erroAcesso!, style: TextStyle(color: Colors.red.shade700), textAlign: TextAlign.center),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // --- AÇÕES / ESTADO DE CARREGAMENTO / RESULTADO ---
-              if (_estaCarregando)
-                _ConstruirEstadoProcessamento()
-              else if (_resultadoIA != null)
-                _ConstruirCartaoResultado()
-              else ...[
-                // Mostrar botão de Capturar APENAS se ainda não tiver imagem
-                if (_imagem == null)
-                  OutlinedButton.icon(
-                    onPressed: _tirarFoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('ABRIR CÂMERA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: corAzulPrincipal,
-                      side: const BorderSide(color: corAzulPrincipal, width: 2),
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ),
-
-                // Mostrar botão de Analisar APENAS se tiver imagem
-                if (_imagem != null)
-                  ElevatedButton.icon(
-                    onPressed: _analisarAmostra,
-                    icon: const Icon(Icons.memory),
-                    label: const Text('ANALISAR COM IA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: corVerdePrincipal,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 56),
-                      elevation: 4,
-                      shadowColor: corVerdePrincipal.withOpacity(0.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ),
-              ],
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  // --- WIDGET EXTRAÍDO: ESTADO DE PROCESSAMENTO ---
+  // - WIDGET: ESTADO DE PROCESSAMENTO 
   Widget _ConstruirEstadoProcessamento() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -361,62 +386,61 @@ class _TelaCapturaState extends State<TelaCaptura> {
     );
   }
 
-  // --- WIDGET EXTRAÍDO: CARTÃO DE RESULTADO ---
+  // - WIDGET: CARTÃO DE RESULTADO
   Widget _ConstruirCartaoResultado() {
     final config = _configResultado;
-    final cor = config['corBase'] as MaterialColor;
+    final cor = config['corBase'] as Color;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: cor.shade50,
+        color: cor, 
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cor.shade300, width: 1.5),
         boxShadow: [
-          BoxShadow(color: cor.withOpacity(0.1), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(color: cor.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
         children: [
-          Icon(config['icone'], size: 48, color: cor.shade700),
+          Icon(config['icone'], size: 56, color: Colors.white),
           const SizedBox(height: 12),
           Text(
             config['titulo'],
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cor.shade800, letterSpacing: 1.5),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.5),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             _resultadoIA!['resultado'],
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: corTextoPrimario),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(),
+            child: Divider(color: Colors.white30, thickness: 1),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.analytics_outlined, size: 20, color: Colors.grey.shade700),
+              const Icon(Icons.analytics_outlined, size: 20, color: Colors.white70),
               const SizedBox(width: 8),
               Text(
-                'Grau de Confiança (IA): ${_resultadoIA!['confianca']}',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+                'Confiança (IA): ${_resultadoIA!['confianca']}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ],
           ),
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Volta para o Dashboard após ver o resultado
+              Navigator.of(context).pop(); 
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: corTextoPrimario,
-              side: BorderSide(color: Colors.grey.shade400),
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Colors.white70, width: 1.5),
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Concluir e Voltar'),
+            child: const Text('CONCLUIR E VOLTAR', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

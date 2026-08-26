@@ -21,7 +21,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
   List<dynamic> _analises = [];
 
   // Paleta de Cores
-  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
+  static const Color corVerdeEscuro = Color.fromARGB(255, 24, 134, 66); 
   static const Color corVerdeClaro = Color(0xFF74C319);
   static const Color corAzulPrincipal = Color(0xFF0D6EFD);
   static const Color corFundo = Color(0xFFF4F6F8);
@@ -111,7 +111,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                           padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
                           width: double.infinity,
                           decoration: const BoxDecoration(
-                            color: corVerdeEscuro,
+                            color: corVerdeClaro,
                             borderRadius: BorderRadius.only(
                               bottomLeft: Radius.circular(32),
                               bottomRight: Radius.circular(32),
