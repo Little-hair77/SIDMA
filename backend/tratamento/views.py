@@ -43,4 +43,8 @@ def tratamentos(request, animal_id):
         data_fim_carencia = parse_date(data_fim_raw),
         observacoes = (request.data.get('observacoes') or '').strip(), 
     )
+
+    from alertas.services import verificar_alerta_carencia
+    verificar_alerta_carencia(tratamento)
+    
     return Response({'status': 'sucesso', 'tratamento': serializar_tratamento(tratamento)})

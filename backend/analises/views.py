@@ -54,6 +54,10 @@ def diagnosticar_leite(request):
         confianca=confianca,
     )
 
+    if animal:
+        from alertas.services import verificar_alerta_reincidencia
+        verificar_alerta_reincidencia(animal)
+
     resposta = serializar_analise(analise, request)
     resposta['status'] = 'sucesso'
     resposta['mensagem'] = 'Análise processada com sucesso (Simulação).'
