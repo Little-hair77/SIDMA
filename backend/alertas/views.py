@@ -27,3 +27,15 @@ def listar_alertas(request):
     alertas = Alerta.objects.filter(usuario=request.user, ativo=True).select_related('animal')
     return Response({'status': 'sucesso', 'alertas': [serializar_alerta(a) for a in alertas]})
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def resolver_alerta(request, alerta_id):
+    try:
+        alerta = Alerta.objects.get(id=alerta_id, usuario=request.user)
+    except Alerta.DoesNotExist:
+        return Response({'status': 'erro', 'mensagem': 'Alerta não encontrado.'}, status=404)
+
+    alerta_ativo = False
+    alerta.resolvido_em = timezone.now()
+    alerta.save()
+    return Response({'status': 'sucesso'})
