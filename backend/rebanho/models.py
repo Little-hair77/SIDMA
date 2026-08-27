@@ -11,7 +11,10 @@ class Animal(models.Model):
     nome = models.CharField(max_length=100, blank=True)
     raca = models.CharField(max_length=100, blank=True)
     data_nascimento = models.DateField(blank=True, null=True)
-    
+    data_ultimo_cio = models.DateField(
+        blank=True, null=True,
+        help_text="Data do último cio observado, usada para prever a próximo (~21 dias depois)"
+    )
     sexo = models.CharField(
         max_length=10, 
         choices=[('Fêmea', 'Fêmea'), ('Macho', 'Macho')], 
