@@ -328,4 +328,75 @@ class ApiService {
       return false;
     }
   }
+
+  // - RECUPERAÇÃO DE SENHA
+  Future<Map<String, dynamic>> solicitarRecuperacaoSenha(String email) async {
+    try {
+      final response = await _dio.post("auth/recuperar-senha/solicitar/", data: {"email": email});
+      return {
+        'sucesso': response.statusCode == 200,
+        'mensagem': response.data['mensagem'] ?? '',
+      };
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  Future<Map<String, dynamic>> confirmarRecuperacaoSenha(String email, String codigo, String novaSenha) async {
+    try {
+      final response = await _dio.post("auth/recuperar-senha/confirmar/", data: {
+        "email": email,
+        "codigo": codigo,
+        "nova_senha": novaSenha,
+      });
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'sucesso': true, 'mensagem': response.data['mensagem'] ?? ''};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível redefinir a senha.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  // - REGISTRO DE CCS (Contagem de Células Somáticas)
+  Future<List<dynamic>?> listarRegistrosCcs(int animalId) async {
+    try {
+      final response = await _dio.get("animais/$animalId/ccs/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['registros_ccs'];
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao listar registros de CCS: ${e.message}");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> registrarCcs(int animalId, int valorCcs, String dataColeta, {String? laboratorio, String? observacoes}) async {
+    try {
+      final response = await _dio.post("animais/$animalId/ccs/", data: {
+        "valor_ccs": valorCcs,
+        "data_coleta": dataColeta,
+        if (laboratorio != null && laboratorio.isNotEmpty) "laboratorio": laboratorio,
+        if (observacoes != null && observacoes.isNotEmpty) "observacoes": observacoes,
+      });
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'sucesso': true, 'registro_ccs': response.data['registro_ccs']};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao registrar CCS.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  Future<bool> excluirRegistroCcs(int animalId, int registroId) async {
+    try {
+      final response = await _dio.delete("animais/$animalId/ccs/$registroId/");
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      print("Erro ao excluir registro de CCS: ${e.message}");
+      return false;
+    }
+  }
 }

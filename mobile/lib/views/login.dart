@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import '../navigation/nav.dart';
 import 'cadastro.dart';
+import 'recuperar_senha.dart';
 
 const String _webClientId =
     '286956469225-sc8ji78jvpllpr7qjfiu7sv8ak0i0e3h.apps.googleusercontent.com';
@@ -260,7 +261,9 @@ class _TelaLoginState extends State<TelaLogin> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // Lógica de recuperação de senha
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const TelaRecuperarSenha()),
+                            );
                           },
                           style: TextButton.styleFrom(foregroundColor: corAzulPrincipal),
                           child: const Text('Esqueceu a senha?', style: TextStyle(fontSize: 13)),
