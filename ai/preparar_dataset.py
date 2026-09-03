@@ -1,21 +1,3 @@
-"""
-Script de validação e diagnóstico do dataset ANTES do treinamento.
-
-Por quê rodar isso primeiro? A causa mais comum de um modelo de IA com
-desempenho ruim em TCC não é a arquitetura da rede — é um dataset com
-problemas que passaram despercebidos: imagens corrompidas, classes muito
-desbalanceadas, duplicatas entre treino/teste, imagens de tamanho ou
-qualidade muito heterogênea, etc. Este script varre `ai/dataset/` e gera
-um relatório antes de você gastar tempo de treinamento em cima de dados
-com problemas.
-
-Uso:
-    cd ai
-    python preparar_dataset.py
-
-Não requer TensorFlow — só Pillow (já é dependência do projeto).
-"""
-
 import hashlib
 import json
 from collections import defaultdict

@@ -1,18 +1,3 @@
-"""
-Teste rápido do modelo treinado em UMA imagem, direto pelo terminal —
-sem precisar subir o backend Django/Flutter só para conferir se o modelo
-está classificando de forma razoável.
-
-Uso:
-    python testar_modelo.py caminho/para/imagem.jpg
-    python testar_modelo.py caminho/para/imagem.jpg --limiar 70
-
-Usa exatamente o mesmo pré-processamento (resize 224x224, RGB) e a mesma
-lógica de limiar de confiança que o backend usa em `analises/ia.py`, para
-que o resultado aqui seja um previsor confiável do que vai acontecer em
-produção.
-"""
-
 import argparse
 import json
 from pathlib import Path

@@ -1,36 +1,3 @@
-"""
-Script de treinamento do modelo de classificação de mastite clínica (SIDMA).
-
-Uso esperado do dataset (já é a estrutura que você tem):
-
-    ai/dataset/
-        saudavel/       <- imagens de leite sem indícios de mastite
-        com_mastite/    <- imagens de leite com indícios de mastite clínica
-
-O script:
-  1. Divide automaticamente as imagens em treino / validação / teste
-     (padrão: 70% / 15% / 15%), de forma estratificada por classe.
-  2. Usa transfer learning com MobileNetV2 (pré-treinada na ImageNet),
-     adequado para datasets pequenos/médios como costuma ser o caso em TCC.
-  3. Treina em duas fases: (a) apenas o "topo" da rede, com o backbone
-     congelado; (b) fine-tuning das últimas camadas do backbone, com
-     taxa de aprendizado baixa.
-  4. Avalia no conjunto de teste com acurácia, precisão, recall, F1-score
-     e matriz de confusão (métricas descritas na metodologia do TCC).
-  5. Salva o modelo treinado em ai/models/mastite_model.keras e o mapa de
-     classes em ai/models/labels.json, prontos para o backend consumir.
-
-Requisitos (adicionar ao requirements.txt do backend, ou usar um venv
-separado só para treinamento):
-    tensorflow
-    scikit-learn
-    matplotlib
-
-Execução:
-    python train_model.py
-    python train_model.py --epochs 20 --fine-tune-epochs 10
-"""
-
 import argparse
 import json
 import random
