@@ -10,7 +10,7 @@ class ApiService {
   // - Emulador Android: 10.0.2.2 (alias especial que aponta para o localhost do PC hospedeiro)
   // - iOS simulator / outros: 127.0.0.1
   //
-  // ATENÇÃO: se for testar em um CELULAR FÍSICO (não emulador), troque o valor abaixo
+  // ATENÇÃO: testando em um CELULAR FÍSICO (não emulador), troque o valor abaixo
   // pelo IP da sua máquina na rede local (ex: "http://192.168.0.15:8000/api/"),
   // descoberto com `ipconfig` no PowerShell — com o celular na mesma rede Wi-Fi do PC.
   static String _resolverBaseUrl() {
@@ -330,6 +330,7 @@ class ApiService {
   }
 
   // - RECUPERAÇÃO DE SENHA
+
   Future<Map<String, dynamic>> solicitarRecuperacaoSenha(String email) async {
     try {
       final response = await _dio.post("auth/recuperar-senha/solicitar/", data: {"email": email});
@@ -361,6 +362,7 @@ class ApiService {
   }
 
   // - REGISTRO DE CCS (Contagem de Células Somáticas)
+
   Future<List<dynamic>?> listarRegistrosCcs(int animalId) async {
     try {
       final response = await _dio.get("animais/$animalId/ccs/");
@@ -396,6 +398,40 @@ class ApiService {
       return response.statusCode == 200;
     } on DioException catch (e) {
       print("Erro ao excluir registro de CCS: ${e.message}");
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> buscarAnimal(int id) async {
+    try {
+      final response = await _dio.get("animais/$id/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['animal'];
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao buscar animal: ${e.message}");
+      return null;
+    }
+  }
+
+  // - ALERTAS AUTOMÁTICOS (reincidência, carência, cio, CCS elevada)
+
+  Future<List<dynamic>?> listarAlertas() async {
+    try {
+      final response = await _dio.get("alertas/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') return response.data['alertas'];
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao listar alertas: ${e.message}");
+      return null;
+    }
+  }
+
+  Future<bool> resolverAlerta(int alertaId) async {
+    try {
+      final response = await _dio.patch("alertas/$alertaId/resolver/");
+      return response.statusCode == 200 && response.data['status'] == 'sucesso';
+    } on DioException catch (e) {
+      print("Erro ao resolver alerta: ${e.message}");
       return false;
     }
   }

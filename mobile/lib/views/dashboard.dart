@@ -4,6 +4,7 @@ import 'captura.dart';
 import 'historico.dart';
 import 'login.dart';
 import 'detalhe_analise.dart';
+import 'alerta_bell_button.dart';
 // import 'animais.dart'; 
 
 class TelaDashboard extends StatefulWidget {
@@ -144,6 +145,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                   ],
                                 ),
                               ),
+                              const BotaoSinoAlertas(corIcone: Colors.white),
                               IconButton(
                                 icon: const Icon(Icons.logout, color: Colors.white),
                                 onPressed: _sair,
