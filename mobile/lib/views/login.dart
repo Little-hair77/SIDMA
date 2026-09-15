@@ -33,10 +33,12 @@ class _TelaLoginState extends State<TelaLogin> {
   );
 
   // Paleta de Cores
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD); 
-  static const Color corVerdePrincipal = Color(0xFF74C319); 
-  static const Color corTextoPrimario = Color(0xFF1E293B); 
-  static const Color corFundo = Colors.white; 
+  static const Color corVerdePrimaria = Color(0xFF10B981); 
+  static const Color corAzulMarinho   = Color(0xFF1E293B); 
+  static const Color corTextoPrimario = Color(0xFF0F172A); 
+  static const Color corTextoSecundario = Color(0xFF64748B); 
+  static const Color corCampoFundo    = Color(0xFFF1F5F9); 
+  static const Color corFundo         = Color(0xFFF8FAFC); 
 
   @override
   void dispose() {
@@ -128,100 +130,104 @@ class _TelaLoginState extends State<TelaLogin> {
     }
   }
 
-  // Helper para criar o estilo dos campos de texto (evita repetição)
-  InputDecoration _estiloCampo({required String rotulo, required IconData iconePrefixo, Widget? iconeSufixo}) {
+  InputDecoration _estiloCampo({
+    required String rotulo, 
+    required IconData iconePrefixo, 
+    Widget? iconeSufixo,
+  }) {
     return InputDecoration(
       labelText: rotulo,
-      labelStyle: const TextStyle(color: Colors.grey),
-      prefixIcon: Icon(iconePrefixo, color: corAzulPrincipal),
+      labelStyle: const TextStyle(color: corTextoSecundario, fontSize: 14),
+      prefixIcon: Icon(iconePrefixo, color: corTextoSecundario, size: 22),
       suffixIcon: iconeSufixo,
       filled: true,
-      fillColor: Colors.grey[100], 
-      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16), // Aumenta a área de toque
+      fillColor: corCampoFundo, 
+      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none, // Remove a borda padrão
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: corAzulPrincipal, width: 2), 
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: corVerdePrimaria, width: 1.8), 
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.8),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Definindo um ThemeData local para garantir o estilo Material 3 e cores corretas
     return Theme(
       data: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: corAzulPrincipal,
-          primary: corAzulPrincipal,
-          secondary: corVerdePrincipal,
-          background: corFundo,
+          seedColor: corVerdePrimaria,
+          primary: corVerdePrimaria,
+          secondary: corAzulMarinho,
+          surface: corFundo,
         ),
-        // Se usar Google Fonts, descomente abaixo:
-        // textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
       ),
       child: Scaffold(
         backgroundColor: corFundo,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420), // Um pouco mais largo para tablets/web
+                constraints: const BoxConstraints(maxWidth: 400),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // --- CABEÇALHO ---
+                      // - CABEÇALHO 
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
+                        padding: const EdgeInsets.only(bottom: 12.0),
                         child: Image.asset(
                           'assets/images/logoSIDMA-2.png', 
-                          height: 120, 
+                          height: 110, 
                           fit: BoxFit.contain,
                         ),
                       ),
                       
-                      Text(
+                      const Text(
                         'SIDMA',
                         style: TextStyle(
-                          fontSize: 36, 
+                          fontSize: 34, 
                           fontWeight: FontWeight.w900, 
-                          color: corAzulPrincipal, 
-                          letterSpacing: 1.2,
+                          color: corAzulMarinho, 
+                          letterSpacing: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       const Text(
                         'Sistema Inteligente de Auxílio\nao Diagnóstico de Mastite',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.black54, 
-                          height: 1.3, 
+                          fontSize: 14,
+                          color: corTextoSecundario, 
+                          height: 1.35, 
                         ),
                       ),
-                      const SizedBox(height: 48), 
+                      const SizedBox(height: 40), 
 
-                      // --- CAMPOS DE ENTRADA ---
+                      // - CAMPOS DE ENTRADA 
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: corTextoPrimario),
+                        style: const TextStyle(color: corTextoPrimario, fontSize: 15),
                         decoration: _estiloCampo(
                           rotulo: 'E-mail',
                           iconePrefixo: Icons.email_outlined,
@@ -232,19 +238,20 @@ class _TelaLoginState extends State<TelaLogin> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 18), // Espaçamento consistente
+                      const SizedBox(height: 16),
 
                       TextFormField(
                         controller: _senhaController,
                         obscureText: !_senhaVisivel,
-                        style: const TextStyle(color: corTextoPrimario),
+                        style: const TextStyle(color: corTextoPrimario, fontSize: 15),
                         decoration: _estiloCampo(
                           rotulo: 'Senha',
                           iconePrefixo: Icons.lock_outline,
                           iconeSufixo: IconButton(
                             icon: Icon(
                               _senhaVisivel ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              color: Colors.grey,
+                              color: corTextoSecundario,
+                              size: 22,
                             ),
                             onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
                           ),
@@ -256,7 +263,7 @@ class _TelaLoginState extends State<TelaLogin> {
                         },
                       ),
                       
-                      // Esqueceu a senha? (Adicionado para profissionalismo)
+                      // Esqueceu a senha?
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -265,63 +272,73 @@ class _TelaLoginState extends State<TelaLogin> {
                               MaterialPageRoute(builder: (_) => const TelaRecuperarSenha()),
                             );
                           },
-                          style: TextButton.styleFrom(foregroundColor: corAzulPrincipal),
-                          child: const Text('Esqueceu a senha?', style: TextStyle(fontSize: 13)),
+                          style: TextButton.styleFrom(
+                            foregroundColor: corAzulMarinho,
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          ),
+                          child: const Text(
+                            'Esqueceu a senha?', 
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      // --- BOTÕES DE AÇÃO ---
+                      // - BOTÕES DE AÇÃO 
                       if (_carregando)
                         const Padding(
                           padding: EdgeInsets.all(16.0),
-                          child: CircularProgressIndicator(),
+                          child: CircularProgressIndicator(color: corVerdePrimaria),
                         )
                       else ...[
                         // Botão Entrar Principal 
                         ElevatedButton(
                           onPressed: _entrarComEmailSenha,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: corVerdePrincipal, 
+                            backgroundColor: corVerdePrimaria, 
                             foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 56), 
-                            elevation: 2, // Sombra sutil M3
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Mais arredondado
+                            minimumSize: const Size(double.infinity, 54), 
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                           child: const Text(
                             'ENTRAR',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, letterSpacing: 1),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.8),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         
                         // Divisor "ou"
                         Row(
                           children: const [
-                            Expanded(child: Divider(color: Colors.grey, thickness: 0.5)),
+                            Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('ou acesse com', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              padding: EdgeInsets.symmetric(horizontal: 14),
+                              child: Text('ou acesse com', style: TextStyle(color: corTextoSecundario, fontSize: 12)),
                             ),
-                            Expanded(child: Divider(color: Colors.grey, thickness: 0.5)),
+                            Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
 
-                        // Botão Google Profissional
+                        // Botão Google
                         OutlinedButton.icon(
                           onPressed: _entrarComGoogle,
-                          icon: Image.asset('assets/images/logoGoogle.png',
-                          height: 18,
-                          fit: BoxFit.contain,),
+                          icon: Image.asset(
+                            'assets/images/logoGoogle.png',
+                            height: 18,
+                            fit: BoxFit.contain,
+                          ),
                           label: const Text(
                             'Continuar com Google',
-                            style: TextStyle(fontSize: 16, color: corTextoPrimario, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 15, color: corTextoPrimario, fontWeight: FontWeight.w600),
                           ),
                           style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 56),
-                            side: BorderSide(color: Colors.grey[300]!), 
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            minimumSize: const Size(double.infinity, 54),
+                            side: const BorderSide(color: Color(0xFFCBD5E1)), 
+                            backgroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                         ),
                         
@@ -331,32 +348,35 @@ class _TelaLoginState extends State<TelaLogin> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('Novo por aqui?', style: TextStyle(color: Colors.black54)),
+                            const Text('Novo por aqui?', style: TextStyle(color: corTextoSecundario, fontSize: 14)),
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(builder: (_) => const TelaCadastro()),
                                 );
                               },
-                              style: TextButton.styleFrom(foregroundColor: corAzulPrincipal),
+                              style: TextButton.styleFrom(
+                                foregroundColor: corAzulMarinho,
+                                padding: const EdgeInsets.only(left: 6),
+                              ),
                               child: const Text(
                                 'Crie sua conta',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                             ),
                           ],
                         ),
                       ],
 
-                      // --- ÁREA DE ERRO ---
+                      // - ÁREA DE ERRO
                       if (_erro != null) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.redAccent, width: 0.5),
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFFECACA), width: 1),
                           ),
                           child: Row(
                             children: [
