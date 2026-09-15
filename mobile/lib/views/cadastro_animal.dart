@@ -23,11 +23,9 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
   late final TextEditingController _observacoesController;
   
   DateTime? _dataNascimento;
-
-  final ImagePicker _picker = ImagePicker();
   Uint8List? _fotoAnimalBytes;
 
-  String _sexoSelected = 'Fêmea'; // Padrão para rebanho bovino
+  String _sexoSelected = 'Fêmea';
 
   bool _carregando = false;
   String? _erro;
@@ -58,11 +56,13 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
 
   @override
   void dispose() {
+    // 1. PRIMEIRO descarta os controllers
     _brincoController.dispose();
     _nomeController.dispose();
     _racaController.dispose();
     _pesoController.dispose();
     _observacoesController.dispose();
+    // 2. POR ÚLTIMO chama o super.dispose()
     super.dispose();
   }
 
@@ -148,7 +148,8 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
 
   Future<void> _alterarFoto(ImageSource fonte) async {
     try {
-      final XFile? arquivo = await _picker.pickImage(
+      final ImagePicker picker = ImagePicker();
+      final XFile? arquivo = await picker.pickImage(
         source: fonte,
         imageQuality: 70,
         maxWidth: 800,
@@ -221,7 +222,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     );
   }
 
-  // - COMPONENTE: TEXTFIELD NEUTRO COM FOCO AZUL
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -267,8 +267,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: corFundo,
-      
-      // - APP BAR VERDE ARREDONDADO 
       appBar: AppBar(
         backgroundColor: corVerdeClaro,
         foregroundColor: Colors.white,
@@ -284,10 +282,8 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
           ),
         ),
       ),
-      
       body: Stack(
         children: [
-          // MARCA D'ÁGUA 
           Center(
             child: Opacity(
               opacity: 0.04, 
@@ -299,7 +295,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               ),
             ),
           ),
-          
           SafeArea(
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -308,14 +303,11 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          
-                          // - ÁREA DA FOTO DO ANIMAL 
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.only(top: 24, bottom: 24),
@@ -374,8 +366,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                               ],
                             ),
                           ),
-
-                          // - IDENTIFICAÇÃO 
                           _buildSeccionTitle('Identificação do Animal'),
                           Container(
                             decoration: BoxDecoration(
@@ -407,8 +397,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
-                          // - BIOMETRIA / CARACTERÍSTICAS
                           _buildSeccionTitle('Características Clínicas'),
                           Container(
                             decoration: BoxDecoration(
@@ -429,8 +417,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                                     validator: (v) => v == null || v.trim().isEmpty ? 'Insira a raça' : null,
                                   ),
                                   const SizedBox(height: 16),
-                                  
-                                  // Dropdown de Sexo interativo
                                   DropdownButtonFormField<String>(
                                     value: _sexoSelected,
                                     style: const TextStyle(color: corTextoPrimario, fontSize: 15),
@@ -473,8 +459,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
-                          // - CRONOGRAMA E NOTAS
                           _buildSeccionTitle('Nascimento & Observações'),
                           Container(
                             decoration: BoxDecoration(
@@ -540,8 +524,6 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                               ),
                             ),
                           ),
-                          
-                          // - ÁREA DE NOTIFICAÇÃO DE ERRO 
                           if (_erro != null) ...[
                             const SizedBox(height: 20),
                             Container(
@@ -565,15 +547,13 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                               ),
                             ),
                           ],
-
                           const SizedBox(height: 32),
-
-                          // - BOTÃO DE SALVAMENTO 
                           if (_carregando)
                             const Center(child: CircularProgressIndicator(color: corVerdeEscuro))
                           else
                             ElevatedButton.icon(
                               onPressed: _salvar,
+                              icon: const Icon(Icons.check_circle_outline), // Ícone corrigido
                               label: Text(
                                 _editando ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR BOVINO',
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),

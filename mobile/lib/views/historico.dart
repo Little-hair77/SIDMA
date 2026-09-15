@@ -15,12 +15,12 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   List<dynamic> _analises = [];
   bool _carregando = true;
 
-  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86); 
-  static const Color corVerdeClaro = Color(0xFF74C319);
-  static const Color corVerdePrincipal = Color(0xFF74C319);
-  static const Color corFundo = Color(0xFFF8FAFC);
-  static const Color corTextoPrimario = Color(0xFF1E293B);
-
+  // Paleta de Cores
+  static const Color corVerdePrimaria   = Color(0xFF10B981); 
+  static const Color corAzulMarinho     = Color(0xFF1E293B); 
+  static const Color corTextoPrimario   = Color(0xFF0F172A); 
+  static const Color corTextoSecundario = Color(0xFF64748B); 
+  static const Color corFundo           = Color(0xFFF8FAFC); 
   @override
   void initState() {
     super.initState();
@@ -69,27 +69,29 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     return Scaffold(
       backgroundColor: corFundo,
       
+      // APP BAR INSTITUCIONAL
       appBar: AppBar(
-        backgroundColor: corVerdeClaro,
+        backgroundColor: corAzulMarinho,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Histórico Completo',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(32),
+            bottom: Radius.circular(24),
           ),
         ),
       ),
       
       body: Stack(
         children: [
+          // MARCA D'ÁGUA SUAVE
           Center(
             child: Opacity(
-              opacity: 0.04, 
+              opacity: 0.03, 
               child: Image.asset(
                 'assets/images/logoSIDMA-2.png',
                 width: 250,
@@ -100,14 +102,14 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           ),
           
           _carregando
-              ? const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
+              ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
               : _analises.isEmpty
                   ? const _ConstruirEstadoVazio()
                   : RefreshIndicator(
-                      color: corVerdePrincipal,
+                      color: corVerdePrimaria,
                       onRefresh: _carregar,
                       child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         itemCount: analisesAgrupadas.length,
                         itemBuilder: (context, index) {
                           String mesChave = analisesAgrupadas.keys.elementAt(index);
@@ -117,13 +119,13 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(top: 16, bottom: 12),
+                                padding: const EdgeInsets.only(top: 8, bottom: 12, left: 4),
                                 child: Text(
                                   mesChave,
                                   style: const TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: corVerdeEscuro, 
+                                    color: corAzulMarinho, 
                                   ),
                                 ),
                               ),
@@ -156,16 +158,16 @@ class _ConstruirEstadoVazio extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_toggle_off_outlined, size: 80, color: Colors.grey.shade300),
+          Icon(Icons.history_toggle_off_outlined, size: 64, color: const Color(0xFF64748B).withOpacity(0.5)),
           const SizedBox(height: 16),
           const Text(
             'Histórico Vazio',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black54),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
           ),
           const SizedBox(height: 8),
           const Text(
             'As análises concluídas aparecerão aqui.',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
           ),
         ],
       ),
@@ -184,19 +186,25 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
     
     if (resultado.contains('possível') || resultado.contains('suspeita') || resultado.contains('mastite')) {
       return {
-        'corFundo': const Color.fromARGB(190, 255, 0, 51), 
+        'corBorda': Colors.redAccent,
+        'corFundoTag': Colors.red.shade50,
+        'corTextoTag': Colors.red.shade700,
         'icone': Icons.error_outline,
         'label': 'Suspeita Detectada'
       };
     } else if (resultado.contains('adicional') || resultado.contains('atenção')) {
       return {
-        'corFundo': const Color.fromARGB(190, 253, 200, 24), 
+        'corBorda': Colors.amber.shade700,
+        'corFundoTag': Colors.amber.shade50,
+        'corTextoTag': Colors.amber.shade900,
         'icone': Icons.warning_amber_rounded,
         'label': 'Atenção Necessária'
       };
     } else {
       return {
-        'corFundo': const Color.fromARGB(190, 71, 190, 117),
+        'corBorda': const Color(0xFF10B981),
+        'corFundoTag': const Color(0xFF10B981).withOpacity(0.12),
+        'corTextoTag': const Color(0xFF10B981),
         'icone': Icons.check_circle_outline,
         'label': 'Laudo Saudável'
       };
@@ -206,98 +214,115 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
   String _formatarDataHora(String? isoData) {
     final data = DateTime.tryParse(isoData ?? '');
     if (data == null) return 'Data desconhecida';
-    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')} às ${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}';
+    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year} às ${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final config = _statusConfig;
-    final corBase = config['corFundo'] as Color;
     final String imageUrl = analise['imagem_url']?.toString() ?? '';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: corBase.withOpacity(0.4), 
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.03), 
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
+        border: Border(
+          left: BorderSide(color: config['corBorda'], width: 4),
+          top: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          right: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          bottom: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+        ),
       ),
       child: Material(
-        color: corBase,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: aoClicar,
-          hoverColor: Colors.black12,
-          splashColor: Colors.black26,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // MINIATURA DA FOTO
                 Container(
-                  width: 72,
-                  height: 72,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
-                    color: Colors.black12,
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white54, width: 2), 
+                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1), 
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(11),
                     child: imageUrl.isNotEmpty
                       ? Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.science, color: Colors.white, size: 32),
+                          errorBuilder: (_, __, ___) => const Icon(Icons.science, color: Color(0xFF64748B), size: 28),
                         )
-                      : const Icon(Icons.science, color: Colors.white, size: 32),
+                      : const Icon(Icons.science, color: Color(0xFF64748B), size: 28),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 
+                // INFORMAÇÕES PRINCIPAIS
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(config['icone'], size: 20, color: Colors.white),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
+                      // BADGE DE STATUS
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: config['corFundoTag'],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(config['icone'], size: 14, color: config['corTextoTag']),
+                            const SizedBox(width: 4),
+                            Text(
                               config['label'],
-                              style: const TextStyle(
-                                fontSize: 16,
+                              style: TextStyle(
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white, 
+                                color: config['corTextoTag'], 
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         'Confiança: ${analise['confianca'] ?? 'N/A'}',
                         style: const TextStyle(
-                          fontSize: 14, 
-                          color: Colors.white, 
-                          fontWeight: FontWeight.w600
+                          fontSize: 13, 
+                          color: Color(0xFF0F172A), 
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 14, color: Colors.white70),
+                          const Icon(Icons.access_time, size: 13, color: Color(0xFF64748B)),
                           const SizedBox(width: 4),
-                          Text(
-                            _formatarDataHora(analise['criado_em']),
-                            style: const TextStyle(fontSize: 12, color: Colors.white70),
+                          Expanded(
+                            child: Text(
+                              _formatarDataHora(analise['criado_em']),
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
@@ -305,10 +330,7 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
                   ),
                 ),
                 
-                const Padding(
-                  padding: EdgeInsets.only(top: 24),
-                  child: Icon(Icons.chevron_right, color: Colors.white70, size: 28),
-                ),
+                const Icon(Icons.chevron_right, color: Color(0xFF64748B), size: 24),
               ],
             ),
           ),

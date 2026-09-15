@@ -7,6 +7,7 @@ import 'registrar_tratamento.dart';
 
 class TelaAnimais extends StatefulWidget {
   const TelaAnimais({Key? key}) : super(key: key);
+
   @override
   State<TelaAnimais> createState() => _TelaAnimaisState();
 }
@@ -21,12 +22,11 @@ class _TelaAnimaisState extends State<TelaAnimais> {
   final TextEditingController _buscaController = TextEditingController();
 
   // Paleta de Cores
-  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
-  static const Color corVerdeClaro = Color(0xFF74C319);
-  static const Color corVerdePrincipal = Color(0xFF74C319);
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
-  static const Color corFundo = Color(0xFFF4F6F8);
-  static const Color corTextoPrimario = Color(0xFF1E293B);
+  static const Color corVerdePrimaria   = Color(0xFF10B981); 
+  static const Color corAzulMarinho     = Color(0xFF1E293B); 
+  static const Color corTextoPrimario   = Color(0xFF0F172A); 
+  static const Color corTextoSecundario = Color(0xFF64748B); 
+  static const Color corFundo           = Color(0xFFF8FAFC); 
 
   @override
   void initState() {
@@ -80,7 +80,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+            child: const Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -131,23 +131,26 @@ class _TelaAnimaisState extends State<TelaAnimais> {
 
     return Scaffold(
       backgroundColor: corFundo,
+      
+      // APP BAR
       appBar: AppBar(
-        backgroundColor: corVerdeClaro,
+        backgroundColor: corAzulMarinho,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Meu Rebanho',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(32),
+            bottom: Radius.circular(24),
           ),
         ),
       ),
+      
       floatingActionButton: FloatingActionButton(
-        backgroundColor: corVerdePrincipal,
+        backgroundColor: corVerdePrimaria,
         onPressed: () async {
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const TelaCadastroAnimal()),
@@ -156,11 +159,13 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
+      
       body: Stack(
         children: [
+          // Marca d'água
           Center(
             child: Opacity(
-              opacity: 0.04,
+              opacity: 0.03,
               child: Image.asset(
                 'assets/images/logoSIDMA-2.png',
                 width: 250,
@@ -169,20 +174,23 @@ class _TelaAnimaisState extends State<TelaAnimais> {
               ),
             ),
           ),
+          
           Column(
             children: [
+              // BARRINHA DE PESQUISA
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: TextField(
                   controller: _buscaController,
                   onChanged: _filtrarAnimais,
+                  style: const TextStyle(color: corTextoPrimario, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Buscar por nome ou brinco...',
-                    hintStyle: TextStyle(color: Colors.grey.shade400),
-                    prefixIcon: const Icon(Icons.search, color: corVerdeEscuro),
+                    hintStyle: const TextStyle(color: corTextoSecundario, fontSize: 14),
+                    prefixIcon: const Icon(Icons.search, color: corVerdePrimaria),
                     suffixIcon: _buscaController.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            icon: const Icon(Icons.clear, color: corTextoSecundario),
                             onPressed: () {
                               _buscaController.clear();
                               _filtrarAnimais('');
@@ -194,28 +202,30 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: corVerdeEscuro, width: 1.5),
+                      borderSide: const BorderSide(color: corVerdePrimaria, width: 1.5),
                     ),
                   ),
                 ),
               ),
+
+              // LISTAGEM DE ANIMAIS
               Expanded(
                 child: _carregando
-                    ? const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
+                    ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
                     : _animais.isEmpty
                         ? _buildEmptyState('Nenhum animal cadastrado', 'Toque no "+" para adicionar o primeiro animal do rebanho.')
                         : _animaisFiltrados.isEmpty
                             ? _buildEmptyState('Nenhum resultado encontrado', 'Tente buscar por outro nome ou número de brinco.')
                             : RefreshIndicator(
-                                color: corVerdePrincipal,
+                                color: corVerdePrimaria,
                                 onRefresh: _carregar,
                                 child: ListView(
                                   padding: const EdgeInsets.all(16),
@@ -226,12 +236,12 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                                       const SizedBox(height: 16),
                                     ],
                                     if (listaAlerta.isNotEmpty) ...[
-                                      _buildSectionHeader('Em Análise / Alerta', Colors.orange, 'Atenção necessária ou reincidência'),
+                                      _buildSectionHeader('Em Análise / Alerta', Colors.amber.shade800, 'Atenção necessária ou reincidência'),
                                       ...listaAlerta.map((a) => _buildAnimalCard(a)).toList(),
                                       const SizedBox(height: 16),
                                     ],
                                     if (listaSaudaveis.isNotEmpty) ...[
-                                      _buildSectionHeader('Rebanho Saudável', corVerdeEscuro, 'Sem anomalias recentes registradas'),
+                                      _buildSectionHeader('Rebanho Saudável', corVerdePrimaria, 'Sem anomalias recentes registradas'),
                                       ...listaSaudaveis.map((a) => _buildAnimalCard(a)).toList(),
                                     ],
                                   ],
@@ -254,18 +264,17 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           Text(
             titulo,
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: cor,
-              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             subtitulo,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
+            style: const TextStyle(
+              fontSize: 12,
+              color: corTextoSecundario,
             ),
           ),
         ],
@@ -277,9 +286,9 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     final bool emCarencia = animal['em_carencia'] == true;
     final bool alertaReincidencia = animal['alerta_reincidencia'] == true;
 
-    final Color corBorda = emCarencia ? Colors.redAccent : (alertaReincidencia ? Colors.orange : Colors.transparent);
-    final Color corFundoTag = emCarencia ? Colors.red.shade50 : (alertaReincidencia ? Colors.orange.shade50 : Colors.green.shade50);
-    final Color corTextoTag = emCarencia ? Colors.red.shade700 : (alertaReincidencia ? Colors.orange.shade800 : Colors.green.shade700);
+    final Color corBorda = emCarencia ? Colors.redAccent : (alertaReincidencia ? Colors.amber.shade700 : Colors.transparent);
+    final Color corFundoTag = emCarencia ? Colors.red.shade50 : (alertaReincidencia ? Colors.amber.shade50 : corVerdePrimaria.withOpacity(0.12));
+    final Color corTextoTag = emCarencia ? Colors.red.shade700 : (alertaReincidencia ? Colors.amber.shade900 : corVerdePrimaria);
     final String textoTag = emCarencia ? 'Em Tratamento' : (alertaReincidencia ? 'Alerta / Reincidência' : 'Saudável');
     final IconData iconeTag = emCarencia ? Icons.medical_information : (alertaReincidencia ? Icons.warning_amber_rounded : Icons.check_circle_outline);
 
@@ -292,10 +301,10 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
         ],
         border: Border(
-          left: BorderSide(color: corBorda != Colors.transparent ? corBorda : Colors.grey.shade200, width: corBorda != Colors.transparent ? 5 : 1),
-          top: BorderSide(color: Colors.grey.shade200, width: 1),
-          right: BorderSide(color: Colors.grey.shade200, width: 1),
-          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+          left: BorderSide(color: corBorda != Colors.transparent ? corBorda : const Color(0xFFE2E8F0), width: corBorda != Colors.transparent ? 4 : 1),
+          top: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          right: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          bottom: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
       ),
       child: ListTile(
@@ -304,22 +313,22 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           radius: 26,
           backgroundColor: corFundo,
           backgroundImage: animal['foto'] != null ? NetworkImage(animal['foto']) : null,
-          child: animal['foto'] == null ? const Icon(Icons.pets, color: Colors.grey) : null,
+          child: animal['foto'] == null ? const Icon(Icons.pets, color: corTextoSecundario) : null,
         ),
         title: Row(
           children: [
             Expanded(
               child: Text(
                 animal['nome']?.isNotEmpty == true ? animal['nome'] : 'Brinco ${animal['brinco']}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: corTextoPrimario, fontSize: 16),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: corTextoPrimario, fontSize: 15),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             if (emCarencia || alertaReincidencia)
-              const Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 20),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Icon(Icons.warning_amber_rounded, color: emCarencia ? Colors.redAccent : Colors.amber.shade700, size: 18),
               ),
           ],
         ),
@@ -329,7 +338,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             const SizedBox(height: 4),
             Text(
               'Brinco: ${animal['brinco']} · ${animal['total_analises'] ?? 0} análise(s)',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: const TextStyle(color: corTextoSecundario, fontSize: 13),
             ),
             const SizedBox(height: 8),
             Container(
@@ -353,7 +362,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           ],
         ),
         trailing: PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.grey),
+          icon: const Icon(Icons.more_vert, color: corTextoSecundario),
           color: Colors.white,
           surfaceTintColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -381,19 +390,19 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           itemBuilder: (BuildContext context) => [
             const PopupMenuItem(
               value: 'visualizar',
-              child: Row(children: [Icon(Icons.visibility_outlined, size: 20, color: corAzulPrincipal), SizedBox(width: 12), Text('Ver Ficha')]),
+              child: Row(children: [Icon(Icons.visibility_outlined, size: 20, color: corAzulMarinho), SizedBox(width: 12), Text('Ver Ficha')]),
             ),
             const PopupMenuItem(
               value: 'tratamento',
-              child: Row(children: [Icon(Icons.medical_services_outlined, size: 20, color: corVerdeEscuro), SizedBox(width: 12), Text('Registrar Tratamento')]),
+              child: Row(children: [Icon(Icons.medical_services_outlined, size: 20, color: corVerdePrimaria), SizedBox(width: 12), Text('Registrar Tratamento')]),
             ),
             const PopupMenuItem(
               value: 'editar',
-              child: Row(children: [Icon(Icons.edit_outlined, size: 20, color: Colors.black87), SizedBox(width: 12), Text('Editar')]),
+              child: Row(children: [Icon(Icons.edit_outlined, size: 20, color: corTextoPrimario), SizedBox(width: 12), Text('Editar')]),
             ),
             const PopupMenuItem(
               value: 'qrcode',
-              child: Row(children: [Icon(Icons.qr_code, size: 20, color: Colors.black87), SizedBox(width: 12), Text('QR Code')]),
+              child: Row(children: [Icon(Icons.qr_code, size: 20, color: corTextoPrimario), SizedBox(width: 12), Text('QR Code')]),
             ),
             const PopupMenuDivider(),
             const PopupMenuItem(
@@ -419,17 +428,17 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.pets_outlined, size: 72, color: Colors.grey.shade300),
+            Icon(Icons.pets_outlined, size: 64, color: corTextoSecundario.withOpacity(0.5)),
             const SizedBox(height: 16),
             Text(
               titulo,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: corTextoPrimario),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: corTextoPrimario),
             ),
             const SizedBox(height: 8),
             Text(
               subtitulo,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
+              style: const TextStyle(color: corTextoSecundario, fontSize: 13),
             ),
           ],
         ),

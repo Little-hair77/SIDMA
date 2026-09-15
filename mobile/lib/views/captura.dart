@@ -67,6 +67,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
         SnackBar(
           content: Text('Animal identificado: ${animalEncontrado['brinco']}'),
           backgroundColor: corVerdeEscuro,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } else {
@@ -74,6 +75,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
         const SnackBar(
           content: Text('Nenhum animal cadastrado corresponde a esse código.'),
           backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -126,7 +128,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
     });
   }
 
-  // - LÓGICA DE CORES PARA O RESULTADO 
+  // Lógica de cores do resultado
   Map<String, dynamic> get _configResultado {
     if (_resultadoIA == null) return {};
     final resultadoStr = (_resultadoIA!['resultado'] as String).toLowerCase();
@@ -144,8 +146,6 @@ class _TelaCapturaState extends State<TelaCaptura> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: corFundo,
-      
-      // APP BAR 
       appBar: AppBar(
         backgroundColor: corVerdeClaro,
         foregroundColor: Colors.white,
@@ -161,10 +161,9 @@ class _TelaCapturaState extends State<TelaCaptura> {
           ),
         ),
       ),
-      
       body: Stack(
         children: [
-          // MARCA D'ÁGUA
+          // Marca D'Água
           Center(
             child: Opacity(
               opacity: 0.04,
@@ -183,7 +182,6 @@ class _TelaCapturaState extends State<TelaCaptura> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // - INSTRUÇÕES
                   const Text(
                     'Captura de Amostra',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: corTextoPrimario),
@@ -195,7 +193,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                   ),
                   const SizedBox(height: 24),
 
-                  // - SELEÇÃO DE ANIMAL
+                  // Seleção de Animal
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
@@ -230,7 +228,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.qr_code_scanner, color: corAzulPrincipal), // Retornado ao Azul
+                          icon: const Icon(Icons.qr_code_scanner, color: corAzulPrincipal),
                           tooltip: 'Escanear QR Code do animal',
                           onPressed: _escanearAnimal,
                         ),
@@ -239,7 +237,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                   ),
                   const SizedBox(height: 24),
 
-                  // - ÁREA DE EXIBIÇÃO DA IMAGEM 
+                  // Exibição da Imagem
                   Container(
                     height: 320,
                     decoration: BoxDecoration(
@@ -301,7 +299,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                   ),
                   const SizedBox(height: 32),
 
-                  // - MENSAGEM DE ERRO 
+                  // Mensagem de Erro
                   if (_erroAcesso != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -315,11 +313,11 @@ class _TelaCapturaState extends State<TelaCaptura> {
                     const SizedBox(height: 16),
                   ],
 
-                  // - AÇÕES / ESTADO DE CARREGAMENTO / RESULTADO
+                  // Estados de Ação
                   if (_estaCarregando)
-                    _ConstruirEstadoProcessamento()
+                    _construirEstadoProcessamento()
                   else if (_resultadoIA != null)
-                    _ConstruirCartaoResultado()
+                    _construirCartaoResultado()
                   else ...[
                     if (_imagem == null)
                       OutlinedButton.icon(
@@ -327,7 +325,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                         icon: const Icon(Icons.camera_alt),
                         label: const Text('ABRIR CÂMERA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: corAzulPrincipal, // Retornado ao Azul Interativo
+                          foregroundColor: corAzulPrincipal,
                           side: const BorderSide(color: corAzulPrincipal, width: 2),
                           minimumSize: const Size(double.infinity, 56),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -358,8 +356,8 @@ class _TelaCapturaState extends State<TelaCaptura> {
     );
   }
 
-  // - WIDGET: ESTADO DE PROCESSAMENTO 
-  Widget _ConstruirEstadoProcessamento() {
+  // Métodos auxiliares de construção de widgets
+  Widget _construirEstadoProcessamento() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -386,8 +384,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
     );
   }
 
-  // - WIDGET: CARTÃO DE RESULTADO
-  Widget _ConstruirCartaoResultado() {
+  Widget _construirCartaoResultado() {
     final config = _configResultado;
     final cor = config['corBase'] as Color;
 
