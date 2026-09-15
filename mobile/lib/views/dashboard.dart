@@ -5,7 +5,6 @@ import 'historico.dart';
 import 'login.dart';
 import 'detalhe_analise.dart';
 import 'alerta_bell_button.dart';
-// import 'animais.dart'; 
 
 class TelaDashboard extends StatefulWidget {
   const TelaDashboard({Key? key}) : super(key: key);
@@ -21,12 +20,18 @@ class _TelaDashboardState extends State<TelaDashboard> {
   String _nomeUsuario = '';
   List<dynamic> _analises = [];
 
+  // Métrica simuladas / calculadas dos dados
+  int _totalAnimais = 128;
+  int _emTratamento = 5;
+
   // Paleta de Cores
-  static const Color corVerdeEscuro = Color.fromARGB(255, 24, 134, 66); 
-  static const Color corVerdeClaro = Color(0xFF74C319);
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
-  static const Color corFundo = Color(0xFFF4F6F8);
-  static const Color corTextoPrimario = Color(0xFF1E293B);
+  static const Color corVerdePrimaria = Color(0xFF10B981); 
+  static const Color corVerdeEscuro = Color(0xFF059669);   
+  static const Color corVerdeSuave = Color(0xFFECFDF5);    
+  static const Color corAzulMarinho = Color(0xFF1E293B);   
+  static const Color corFundo = Color(0xFFF8FAFC);         
+  static const Color corTextoPrimario = Color(0xFF0F172A); 
+  static const Color corTextoSecundario = Color(0xFF64748B);
 
   @override
   void initState() {
@@ -58,6 +63,13 @@ class _TelaDashboardState extends State<TelaDashboard> {
     );
   }
 
+  int get _suspeitasDiagnostico {
+    return _analises.where((a) {
+      final res = (a['resultado'] ?? '').toString().toLowerCase();
+      return res.contains('possível') || res.contains('suspeita') || res.contains('mastite');
+    }).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> widgetsHistorico = [];
@@ -69,11 +81,12 @@ class _TelaDashboardState extends State<TelaDashboard> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: const Center(
             child: Text(
               'Nenhuma amostra processada ainda.',
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: corTextoSecundario),
             ),
           ),
         ),
@@ -95,27 +108,26 @@ class _TelaDashboardState extends State<TelaDashboard> {
     return Scaffold(
       backgroundColor: corFundo,
       body: _carregando
-          ? const Center(child: CircularProgressIndicator(color: corVerdeEscuro))
+          ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
           : RefreshIndicator(
-              color: corVerdeEscuro,
+              color: corVerdePrimaria,
               onRefresh: _carregarDados,
               child: CustomScrollView(
                 slivers: [
 
-                  // 1 - HEADER & GRID SOBREPOSTO (OVERLAP)
+                  // 1 - HEADER MODERNO EM AZUL MARINHO
                   SliverToBoxAdapter(
                     child: Stack(
                       children: [
-                        // --- O FUNDO VERDE FIXO ---
                         Container(
-                          height: 230, // Altura que garante a margem para o overlap
+                          height: 210,
                           padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
                           width: double.infinity,
                           decoration: const BoxDecoration(
-                            color: corVerdeClaro,
+                            color: corAzulMarinho,
                             borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(32),
-                              bottomRight: Radius.circular(32),
+                              bottomLeft: Radius.circular(28),
+                              bottomRight: Radius.circular(28),
                             ),
                           ),
                           child: Row(
@@ -136,10 +148,10 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Gestão do Rebanho & SIDMA',
+                                      'Gestão de Rebanho & Diagnóstico',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withOpacity(0.7),
                                       ),
                                     ),
                                   ],
@@ -155,53 +167,53 @@ class _TelaDashboardState extends State<TelaDashboard> {
                           ),
                         ),
 
-                        // --- OS CARDS ---
+                        // - MÓDULOS COM DADOS E MÉTRICAS 
                         Padding(
-                          padding: const EdgeInsets.only(
-                              top: 140, 
-                              left: 20, 
-                              right: 20
-                          ),
+                          padding: const EdgeInsets.only(top: 125, left: 20, right: 20),
                           child: GridView.count(
-                            shrinkWrap: true, // Importante para não dar erro de tamanho no Stack
-                            physics: const NeverScrollableScrollPhysics(), // Desativa rolagem interna
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
                             crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
                             childAspectRatio: 1.1,
                             padding: EdgeInsets.zero,
                             children: [
-                              _ModuloCard(
+                              _ModuloCardData(
                                 titulo: 'Meu Rebanho',
-                                icone: Icons.pets,
-                                corIcone: corVerdeClaro,
-                                onTap: () {
-                                  // Navigator.push(context, MaterialPageRoute(builder: (_) => const TelaAnimais()));
-                                },
+                                valor: '$_totalAnimais',
+                                legenda: 'Cabeças ativas',
+                                icone: Icons.agriculture_outlined,
+                                corDestaque: corAzulMarinho,
+                                onTap: () {},
                               ),
-                              _ModuloCard(
-                                titulo: 'Diagnóstico IA',
+                              _ModuloCardData(
+                                titulo: 'Diagnósticos IA',
+                                valor: '${_analises.length}',
+                                legenda: '$_suspeitasDiagnostico em alerta',
                                 icone: Icons.document_scanner_outlined,
-                                corIcone: corAzulPrincipal,
-                                notificacao: 'Novo',
+                                corDestaque: corVerdePrimaria,
+                                destaqueAlerta: _suspeitasDiagnostico > 0,
                                 onTap: () {
                                   Navigator.of(context)
                                       .push(MaterialPageRoute(builder: (_) => const TelaCaptura()))
                                       .then((_) => _carregarDados());
                                 },
                               ),
-                              _ModuloCard(
-                                titulo: 'Tratamento Sanitário',
+                              _ModuloCardData(
+                                titulo: 'Tratamentos',
+                                valor: '$_emTratamento',
+                                legenda: 'Animais isolados',
                                 icone: Icons.medical_services_outlined,
-                                corIcone: Colors.redAccent,
-                                onTap: () {
-                                  // TODO: Navegar para tela de Tratamentos
-                                },
+                                corDestaque: const Color(0xFFF59E0B), 
+                                onTap: () {},
                               ),
-                              _ModuloCard(
-                                titulo: 'Histórico & Laudos',
+                              _ModuloCardData(
+                                titulo: 'Laudos',
+                                valor: '${_analises.length}',
+                                legenda: 'Histórico total',
                                 icone: Icons.history_edu_outlined,
-                                corIcone: Colors.orange,
+                                corDestaque: const Color(0xFF6366F1), // Índigo
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => const TelaHistorico()),
@@ -215,22 +227,21 @@ class _TelaDashboardState extends State<TelaDashboard> {
                     ),
                   ),
 
-                  // 2 - AÇÕES RÁPIDAS (ESTILO LISTA LARGA)
+                  // 2 - AÇÕES RÁPIDAS
                   SliverPadding(
-                    padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
+                    padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         _AcaoRapidaBotao(
                           titulo: 'Sincronizar Dados Offline',
                           icone: Icons.cloud_sync_outlined,
-                          cor: Colors.teal,
+                          destaque: false,
                           onTap: () {},
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         _AcaoRapidaBotao(
                           titulo: 'Compartilhar Relatório',
                           icone: Icons.share_outlined,
-                          cor: corAzulPrincipal,
                           destaque: true,
                           onTap: () {},
                         ),
@@ -240,18 +251,18 @@ class _TelaDashboardState extends State<TelaDashboard> {
 
                   // 3 - HISTÓRICO RECENTE
                   SliverPadding(
-                    padding: const EdgeInsets.only(top: 32, left: 20, right: 20, bottom: 40),
+                    padding: const EdgeInsets.only(top: 28, left: 20, right: 20, bottom: 40),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         const Text(
-                          'Análises Recentes',
+                          'Últimas Análises de Mastite',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: corTextoPrimario,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         ...widgetsHistorico,
                       ]),
                     ),
@@ -264,21 +275,25 @@ class _TelaDashboardState extends State<TelaDashboard> {
 }
 
 // ==========================================
-// WIDGETS AUXILIARES
+// CARD DE DADOS & MÉTRICAS
 // ==========================================
 
-class _ModuloCard extends StatelessWidget {
+class _ModuloCardData extends StatelessWidget {
   final String titulo;
+  final String valor;
+  final String legenda;
   final IconData icone;
-  final Color corIcone;
-  final String? notificacao;
+  final Color corDestaque;
+  final bool destaqueAlerta;
   final VoidCallback onTap;
 
-  const _ModuloCard({
+  const _ModuloCardData({
     required this.titulo,
+    required this.valor,
+    required this.legenda,
     required this.icone,
-    required this.corIcone,
-    this.notificacao,
+    required this.corDestaque,
+    this.destaqueAlerta = false,
     required this.onTap,
   });
 
@@ -288,14 +303,18 @@ class _ModuloCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: destaqueAlerta ? const Color(0xFFFCA5A5) : const Color(0xFFF1F5F9),
+            width: destaqueAlerta ? 1.5 : 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
@@ -307,29 +326,38 @@ class _ModuloCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icone, color: corIcone, size: 32),
-                if (notificacao != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      notificacao!,
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
-                    ),
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _TelaDashboardState.corTextoSecundario,
                   ),
+                ),
+                Icon(icone, color: corDestaque, size: 20),
               ],
             ),
-            Text(
-              titulo,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: _TelaDashboardState.corTextoPrimario,
-                height: 1.2,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  valor,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: destaqueAlerta ? const Color(0xFFDC2626) : _TelaDashboardState.corTextoPrimario,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  legenda,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: destaqueAlerta ? FontWeight.bold : FontWeight.normal,
+                    color: destaqueAlerta ? const Color(0xFFDC2626) : _TelaDashboardState.corTextoSecundario,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -341,14 +369,12 @@ class _ModuloCard extends StatelessWidget {
 class _AcaoRapidaBotao extends StatelessWidget {
   final String titulo;
   final IconData icone;
-  final Color cor;
   final bool destaque;
   final VoidCallback onTap;
 
   const _AcaoRapidaBotao({
     required this.titulo,
     required this.icone,
-    required this.cor,
     this.destaque = false,
     required this.onTap,
   });
@@ -361,23 +387,33 @@ class _AcaoRapidaBotao extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: destaque ? cor : Colors.white,
+          color: destaque ? _TelaDashboardState.corVerdePrimaria : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: destaque ? null : Border.all(color: Colors.grey.shade300),
+          border: destaque ? null : Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: destaque
-              ? [BoxShadow(color: cor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+              ? [
+                  BoxShadow(
+                    color: _TelaDashboardState.corVerdePrimaria.withOpacity(0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
               : null,
         ),
         child: Row(
           mainAxisAlignment: destaque ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(icone, color: destaque ? Colors.white : cor, size: 20),
+            Icon(
+              icone,
+              color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Text(
               titulo,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
               ),
             ),
@@ -395,11 +431,26 @@ class _CartaoAnalise extends StatelessWidget {
   Map<String, dynamic> get _statusConfig {
     final resultado = (analise['resultado'] as String).toLowerCase();
     if (resultado.contains('possível') || resultado.contains('suspeita') || resultado.contains('mastite')) {
-      return {'corTexto': Colors.red.shade700, 'corFundo': Colors.red.shade50, 'icone': Icons.error_outline, 'label': 'Suspeita'};
+      return {
+        'corTexto': const Color(0xFFDC2626),
+        'corFundo': const Color(0xFFFEF2F2),
+        'icone': Icons.error_outline,
+        'label': 'Suspeita'
+      };
     } else if (resultado.contains('adicional') || resultado.contains('atenção')) {
-      return {'corTexto': Colors.orange.shade800, 'corFundo': Colors.orange.shade50, 'icone': Icons.warning_amber_rounded, 'label': 'Atenção'};
+      return {
+        'corTexto': const Color(0xFFD97706),
+        'corFundo': const Color(0xFFFFFBEB),
+        'icone': Icons.warning_amber_rounded,
+        'label': 'Atenção'
+      };
     } else {
-      return {'corTexto': Colors.green.shade700, 'corFundo': Colors.green.shade50, 'icone': Icons.check_circle_outline, 'label': 'Saudável'};
+      return {
+        'corTexto': const Color(0xFF059669),
+        'corFundo': const Color(0xFFECFDF5),
+        'icone': Icons.check_circle_outline,
+        'label': 'Saudável'
+      };
     }
   }
 
@@ -407,50 +458,82 @@ class _CartaoAnalise extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = _statusConfig;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
-        border: Border.all(color: Colors.grey.shade100),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          )
+        ],
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Row(
         children: [
           Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               child: Image.network(
                 analise['imagem_url'] ?? '',
-                width: 64, height: 64, fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(width: 64, height: 64, color: Colors.grey.shade50, child: Icon(Icons.science, color: Colors.grey.shade300, size: 28)),
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 56,
+                  height: 56,
+                  color: const Color(0xFFF8FAFC),
+                  child: const Icon(Icons.science_outlined, color: Color(0xFF94A3B8), size: 24),
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: config['corFundo'], borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: config['corFundo'],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(config['icone'], size: 14, color: config['corTexto']),
+                      Icon(config['icone'], size: 12, color: config['corTexto']),
                       const SizedBox(width: 4),
-                      Text(config['label'], style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: config['corTexto'])),
+                      Text(
+                        config['label'],
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: config['corTexto'],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text('Confiança: ${analise['confianca'] ?? 'N/A'}', style: const TextStyle(fontSize: 13, color: Colors.black54)),
+                const SizedBox(height: 6),
+                Text(
+                  'Confiança: ${analise['confianca'] ?? 'N/A'}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: _TelaDashboardState.corTextoSecundario,
+                  ),
+                ),
               ],
             ),
           ),
-          Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1)),
         ],
       ),
     );
