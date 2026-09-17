@@ -91,7 +91,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           // MARCA D'ÁGUA SUAVE
           Center(
             child: Opacity(
-              opacity: 0.03, 
+              opacity: 0.03,
               child: Image.asset(
                 'assets/images/logoSIDMA-2.png',
                 width: 250,

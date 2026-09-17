@@ -32,7 +32,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
 
   bool get _editando => widget.animal != null;
 
-  // Paleta de Cores do Projeto
+  // Paleta de Cores
   static const Color corAppBar = Color(0xFF1E2A38);
   static const Color corVerdePrincipal = Color(0xFF00B67A);
   static const Color corVerdeSuave = Color(0xFFE6F4EA);
@@ -290,22 +290,37 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(String title, IconData icon, {String? subtitle}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14.0),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: corVerdePrincipal),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: corTextoSecundario,
-              letterSpacing: 0.8,
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 18, color: corVerdePrincipal),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: corTextoSecundario,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: corTextoSecundario.withOpacity(0.8),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -325,6 +340,11 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(24),
+          ),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -335,50 +355,71 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Topo: Photo Picker Clean
+                // Topo: Photo Picker 
                 Center(
-                  child: Stack(
+                  child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: _mostrarOpcoesFoto,
-                        child: Container(
-                          width: 104,
-                          height: 104,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: corVerdeSuave,
-                            border: Border.all(color: Colors.white, width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
+                      Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: _mostrarOpcoesFoto,
+                            child: Container(
+                              width: 104,
+                              height: 104,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: corVerdeSuave,
+                                border: Border.all(color: Colors.white, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: _fotoAnimalBytes != null
+                                    ? Image.memory(_fotoAnimalBytes!, fit: BoxFit.cover)
+                                    : (widget.animal?['foto'] != null
+                                        ? Image.network(widget.animal!['foto'], fit: BoxFit.cover)
+                                        : const Icon(Icons.pets, size: 42, color: corVerdePrincipal)),
+                              ),
+                            ),
                           ),
-                          child: ClipOval(
-                            child: _fotoAnimalBytes != null
-                                ? Image.memory(_fotoAnimalBytes!, fit: BoxFit.cover)
-                                : (widget.animal?['foto'] != null
-                                    ? Image.network(widget.animal!['foto'], fit: BoxFit.cover)
-                                    : const Icon(Icons.pets, size: 42, color: corVerdePrincipal)),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: _mostrarOpcoesFoto,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: corVerdePrincipal,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Toque para adicionar ou alterar a foto',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: corTextoSecundario,
                         ),
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: GestureDetector(
-                          onTap: _mostrarOpcoesFoto,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: corVerdePrincipal,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Formatos aceitos: JPG ou PNG (opcional)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: corTextoSecundario.withOpacity(0.7),
                         ),
                       ),
                     ],
@@ -389,7 +430,11 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 // CARD 1: IDENTIFICAÇÃO
                 _buildCardSection(
                   children: [
-                    _buildSectionHeader('IDENTIFICAÇÃO', Icons.badge_outlined),
+                    _buildSectionHeader(
+                      'IDENTIFICAÇÃO',
+                      Icons.badge_outlined,
+                      subtitle: 'Insira os dados principais de registro do animal no sistema.',
+                    ),
                     _buildTextField(
                       controller: _brincoController,
                       label: 'Número do Brinco *',
@@ -410,7 +455,11 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 // CARD 2: CARACTERÍSTICAS
                 _buildCardSection(
                   children: [
-                    _buildSectionHeader('CARACTERÍSTICAS', Icons.tune),
+                    _buildSectionHeader(
+                      'CARACTERÍSTICAS',
+                      Icons.tune,
+                      subtitle: 'Informe as especificações físicas e raciais para controle de rebanho.',
+                    ),
                     _buildTextField(
                       controller: _racaController,
                       label: 'Raça / Linhagem *',
@@ -463,7 +512,11 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 // CARD 3: OUTRAS INFORMAÇÕES
                 _buildCardSection(
                   children: [
-                    _buildSectionHeader('OUTRAS INFORMAÇÕES', Icons.info_outline),
+                    _buildSectionHeader(
+                      'OUTRAS INFORMAÇÕES',
+                      Icons.info_outline,
+                      subtitle: 'Registre datas importantes e detalhes adicionais de acompanhamento.',
+                    ),
                     InkWell(
                       onTap: _selecionarData,
                       borderRadius: BorderRadius.circular(12),
