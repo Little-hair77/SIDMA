@@ -32,7 +32,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
 
   bool get _editando => widget.animal != null;
 
-  // Paleta de Cores 
+  // Paleta de Cores do Projeto
   static const Color corAppBar = Color(0xFF1E2A38);
   static const Color corVerdePrincipal = Color(0xFF00B67A);
   static const Color corVerdeSuave = Color(0xFFE6F4EA);
@@ -190,7 +190,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                 child: Text(
                   'Foto do Animal',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: corTextoPrimario,
                   ),
@@ -198,7 +198,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined, color: corVerdePrincipal),
-                title: const Text('Tirar Foto da Câmera'),
+                title: const Text('Tirar foto com a câmera'),
                 onTap: () {
                   Navigator.pop(context);
                   _alterarFoto(ImageSource.camera);
@@ -206,7 +206,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               ),
               ListTile(
                 leading: const Icon(Icons.image_search_outlined, color: corVerdePrincipal),
-                title: const Text('Escolher da Galeria'),
+                title: const Text('Escolher da galeria'),
                 onTap: () {
                   Navigator.pop(context);
                   _alterarFoto(ImageSource.gallery);
@@ -215,7 +215,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               if (_fotoAnimalBytes != null || (widget.animal?['foto'] != null))
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  title: const Text('Remover Foto', style: TextStyle(color: Colors.redAccent)),
+                  title: const Text('Remover foto', style: TextStyle(color: Colors.redAccent)),
                   onTap: () {
                     Navigator.pop(context);
                     setState(() => _fotoAnimalBytes = null);
@@ -229,7 +229,22 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     );
   }
 
-  // Campo de texto limpo e direto, sem caixas desnecessárias no ícone
+  Widget _buildCardSection({required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: corBordaInput, width: 0.8),
+      ),
+      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.only(bottom: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -244,20 +259,20 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
       keyboardType: keyboardType,
       validator: validator,
       maxLines: maxLines,
-      style: const TextStyle(color: corTextoPrimario, fontSize: 15, fontWeight: FontWeight.w500),
+      style: const TextStyle(color: corTextoPrimario, fontSize: 14, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-        prefixIcon: Icon(prefixIcon, color: corTextoSecundario, size: 22),
+        hintStyle: TextStyle(color: corTextoSecundario.withOpacity(0.6), fontSize: 13),
+        prefixIcon: Icon(prefixIcon, color: corTextoSecundario, size: 20),
         filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: corTextoSecundario, fontSize: 14),
+        fillColor: corFundo,
+        labelStyle: const TextStyle(color: corTextoSecundario, fontSize: 13),
         floatingLabelStyle: const TextStyle(color: corVerdePrincipal, fontWeight: FontWeight.bold),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: corBordaInput, width: 1),
+          borderSide: BorderSide(color: corBordaInput.withOpacity(0.8), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -275,10 +290,9 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     );
   }
 
-  // Títulos de Seção discretos e organizados
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 14.0),
       child: Row(
         children: [
           Icon(icon, size: 18, color: corVerdePrincipal),
@@ -286,7 +300,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: corTextoSecundario,
               letterSpacing: 0.8,
@@ -311,212 +325,198 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
-        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Avatar / Seleção de Foto
+                // Topo: Photo Picker Clean
                 Center(
-                  child: Column(
+                  child: Stack(
                     children: [
                       GestureDetector(
                         onTap: _mostrarOpcoesFoto,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: corVerdeSuave,
-                              ),
-                              padding: const EdgeInsets.all(4),
-                              child: CircleAvatar(
-                                radius: 52,
-                                backgroundColor: corVerdeSuave,
-                                backgroundImage: _fotoAnimalBytes != null
-                                    ? MemoryImage(_fotoAnimalBytes!)
-                                    : (widget.animal?['foto'] != null
-                                        ? NetworkImage(widget.animal!['foto'])
-                                        : null) as ImageProvider?,
-                                child: _fotoAnimalBytes == null && widget.animal?['foto'] == null
-                                    ? const Icon(Icons.pets, size: 48, color: corVerdePrincipal)
-                                    : null,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 2,
-                              right: 2,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: corVerdePrincipal,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2.5),
-                                ),
-                                padding: const EdgeInsets.all(7),
-                                child: const Icon(Icons.camera_alt, size: 15, color: Colors.white),
-                              ),
-                            ),
-                          ],
+                        child: Container(
+                          width: 104,
+                          height: 104,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: corVerdeSuave,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: _fotoAnimalBytes != null
+                                ? Image.memory(_fotoAnimalBytes!, fit: BoxFit.cover)
+                                : (widget.animal?['foto'] != null
+                                    ? Image.network(widget.animal!['foto'], fit: BoxFit.cover)
+                                    : const Icon(Icons.pets, size: 42, color: corVerdePrincipal)),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _mostrarOpcoesFoto,
-                        child: Text(
-                          _fotoAnimalBytes == null && widget.animal?['foto'] == null
-                              ? 'Adicionar Foto'
-                              : 'Alterar Foto',
-                          style: const TextStyle(
-                            color: corVerdePrincipal,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: _mostrarOpcoesFoto,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: corVerdePrincipal,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
 
-                const SizedBox(height: 12),
-
-                // SEÇÃO 1: IDENTIFICAÇÃO
-                _buildSectionHeader('IDENTIFICAÇÃO', Icons.badge_outlined),
-                _buildTextField(
-                  controller: _brincoController,
-                  label: 'Número do Brinco *',
-                  hint: 'Ex: 1024A',
-                  prefixIcon: Icons.tag,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Insira o número do brinco' : null,
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _nomeController,
-                  label: 'Nome / Apelido (Opcional)',
-                  hint: 'Ex: Mimosa',
-                  prefixIcon: Icons.edit_note,
-                ),
-
-                const SizedBox(height: 20),
-
-                // SEÇÃO 2: CARACTERÍSTICAS
-                _buildSectionHeader('CARACTERÍSTICAS', Icons.tune),
-                _buildTextField(
-                  controller: _racaController,
-                  label: 'Raça / Linhagem *',
-                  hint: 'Ex: Nelore, Gir, Guzerá',
-                  prefixIcon: Icons.category_outlined,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Insira a raça' : null,
-                ),
-                const SizedBox(height: 12),
-                
-                // Dropdown limpo no mesmo formato dos inputs
-                DropdownButtonFormField<String>(
-                  value: _sexoSelected,
-                  style: const TextStyle(color: corTextoPrimario, fontSize: 15, fontWeight: FontWeight.w500),
-                  decoration: InputDecoration(
-                    labelText: 'Sexo *',
-                    prefixIcon: const Icon(Icons.transgender, color: corTextoSecundario, size: 22),
-                    filled: true,
-                    fillColor: Colors.white,
-                    labelStyle: const TextStyle(color: corTextoSecundario, fontSize: 14),
-                    floatingLabelStyle: const TextStyle(color: corVerdePrincipal, fontWeight: FontWeight.bold),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: corBordaInput, width: 1),
+                // CARD 1: IDENTIFICAÇÃO
+                _buildCardSection(
+                  children: [
+                    _buildSectionHeader('IDENTIFICAÇÃO', Icons.badge_outlined),
+                    _buildTextField(
+                      controller: _brincoController,
+                      label: 'Número do Brinco *',
+                      hint: 'Ex: 1024A',
+                      prefixIcon: Icons.tag,
+                      validator: (v) => v == null || v.trim().isEmpty ? 'Insira o número do brinco' : null,
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: corVerdePrincipal, width: 1.5),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _nomeController,
+                      label: 'Nome / Apelido (Opcional)',
+                      hint: 'Ex: Mimosa',
+                      prefixIcon: Icons.edit_note,
                     ),
-                  ),
-                  items: ['Fêmea', 'Macho'].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (novo) {
-                    if (novo != null) setState(() => _sexoSelected = novo);
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _pesoController,
-                  label: 'Peso Estimado (kg)',
-                  hint: 'Ex: 450',
-                  keyboardType: TextInputType.number,
-                  prefixIcon: Icons.scale_outlined,
+                  ],
                 ),
 
-                const SizedBox(height: 20),
-
-                // SEÇÃO 3: OUTRAS INFORMAÇÕES
-                _buildSectionHeader('OUTRAS INFORMAÇÕES', Icons.info_outline),
-                
-                // Seletor de Data Clean
-                InkWell(
-                  onTap: _selecionarData,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Ink(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: corBordaInput),
+                // CARD 2: CARACTERÍSTICAS
+                _buildCardSection(
+                  children: [
+                    _buildSectionHeader('CARACTERÍSTICAS', Icons.tune),
+                    _buildTextField(
+                      controller: _racaController,
+                      label: 'Raça / Linhagem *',
+                      hint: 'Ex: Nelore, Gir, Guzerá',
+                      prefixIcon: Icons.category_outlined,
+                      validator: (v) => v == null || v.trim().isEmpty ? 'Insira a raça' : null,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, color: corTextoSecundario, size: 20),
-                        const SizedBox(width: 12),
-                        const Text('Data de Nascimento', style: TextStyle(fontSize: 14, color: corTextoSecundario)),
-                        const Spacer(),
-                        Text(
-                          _dataNascimento == null
-                              ? 'Não informada'
-                              : "${_dataNascimento!.day.toString().padLeft(2, '0')}/${_dataNascimento!.month.toString().padLeft(2, '0')}/${_dataNascimento!.year}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: _dataNascimento != null ? corVerdePrincipal : corTextoSecundario,
-                            fontSize: 14,
-                          ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: _sexoSelected,
+                      style: const TextStyle(color: corTextoPrimario, fontSize: 14, fontWeight: FontWeight.w500),
+                      decoration: InputDecoration(
+                        labelText: 'Sexo *',
+                        prefixIcon: const Icon(Icons.transgender, color: corTextoSecundario, size: 20),
+                        filled: true,
+                        fillColor: corFundo,
+                        labelStyle: const TextStyle(color: corTextoSecundario, fontSize: 13),
+                        floatingLabelStyle: const TextStyle(color: corVerdePrincipal, fontWeight: FontWeight.bold),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: corBordaInput.withOpacity(0.8), width: 1),
                         ),
-                      ],
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: corVerdePrincipal, width: 1.5),
+                        ),
+                      ),
+                      items: ['Fêmea', 'Macho'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (novo) {
+                        if (novo != null) setState(() => _sexoSelected = novo);
+                      },
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _pesoController,
+                      label: 'Peso Estimado (kg)',
+                      hint: 'Ex: 450',
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.scale_outlined,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _observacoesController,
-                  label: 'Observações / Histórico',
-                  hint: 'Ex: Histórico de vacinas, medicação...',
-                  prefixIcon: Icons.description_outlined,
-                  maxLines: 2,
+
+                // CARD 3: OUTRAS INFORMAÇÕES
+                _buildCardSection(
+                  children: [
+                    _buildSectionHeader('OUTRAS INFORMAÇÕES', Icons.info_outline),
+                    InkWell(
+                      onTap: _selecionarData,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Ink(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: corFundo,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: corBordaInput.withOpacity(0.8)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, color: corTextoSecundario, size: 18),
+                            const SizedBox(width: 12),
+                            const Text('Data de Nascimento', style: TextStyle(fontSize: 13, color: corTextoSecundario)),
+                            const Spacer(),
+                            Text(
+                              _dataNascimento == null
+                                  ? 'Não informada'
+                                  : "${_dataNascimento!.day.toString().padLeft(2, '0')}/${_dataNascimento!.month.toString().padLeft(2, '0')}/${_dataNascimento!.year}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _dataNascimento != null ? corVerdePrincipal : corTextoSecundario,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _observacoesController,
+                      label: 'Observações / Histórico',
+                      hint: 'Ex: Histórico de vacinas, medicação...',
+                      prefixIcon: Icons.description_outlined,
+                      maxLines: 2,
+                    ),
+                  ],
                 ),
 
                 if (_erro != null) ...[
-                  const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.red[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.redAccent, width: 0.5),
+                      border: Border.all(color: Colors.redAccent.shade100, width: 0.8),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                        const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -529,9 +529,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                   ),
                 ],
 
-                const SizedBox(height: 28),
-
-                // Botão de Salvar
+                // Botão principal de ação
                 if (_carregando)
                   const Center(child: CircularProgressIndicator(color: corVerdePrincipal))
                 else
@@ -540,7 +538,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                     icon: const Icon(Icons.check_circle_outline, size: 20),
                     label: Text(
                       _editando ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.5),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: corVerdePrincipal,
@@ -550,7 +548,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
               ],
             ),
           ),
