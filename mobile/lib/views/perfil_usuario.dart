@@ -35,13 +35,114 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   }
 
   Future<void> _buscarDadosUsuario() async {
-    final dados = await _apiService.obterUsuarioSalvo();
+    // Tenta buscar os dados atualizados do servidor; se não conseguir (ex: sem internet),
+    // cai para o cache salvo localmente no último login.
+    final dadosServidor = await _apiService.buscarPerfil();
+    final dados = dadosServidor ?? await _apiService.obterUsuarioSalvo();
+
     if (!mounted) return;
     setState(() {
       _nome = dados['nome']?.isNotEmpty == true ? dados['nome']! : 'Usuário SIDMA';
       _email = dados['email']?.isNotEmpty == true ? dados['email']! : 'E-mail não informado';
       _carregandoDados = false;
     });
+  }
+
+  void _mostrarIndisponivel(String recurso) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$recurso ainda não está disponível nesta versão.')),
+    );
+  }
+
+  Future<void> _abrirEdicaoPerfil() async {
+    final controladorNome = TextEditingController(text: _nome == 'Usuário SIDMA' ? '' : _nome);
+    final controladorEmail = TextEditingController(text: _email == 'E-mail não informado' ? '' : _email);
+    final chaveFormulario = GlobalKey<FormState>();
+    bool salvando = false;
+
+    final salvou = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Editar Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Form(
+                key: chaveFormulario,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: controladorNome,
+                      decoration: const InputDecoration(labelText: 'Nome'),
+                      validator: (valor) =>
+                          (valor == null || valor.trim().isEmpty) ? 'Informe seu nome.' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: controladorEmail,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(labelText: 'E-mail'),
+                      validator: (valor) {
+                        if (valor == null || valor.trim().isEmpty) return 'Informe seu e-mail.';
+                        if (!valor.contains('@') || !valor.contains('.')) return 'E-mail inválido.';
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: salvando ? null : () => Navigator.of(context).pop(false),
+                  child: const Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: corVerdePrimaria),
+                  onPressed: salvando
+                      ? null
+                      : () async {
+                          if (!chaveFormulario.currentState!.validate()) return;
+
+                          setStateDialog(() => salvando = true);
+                          final resultado = await _apiService.atualizarPerfil(
+                            controladorNome.text.trim(),
+                            controladorEmail.text.trim(),
+                          );
+                          setStateDialog(() => salvando = false);
+
+                          if (!context.mounted) return;
+
+                          if (resultado['sucesso'] == true) {
+                            Navigator.of(context).pop(true);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(resultado['mensagem'] ?? 'Erro ao salvar perfil.')),
+                            );
+                          }
+                        },
+                  child: salvando
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Salvar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (salvou == true) {
+      await _buscarDadosUsuario();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil atualizado com sucesso.')),
+      );
+    }
   }
 
   Future<void> _alterarFoto(ImageSource fonte) async {
@@ -271,16 +372,17 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                               ),
                               child: Column(
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(16.0),
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                    ),
                                     child: Column(
                                       children: [
-                                        _buildInfoTile(Icons.assignment_ind_outlined, 'Cargo/Função', 'Produtor / Gestor'),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                                          child: Divider(height: 16, thickness: 0.5),
+                                        _buildAcaoMenu(
+                                          Icons.edit_outlined,
+                                          'Editar Perfil',
+                                          onTap: _abrirEdicaoPerfil,
                                         ),
-                                        _buildInfoTile(Icons.verified_user_outlined, 'Nível de Acesso', 'Administrador'),
                                       ],
                                     ),
                                   ),
@@ -294,9 +396,13 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                     ),
                                     child: Column(
                                       children: [
-                                        _buildAcaoMenu(Icons.notifications_none, 'Notificações', onTap: () {}),
-                                        _buildAcaoMenu(Icons.security, 'Segurança e Senha', onTap: () {}),
-                                        _buildAcaoMenu(Icons.help_outline, 'Suporte SIDMA', onTap: () {}),
+                                        const Divider(height: 1, thickness: 0.5),
+                                        _buildAcaoMenu(Icons.notifications_none, 'Notificações',
+                                            onTap: () => _mostrarIndisponivel('Notificações')),
+                                        _buildAcaoMenu(Icons.security, 'Segurança e Senha',
+                                            onTap: () => _mostrarIndisponivel('Segurança e Senha')),
+                                        _buildAcaoMenu(Icons.help_outline, 'Suporte SIDMA',
+                                            onTap: () => _mostrarIndisponivel('Suporte SIDMA')),
                                         const Divider(height: 1, thickness: 0.5),
                                         _buildAcaoMenu(
                                           Icons.exit_to_app, 
@@ -353,31 +459,6 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                 ),
               ],
             ),
-    );
-  }
-
-  // Widget auxiliar para os dados do topo do card
-  Widget _buildInfoTile(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: corVerdePrimaria.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: corVerdePrimaria, size: 20),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: corTextoSecundario)),
-            const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: corTextoPrimario)),
-          ],
-        ),
-      ],
     );
   }
 

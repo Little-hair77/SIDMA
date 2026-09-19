@@ -69,7 +69,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     return Scaffold(
       backgroundColor: corFundo,
       
-      // APP BAR INSTITUCIONAL
+      // APP BAR 
       appBar: AppBar(
         backgroundColor: corAzulMarinho,
         foregroundColor: Colors.white,

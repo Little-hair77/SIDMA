@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../services/api_service.dart';
+import 'animais.dart';
 import 'captura.dart';
 import 'historico.dart';
 import 'login.dart';
@@ -20,9 +24,9 @@ class _TelaDashboardState extends State<TelaDashboard> {
   String _nomeUsuario = '';
   List<dynamic> _analises = [];
 
-  // Métrica simuladas / calculadas dos dados
-  int _totalAnimais = 128;
-  int _emTratamento = 5;
+  // Métricas calculadas a partir dos dados reais retornados pela API
+  int _totalAnimais = 0;
+  int _emTratamento = 0;
 
   // Paleta de Cores
   static const Color corVerdePrimaria = Color(0xFF10B981); 
@@ -44,14 +48,72 @@ class _TelaDashboardState extends State<TelaDashboard> {
 
     final usuario = await _apiService.obterUsuarioSalvo();
     final historico = await _apiService.buscarHistorico();
+    final animais = await _apiService.listarAnimais();
 
     if (!mounted) return;
+
+    final listaAnimais = animais ?? [];
+    final totalEmCarencia = listaAnimais
+        .where((a) => a['em_carencia'] == true)
+        .length;
 
     setState(() {
       _nomeUsuario = usuario['nome']?.isNotEmpty == true ? usuario['nome']! : (usuario['email'] ?? 'Produtor');
       _analises = historico ?? [];
+      _totalAnimais = listaAnimais.length;
+      _emTratamento = totalEmCarencia;
       _carregando = false;
     });
+  }
+
+  Future<void> _compartilharRelatorio() async {
+    final documento = pw.Document();
+    final agora = DateTime.now();
+    final dataGerado =
+        '${agora.day.toString().padLeft(2, '0')}/${agora.month.toString().padLeft(2, '0')}/${agora.year}';
+
+    documento.addPage(
+      pw.Page(
+        build: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              'SIDMA - Relatório de Diagnósticos',
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text('Gerado em: $dataGerado', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            pw.SizedBox(height: 16),
+            pw.Text('Total de animais no rebanho: $_totalAnimais'),
+            pw.Text('Animais em tratamento/carência: $_emTratamento'),
+            pw.Text('Total de análises registradas: ${_analises.length}'),
+            pw.Text('Análises com suspeita de mastite: $_suspeitasDiagnostico'),
+            pw.SizedBox(height: 16),
+            pw.Text('Últimas análises:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 6),
+            ..._analises.take(10).map((a) => pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 4),
+                  child: pw.Text(
+                    '${a['criado_em'] ?? 'Data N/I'} — ${a['resultado'] ?? 'N/I'} (confiança: ${a['confianca'] ?? 'N/A'})',
+                    style: const pw.TextStyle(fontSize: 11),
+                  ),
+                )),
+            pw.SizedBox(height: 20),
+            pw.Text(
+              'Documento gerado pelo SIDMA — Sistema Inteligente de Auxílio ao Diagnóstico de Mastite.',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await Printing.sharePdf(bytes: await documento.save(), filename: 'relatorio_sidma.pdf');
+  }
+
+  void _sincronizarDadosOffline() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sincronização offline ainda não está disponível nesta versão.')),
+    );
   }
 
   Future<void> _sair() async {
@@ -185,7 +247,11 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                 legenda: 'Cabeças ativas',
                                 icone: Icons.agriculture_outlined,
                                 corDestaque: corAzulMarinho,
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.of(context)
+                                      .push(MaterialPageRoute(builder: (_) => const TelaAnimais()))
+                                      .then((_) => _carregarDados());
+                                },
                               ),
                               _ModuloCardData(
                                 titulo: 'Diagnósticos IA',
@@ -206,7 +272,13 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                 legenda: 'Animais isolados',
                                 icone: Icons.medical_services_outlined,
                                 corDestaque: const Color(0xFFF59E0B), 
-                                onTap: () {},
+                                onTap: () {
+                                  // TODO: ainda não existe uma tela dedicada de "animais em tratamento".
+                                  // Por ora, direciona para o Rebanho, onde cada animal exibe seu status de carência.
+                                  Navigator.of(context)
+                                      .push(MaterialPageRoute(builder: (_) => const TelaAnimais()))
+                                      .then((_) => _carregarDados());
+                                },
                               ),
                               _ModuloCardData(
                                 titulo: 'Laudos',
@@ -236,14 +308,14 @@ class _TelaDashboardState extends State<TelaDashboard> {
                           titulo: 'Sincronizar Dados Offline',
                           icone: Icons.cloud_sync_outlined,
                           destaque: false,
-                          onTap: () {},
+                          onTap: _sincronizarDadosOffline,
                         ),
                         const SizedBox(height: 10),
                         _AcaoRapidaBotao(
                           titulo: 'Compartilhar Relatório',
                           icone: Icons.share_outlined,
                           destaque: true,
-                          onTap: () {},
+                          onTap: _compartilharRelatorio,
                         ),
                       ]),
                     ),

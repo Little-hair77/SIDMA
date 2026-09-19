@@ -4,7 +4,7 @@ import '../core/usuario_estado.dart';
 import '../views/dashboard.dart';
 import '../views/animais.dart';
 import '../views/historico.dart';
-import '../views/pefil_usuario.dart'; 
+import '../views/perfil_usuario.dart'; 
 import '../views/captura.dart';
 
 class TelaPrincipal extends StatefulWidget {

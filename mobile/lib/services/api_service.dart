@@ -130,6 +130,35 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>?> buscarPerfil() async {
+    try {
+      final response = await _dio.get("perfil/");
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'nome': response.data['nome'] ?? '', 'email': response.data['email'] ?? ''};
+      }
+      return null;
+    } on DioException catch (e) {
+      print("Erro ao buscar perfil: ${e.message}");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> atualizarPerfil(String nome, String email) async {
+    try {
+      final response = await _dio.put("perfil/", data: {"nome": nome, "email": email});
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        // Mantém o storage local sincronizado, já que outras telas (ex: Dashboard) leem daqui
+        await _storage.write(key: _chaveUsuarioNome, value: response.data['nome'] ?? '');
+        await _storage.write(key: _chaveUsuarioEmail, value: response.data['email'] ?? '');
+        return {'sucesso': true, 'nome': response.data['nome'], 'email': response.data['email']};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível atualizar o perfil.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
   Future<bool> estaLogado() async {
     final token = await _storage.read(key: _chaveAccessToken);
     return token != null;

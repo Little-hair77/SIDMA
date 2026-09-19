@@ -7,7 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -82,3 +82,29 @@ def google_login(request):
     )
 
     return Response(resposta_com_token(usuario))
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def perfil_usuario(request):
+    """Consulta e atualização dos dados de perfil (nome e e-mail) do usuário autenticado."""
+    usuario = request.user
+
+    if request.method == 'GET':
+        return Response({'status': 'sucesso', 'nome': usuario.first_name, 'email': usuario.email})
+
+    nome = (request.data.get('nome') or '').strip()
+    email = (request.data.get('email') or '').strip().lower()
+
+    if not nome or not email:
+        return Response({'status': 'erro', 'mensagem': 'Nome e e-mail são obrigatórios.'}, status=400)
+
+    if User.objects.filter(email=email).exclude(id=usuario.id).exists():
+        return Response({'status': 'erro', 'mensagem': 'Já existe uma conta com esse e-mail.'}, status=400)
+
+    usuario.first_name = nome
+    usuario.email = email
+    usuario.username = email  # login é feito por e-mail, então username precisa acompanhar
+    usuario.save()
+
+    return Response({'status': 'sucesso', 'nome': usuario.first_name, 'email': usuario.email})
