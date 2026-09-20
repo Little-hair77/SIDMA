@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'cadastro_animal.dart';
 import 'registrar_tratamento.dart';
+import 'registrar_ccs.dart';
 import '../services/api_service.dart';
 
 class TelaDetalheAnimal extends StatefulWidget {
@@ -364,6 +365,19 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                     corFundo: corFundo,
                                     corIcone: corTextoSuave,
                                     onTap: _exportarFichaPdf,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _BotaoAcaoIcone(
+                                    icone: Icons.biotech_outlined,
+                                    corFundo: const Color(0xFFEFF6FF),
+                                    corIcone: const Color(0xFF2563EB),
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => TelaRegistrarCcs(animal: _animal),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),

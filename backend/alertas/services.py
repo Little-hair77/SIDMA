@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.utils import timezone
 from .models import Alerta
 
-DURACAO_CICLO_CIO_DIAS = 21  # média do ciclo estral em bovinos
+DURACAO_CICLO_CIO_DIAS = 21  
 
 
 def verificar_alerta_reincidencia(animal):
@@ -50,6 +50,33 @@ def resolver_alertas_carencia_vencidos(usuario):
     ).update(ativo=False, resolvido_em=timezone.now())
 
 
+def verificar_alerta_ccs_elevado(registro):
+    """Cria (ou resolve) o alerta de CCS elevada com base no registro mais recente do animal."""
+    from rebanho.models import RegistroCcs
+
+    animal = registro.animal
+    ultimo = animal.registros_ccs.order_by('-data_coleta', '-criado_em').first()
+
+    if ultimo and ultimo.risco == RegistroCcs.Risco.ALTO:
+        ja_existe = Alerta.objects.filter(animal=animal, tipo='CCS_ELEVADO', ativo=True).exists()
+        if not ja_existe:
+            Alerta.objects.create(
+                usuario=animal.usuario,
+                animal=animal,
+                tipo='CCS_ELEVADO',
+                mensagem=(
+                    f"{animal.brinco} registrou CCS de {ultimo.valor_ccs} céls/mL em "
+                    f"{ultimo.data_coleta:%d/%m/%Y}, indicando risco de mastite subclínica."
+                ),
+                data_referencia=ultimo.data_coleta,
+            )
+    else:
+        # Novo registro voltou ao normal — resolve automaticamente o alerta anterior.
+        Alerta.objects.filter(animal=animal, tipo='CCS_ELEVADO', ativo=True).update(
+            ativo=False, resolvido_em=timezone.now()
+        )
+
+
 def verificar_alerta_cio(animal):
     """Cria o alerta de cio quando a data prevista (última + ~21 dias) está próxima."""
     if not animal.data_ultimo_cio:
@@ -89,3 +116,6 @@ def sincronizar_alertas_usuario(usuario):
     for animal in Animal.objects.filter(usuario=usuario):
         verificar_alerta_reincidencia(animal)
         verificar_alerta_cio(animal)
+        ultimo_ccs = animal.registros_ccs.order_by('-data_coleta', '-criado_em').first()
+        if ultimo_ccs:
+            verificar_alerta_ccs_elevado(ultimo_ccs)

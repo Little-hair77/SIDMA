@@ -14,6 +14,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   final ApiService _apiService = ApiService();
   List<dynamic> _analises = [];
   bool _carregando = true;
+  bool _comErro = false;
 
   // Paleta de Cores
   static const Color corVerdePrimaria   = Color(0xFF10B981); 
@@ -25,10 +26,27 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   void initState() {
     super.initState();
     _carregar();
+    // Recarrega automaticamente quando uma nova análise é registrada em outra
+    // tela (ex: botão flutuante central), já que esta tela fica "viva" dentro
+    // do IndexedStack e não seria recriada ao voltar para essa aba.
+    ApiService.notificadorAnalises.addListener(_aoNovaAnalise);
+  }
+
+  void _aoNovaAnalise() {
+    if (mounted) _carregar();
+  }
+
+  @override
+  void dispose() {
+    ApiService.notificadorAnalises.removeListener(_aoNovaAnalise);
+    super.dispose();
   }
 
   Future<void> _carregar() async {
-    setState(() => _carregando = true);
+    setState(() {
+      _carregando = true;
+      _comErro = false;
+    });
     final historico = await _apiService.buscarHistorico();
     
     if (historico != null) {
@@ -42,6 +60,8 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     if (!mounted) return;
     setState(() {
       _analises = historico ?? [];
+      // null = falha na requisição (rede/autenticação); [] = sem análises mesmo. São coisas diferentes.
+      _comErro = historico == null;
       _carregando = false;
     });
   }
@@ -69,7 +89,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     return Scaffold(
       backgroundColor: corFundo,
       
-      // APP BAR 
+      // APP BAR INSTITUCIONAL
       appBar: AppBar(
         backgroundColor: corAzulMarinho,
         foregroundColor: Colors.white,
@@ -91,7 +111,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           // MARCA D'ÁGUA SUAVE
           Center(
             child: Opacity(
-              opacity: 0.03,
+              opacity: 0.03, 
               child: Image.asset(
                 'assets/images/logoSIDMA-2.png',
                 width: 250,
@@ -103,7 +123,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           
           _carregando
               ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
-              : _analises.isEmpty
+              : _comErro
+                  ? _ConstruirEstadoErro(aoTentarNovamente: _carregar)
+                  : _analises.isEmpty
                   ? const _ConstruirEstadoVazio()
                   : RefreshIndicator(
                       color: corVerdePrimaria,
@@ -144,6 +166,47 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                       ),
                     ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConstruirEstadoErro extends StatelessWidget {
+  final VoidCallback aoTentarNovamente;
+  const _ConstruirEstadoErro({Key? key, required this.aoTentarNovamente}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 64, color: Colors.redAccent.withOpacity(0.6)),
+            const SizedBox(height: 16),
+            const Text(
+              'Não foi possível carregar o histórico',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Verifique sua conexão com a internet e se o servidor está acessível.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: aoTentarNovamente,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Animal
+from .models import Animal, RegistroCcs
 
 
 def calcular_carencia(a):
@@ -114,4 +114,74 @@ def animal_detalhes(request, animal_id):
         return Response({'status': 'sucesso', 'animal': serializar_animal(request, animal)})
 
     animal.delete()
+    return Response({'status': 'sucesso'})
+
+
+def serializar_registro_ccs(r):
+    return {
+        'id': r.id,
+        'valor_ccs': r.valor_ccs,
+        'data_coleta': r.data_coleta.isoformat(),
+        'laboratorio': r.laboratorio,
+        'observacoes': r.observacoes,
+        'risco': r.risco,
+        'risco_display': RegistroCcs.Risco(r.risco).label,
+        'criado_em': r.criado_em.isoformat(),
+    }
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def registros_ccs(request, animal_id):
+    try:
+        animal = Animal.objects.get(id=animal_id, usuario=request.user)
+    except Animal.DoesNotExist:
+        return Response({'status': 'erro', 'mensagem': 'Animal não encontrado.'}, status=404)
+
+    if request.method == 'GET':
+        registros = animal.registros_ccs.all()
+        return Response({'status': 'sucesso', 'registros_ccs': [serializar_registro_ccs(r) for r in registros]})
+
+    valor_ccs_raw = request.data.get('valor_ccs')
+    data_coleta_raw = request.data.get('data_coleta')
+
+    if valor_ccs_raw in (None, '') or not data_coleta_raw:
+        return Response({'status': 'erro', 'mensagem': 'Valor da CCS e data da coleta são obrigatórios.'}, status=400)
+
+    try:
+        valor_ccs = int(valor_ccs_raw)
+        if valor_ccs < 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return Response({'status': 'erro', 'mensagem': 'Valor da CCS inválido.'}, status=400)
+
+    data_coleta = parse_date(data_coleta_raw)
+    if not data_coleta:
+        return Response({'status': 'erro', 'mensagem': 'Data da coleta inválida.'}, status=400)
+
+    if data_coleta > timezone.localdate():
+        return Response({'status': 'erro', 'mensagem': 'A data da coleta não pode ser no futuro.'}, status=400)
+
+    registro = RegistroCcs.objects.create(
+        animal=animal,
+        valor_ccs=valor_ccs,
+        data_coleta=data_coleta,
+        laboratorio=(request.data.get('laboratorio') or '').strip(),
+        observacoes=(request.data.get('observacoes') or '').strip(),
+    )
+    from alertas.services import verificar_alerta_ccs_elevado
+    verificar_alerta_ccs_elevado(registro)
+
+    return Response({'status': 'sucesso', 'registro_ccs': serializar_registro_ccs(registro)})
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def registro_ccs_detalhe(request, animal_id, registro_id):
+    try:
+        registro = RegistroCcs.objects.get(id=registro_id, animal_id=animal_id, animal__usuario=request.user)
+    except RegistroCcs.DoesNotExist:
+        return Response({'status': 'erro', 'mensagem': 'Registro não encontrado.'}, status=404)
+
+    registro.delete()
     return Response({'status': 'sucesso'})

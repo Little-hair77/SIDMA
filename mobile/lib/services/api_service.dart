@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, ValueNotifier;
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
+  static final ValueNotifier<int> notificadorAnalises = ValueNotifier<int>(0);
+
   // Detecta automaticamente o endereço correto do backend conforme a plataforma:
   // - Web: 127.0.0.1 (o navegador roda na própria máquina onde o Django está)
   // - Emulador Android: 10.0.2.2 (alias especial que aponta para o localhost do PC hospedeiro)
@@ -184,7 +186,10 @@ class ApiService {
         if (animalId != null) "animal_id": animalId,
       });
       Response response = await _dio.post("diagnosticar/", data: formData);
-      if (response.statusCode == 200) return response.data;
+      if (response.statusCode == 200) {
+        notificadorAnalises.value++; // avisa Dashboard/Histórico para recarregar
+        return response.data;
+      }
       return null;
     } on DioException catch (e) {
       print("Erro na requisição Dio: ${e.message}");

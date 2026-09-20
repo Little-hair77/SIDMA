@@ -8,6 +8,7 @@ class Alerta(models.Model):
         ('REINCIDENCIA_MASTITE', 'Reincidência da Mastite'),
         ('CARENCIA', 'Fim de Carência'),
         ('CIO', 'Período de Cio (Atenção Reprodutiva)'),
+        ('CCS_ELEVADO', 'CCS Elevada (Risco de Mastite Subclínica)'),
         ('OUTRO', 'Outro Alerta'),
     ]
 
