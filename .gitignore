@@ -56,3 +56,13 @@ mobile/macos/Flutter/ephemeral/
 *.iml
 .DS_Store
 Thumbs.db
+
+# ---------- IA / Dataset de treinamento ----------
+# Imagens são pesadas e não fazem parte do código-fonte — não sobem pro GitHub.
+ai/dataset/
+ai/dataset_split/
+
+# Modelo treinado é um binário grande; mantenha versionados só os artefatos
+# leves e úteis para o TCC (labels.json, relatorio_classificacao.json, os .png).
+ai/models/*.keras
+ai/models/*.h5
