@@ -15,6 +15,9 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Caminho onde o modelo de IA treinado (ai/train_model.py) é procurado.
+# Enquanto os arquivos nao existirem, o backend usa classificacao simulada.
+AI_MODELS_DIR = BASE_DIR / "ai" / "models"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/

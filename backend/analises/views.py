@@ -1,10 +1,10 @@
-import random
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Analise
+from .ia import classificar_imagem_leite
 from rebanho.models import Animal
 
 
@@ -38,21 +38,20 @@ def diagnosticar_leite(request):
     if animal_id:
         animal = Animal.objects.filter(id=animal_id, usuario=request.user).first()
 
-    # Simulação mock (enquanto o modelo de IA não está pronto)
-    resultado_ia = random.choice([
-        Analise.Resultado.SEM_INDICIOS,
-        Analise.Resultado.POSSIVEL_MASTITE,
-        Analise.Resultado.AVALIACAO_ADICIONAL,
-    ])
-    confianca = round(random.uniform(70.0, 99.0), 2)
-
+    # Salva a imagem primeiro
+    # resultado/confiança abaixo são um placeholder, atualizados logo em seguida.
     analise = Analise.objects.create(
         usuario=request.user,
         animal=animal,
         imagem=imagem_recebida,
-        resultado=resultado_ia,
-        confianca=confianca,
+        resultado=Analise.Resultado.AVALIACAO_ADICIONAL,
+        confianca=0,
     )
+
+    resultado_ia, confianca, simulado = classificar_imagem_leite(analise.imagem.path)
+    analise.resultado = resultado_ia
+    analise.confianca = confianca
+    analise.save()
 
     if animal:
         from alertas.services import verificar_alerta_reincidencia
@@ -60,7 +59,11 @@ def diagnosticar_leite(request):
 
     resposta = serializar_analise(analise, request)
     resposta['status'] = 'sucesso'
-    resposta['mensagem'] = 'Análise processada com sucesso (Simulação).'
+    resposta['mensagem'] = (
+        'Análise processada com sucesso (Simulação — modelo de IA ainda não treinado).'
+        if simulado else
+        'Análise processada com sucesso.'
+    )
     return Response(resposta)
 
 
