@@ -62,6 +62,7 @@ Thumbs.db
 ai/dataset/
 ai/dataset_split/
 relatorio_dataset.json
+ai/models
 
 # Modelo treinado é um binário grande; mantenha versionados só os artefatos
 # leves e úteis para o TCC (labels.json, relatorio_classificacao.json, os .png).
