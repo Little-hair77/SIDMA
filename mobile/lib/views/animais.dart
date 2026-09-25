@@ -282,9 +282,29 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     );
   }
 
+  Widget _buildMiniTag(String texto, IconData icone, Color corTexto, Color corFundo) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: corFundo,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icone, size: 12, color: corTexto),
+          const SizedBox(width: 4),
+          Text(texto, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: corTexto)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAnimalCard(dynamic animal) {
     final bool emCarencia = animal['em_carencia'] == true;
     final bool alertaReincidencia = animal['alerta_reincidencia'] == true;
+    final bool ccsElevado = animal['ultimo_ccs_risco'] == 'ALTO';
+    final bool cioProximo = animal['cio_proximo'] == true;
 
     final Color corBorda = emCarencia ? Colors.redAccent : (alertaReincidencia ? Colors.amber.shade700 : Colors.transparent);
     final Color corFundoTag = emCarencia ? Colors.red.shade50 : (alertaReincidencia ? Colors.amber.shade50 : corVerdePrimaria.withOpacity(0.12));
@@ -359,6 +379,17 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                 ],
               ),
             ),
+            if (ccsElevado || cioProximo) ...[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (ccsElevado) _buildMiniTag('CCS Elevado', Icons.biotech_outlined, const Color(0xFF2563EB), const Color(0xFFEFF6FF)),
+                  if (cioProximo) _buildMiniTag('Cio Previsto', Icons.favorite_outline, const Color(0xFFDB2777), const Color(0xFFFCE7F3)),
+                ],
+              ),
+            ],
           ],
         ),
         trailing: PopupMenuButton<String>(

@@ -23,6 +23,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
   late final TextEditingController _observacoesController;
 
   DateTime? _dataNascimento;
+  DateTime? _dataUltimoCio;
   Uint8List? _fotoAnimalBytes;
 
   String _sexoSelected = 'Fêmea';
@@ -53,6 +54,9 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     _sexoSelected = widget.animal?['sexo'] ?? 'Fêmea';
     if (widget.animal?['data_nascimento'] != null) {
       _dataNascimento = DateTime.tryParse(widget.animal!['data_nascimento']);
+    }
+    if (widget.animal?['data_ultimo_cio'] != null) {
+      _dataUltimoCio = DateTime.tryParse(widget.animal!['data_ultimo_cio']);
     }
   }
 
@@ -90,6 +94,31 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
     }
   }
 
+  Future<void> _selecionarDataUltimoCio() async {
+    final escolhida = await showDatePicker(
+      context: context,
+      initialDate: _dataUltimoCio ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      helpText: 'Data do último cio observado',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: corVerdePrincipal,
+              onPrimary: Colors.white,
+              onSurface: corTextoPrimario,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (escolhida != null) {
+      setState(() => _dataUltimoCio = escolhida);
+    }
+  }
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -102,6 +131,11 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
       final dataFormatada = _dataNascimento != null
           ? '${_dataNascimento!.year.toString().padLeft(4, '0')}-${_dataNascimento!.month.toString().padLeft(2, '0')}-${_dataNascimento!.day.toString().padLeft(2, '0')}'
           : null;
+      // Se o usuário trocar o sexo para "Macho"
+      // depois de já ter registrado uma data, o campo deixa de ser enviado.
+      final dataCioFormatada = (_sexoSelected == 'Fêmea' && _dataUltimoCio != null)
+          ? '${_dataUltimoCio!.year.toString().padLeft(4, '0')}-${_dataUltimoCio!.month.toString().padLeft(2, '0')}-${_dataUltimoCio!.day.toString().padLeft(2, '0')}'
+          : null;
 
       final resultado = _editando
           ? await _apiService.atualizarAnimal(
@@ -113,6 +147,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               sexo: _sexoSelected,
               peso: _pesoController.text.trim(),
               observacoes: _observacoesController.text.trim(),
+              dataUltimoCio: dataCioFormatada,
               fotoBytes: _fotoAnimalBytes,
             )
           : await _apiService.cadastrarAnimal(
@@ -123,6 +158,7 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
               sexo: _sexoSelected,
               peso: _pesoController.text.trim(),
               observacoes: _observacoesController.text.trim(),
+              dataUltimoCio: dataCioFormatada,
               fotoBytes: _fotoAnimalBytes,
             );
 
@@ -547,6 +583,46 @@ class _TelaCadastroAnimalState extends State<TelaCadastroAnimal> {
                         ),
                       ),
                     ),
+                    if (_sexoSelected == 'Fêmea') ...[
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: _selecionarDataUltimoCio,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Ink(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: corFundo,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: corBordaInput.withOpacity(0.8)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.favorite_outline, color: corTextoSecundario, size: 18),
+                              const SizedBox(width: 12),
+                              const Text('Data do Último Cio', style: TextStyle(fontSize: 13, color: corTextoSecundario)),
+                              const Spacer(),
+                              Text(
+                                _dataUltimoCio == null
+                                    ? 'Não informada'
+                                    : "${_dataUltimoCio!.day.toString().padLeft(2, '0')}/${_dataUltimoCio!.month.toString().padLeft(2, '0')}/${_dataUltimoCio!.year}",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: _dataUltimoCio != null ? corVerdePrincipal : corTextoSecundario,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          'Usada para prever o próximo cio (~21 dias depois) e gerar um alerta de atenção reprodutiva.',
+                          style: TextStyle(fontSize: 11, color: corTextoSecundario),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     _buildTextField(
                       controller: _observacoesController,

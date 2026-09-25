@@ -149,7 +149,6 @@ class ApiService {
     try {
       final response = await _dio.put("perfil/", data: {"nome": nome, "email": email});
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
-        // Mantém o storage local sincronizado, já que outras telas (ex: Dashboard) leem daqui
         await _storage.write(key: _chaveUsuarioNome, value: response.data['nome'] ?? '');
         await _storage.write(key: _chaveUsuarioEmail, value: response.data['email'] ?? '');
         return {'sucesso': true, 'nome': response.data['nome'], 'email': response.data['email']};
@@ -187,7 +186,7 @@ class ApiService {
       });
       Response response = await _dio.post("diagnosticar/", data: formData);
       if (response.statusCode == 200) {
-        notificadorAnalises.value++; // avisa Dashboard/Histórico para recarregar
+        notificadorAnalises.value++;
         return response.data;
       }
       return null;
@@ -298,7 +297,7 @@ class ApiService {
 
   // - MÉTODOS DE ANIMAIS COM FORMDATA 
 
-  Future<Map<String, dynamic>> cadastrarAnimal(String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, Uint8List? fotoBytes}) async {
+  Future<Map<String, dynamic>> cadastrarAnimal(String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, String? dataUltimoCio, Uint8List? fotoBytes}) async {
     try {
       FormData formData = FormData.fromMap({
         "brinco": brinco,
@@ -308,6 +307,7 @@ class ApiService {
         if (dataNascimento != null) "data_nascimento": dataNascimento,
         if (peso != null && peso.isNotEmpty) "peso": peso,
         if (observacoes != null && observacoes.isNotEmpty) "observacoes": observacoes,
+        if (dataUltimoCio != null) "data_ultimo_cio": dataUltimoCio,
       });
 
       if (fotoBytes != null) {
@@ -325,7 +325,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> atualizarAnimal(int id, String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, Uint8List? fotoBytes}) async {
+  Future<Map<String, dynamic>> atualizarAnimal(int id, String brinco, String nome, String raca, String? dataNascimento, {String sexo = 'Fêmea', String? peso, String? observacoes, String? dataUltimoCio, Uint8List? fotoBytes}) async {
     try {
       FormData formData = FormData.fromMap({
         "brinco": brinco,
@@ -335,6 +335,7 @@ class ApiService {
         if (dataNascimento != null) "data_nascimento": dataNascimento,
         if (peso != null && peso.isNotEmpty) "peso": peso,
         if (observacoes != null && observacoes.isNotEmpty) "observacoes": observacoes,
+        if (dataUltimoCio != null) "data_ultimo_cio": dataUltimoCio,
       });
 
       if (fotoBytes != null) {

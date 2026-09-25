@@ -88,6 +88,13 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
             _linhaPdf('Data de nascimento', _animal['data_nascimento'] ?? 'N/I'),
             _linhaPdf('Total de análises', '${_animal['total_analises'] ?? 0}'),
             _linhaPdf('Situação de carência', emCarencia ? 'Em carência até ${_animal['carencia_ate']}' : 'Sem restrição'),
+            if ((_animal['sexo'] ?? '') == 'Fêmea')
+              _linhaPdf(
+                'Ciclo reprodutivo',
+                _animal['data_ultimo_cio'] != null
+                    ? 'Último cio em ${_animal['data_ultimo_cio']} — previsão do próximo: ${_animal['previsao_proximo_cio'] ?? 'N/I'}'
+                    : 'Sem registro de cio',
+              ),
             _linhaPdf('Última análise', ultimaAnalise != null ? '${ultimaAnalise['resultado']} (${ultimaAnalise['confianca']}) em ${ultimaAnalise['criado_em']}' : 'Nenhuma análise registrada'),
             if (_animal['observacoes']?.toString().isNotEmpty == true) ...[
               pw.SizedBox(height: 12),
@@ -141,6 +148,8 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
   Widget build(BuildContext context) {
     final bool emCarencia = _animal['em_carencia'] == true;
     final bool alertaReincidencia = _animal['alerta_reincidencia'] == true;
+    final bool cioProximo = _animal['cio_proximo'] == true;
+    final bool ehFemea = (_animal['sexo'] ?? '') == 'Fêmea';
 
     return Scaffold(
       backgroundColor: corFundo,
@@ -284,6 +293,8 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                           const _Badge(texto: 'CARÊNCIA', corFundo: Color(0xFFFEF2F2), corTexto: Color(0xFFEF4444), icone: Icons.warning_amber_rounded),
                                         if (alertaReincidencia)
                                           const _Badge(texto: 'REINCIDÊNCIA', corFundo: Color(0xFFFFEDD5), corTexto: Color(0xFFF97316), icone: Icons.repeat_rounded),
+                                        if (cioProximo)
+                                          const _Badge(texto: 'CIO PREVISTO', corFundo: Color(0xFFFCE7F3), corTexto: Color(0xFFDB2777), icone: Icons.favorite_outline),
                                       ],
                                     ),
                                   ],
@@ -319,6 +330,15 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                       rotulo: 'Situação de carência',
                                       valor: emCarencia ? 'Até ${_formatarDataSimples(_animal['carencia_ate'])}' : 'Sem restrição',
                                     ),
+                                    if (ehFemea) ...[
+                                      const SizedBox(height: 12),
+                                      _TextoInfo(
+                                        rotulo: 'Ciclo reprodutivo',
+                                        valor: _animal['data_ultimo_cio'] != null
+                                            ? 'Último cio: ${_formatarDataSimples(_animal['data_ultimo_cio'])}\nPrevisão: ${_formatarDataSimples(_animal['previsao_proximo_cio'])}'
+                                            : 'Sem registro de cio',
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),

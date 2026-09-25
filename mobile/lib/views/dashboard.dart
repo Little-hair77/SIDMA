@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -126,10 +127,34 @@ class _TelaDashboardState extends State<TelaDashboard> {
   }
 
   int get _suspeitasDiagnostico {
-    return _analises.where((a) {
-      final res = (a['resultado'] ?? '').toString().toLowerCase();
-      return res.contains('possível') || res.contains('suspeita') || res.contains('mastite');
-    }).length;
+    return _analises.where((a) => _ehSuspeita(a)).length;
+  }
+
+  static bool _ehSuspeita(dynamic analise) {
+    final res = (analise['resultado'] ?? '').toString().toLowerCase();
+    return res.contains('possível') || res.contains('suspeita') || res.contains('mastite');
+  }
+
+  /// Agrupa as análises dos últimos 7 dias (incluindo hoje) por data,
+  /// contando o total de análises e quantas foram sinalizadas como suspeitas.
+  List<Map<String, dynamic>> _dadosTendencia() {
+    final hoje = DateTime.now();
+    final diaBase = DateTime(hoje.year, hoje.month, hoje.day);
+    final dias = List.generate(7, (i) => diaBase.subtract(Duration(days: 6 - i)));
+
+    return dias.map((dia) {
+      final analisesDoDia = _analises.where((a) {
+        final dt = DateTime.tryParse((a['criado_em'] ?? '').toString())?.toLocal();
+        if (dt == null) return false;
+        return dt.year == dia.year && dt.month == dia.month && dt.day == dia.day;
+      }).toList();
+
+      return {
+        'data': dia,
+        'total': analisesDoDia.length,
+        'suspeitas': analisesDoDia.where((a) => _ehSuspeita(a)).length,
+      };
+    }).toList();
   }
 
   @override
@@ -273,8 +298,6 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                 icone: Icons.medical_services_outlined,
                                 corDestaque: const Color(0xFFF59E0B), 
                                 onTap: () {
-                                  // TODO: ainda não existe uma tela dedicada de "animais em tratamento".
-                                  // Por ora, direciona para o Rebanho, onde cada animal exibe seu status de carência.
                                   Navigator.of(context)
                                       .push(MaterialPageRoute(builder: (_) => const TelaAnimais()))
                                       .then((_) => _carregarDados());
@@ -299,7 +322,15 @@ class _TelaDashboardState extends State<TelaDashboard> {
                     ),
                   ),
 
-                  // 2 - AÇÕES RÁPIDAS
+                  // 2 - GRÁFICO DE TENDÊNCIA (RF26)
+                  SliverPadding(
+                    padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                    sliver: SliverToBoxAdapter(
+                      child: _GraficoTendencia(dados: _dadosTendencia()),
+                    ),
+                  ),
+
+                  // 3 - AÇÕES RÁPIDAS
                   SliverPadding(
                     padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
                     sliver: SliverList(
@@ -321,7 +352,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                     ),
                   ),
 
-                  // 3 - HISTÓRICO RECENTE
+                  // 4 - HISTÓRICO RECENTE
                   SliverPadding(
                     padding: const EdgeInsets.only(top: 28, left: 20, right: 20, bottom: 40),
                     sliver: SliverList(
@@ -608,6 +639,180 @@ class _CartaoAnalise extends StatelessWidget {
           const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1)),
         ],
       ),
+    );
+  }
+}
+
+// ==========================================
+// GRÁFICO DE TENDÊNCIA (RF26)
+// ==========================================
+
+class _GraficoTendencia extends StatelessWidget {
+  final List<Map<String, dynamic>> dados;
+  const _GraficoTendencia({required this.dados});
+
+  @override
+  Widget build(BuildContext context) {
+    final maiorTotal = dados
+        .map((d) => d['total'] as int)
+        .fold<int>(0, (a, b) => a > b ? a : b);
+    // maxY nunca fica em 0 (evita gráfico "achatado" quando não há dados ainda)
+    final maxY = (maiorTotal < 4 ? 4 : maiorTotal + 1).toDouble();
+    final intervaloEixoY = (maxY / 4).clamp(1.0, double.infinity);
+
+    final spotsTotal = <FlSpot>[
+      for (var i = 0; i < dados.length; i++)
+        FlSpot(i.toDouble(), (dados[i]['total'] as int).toDouble()),
+    ];
+    final spotsSuspeitas = <FlSpot>[
+      for (var i = 0; i < dados.length; i++)
+        FlSpot(i.toDouble(), (dados[i]['suspeitas'] as int).toDouble()),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tendência de Diagnósticos (7 dias)',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: _TelaDashboardState.corTextoPrimario,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: const [
+              _LegendaItem(cor: _TelaDashboardState.corAzulMarinho, texto: 'Total de análises'),
+              SizedBox(width: 16),
+              _LegendaItem(cor: Color(0xFFDC2626), texto: 'Suspeitas'),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 180,
+            child: dados.every((d) => (d['total'] as int) == 0)
+                ? const Center(
+                    child: Text(
+                      'Ainda não há análises suficientes\npara exibir a tendência.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: _TelaDashboardState.corTextoSecundario),
+                    ),
+                  )
+                : LineChart(
+                    LineChartData(
+                      minX: 0,
+                      maxX: (dados.length - 1).toDouble(),
+                      minY: 0,
+                      maxY: maxY,
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: intervaloEixoY,
+                        getDrawingHorizontalLine: (value) => const FlLine(
+                          color: Color(0xFFF1F5F9),
+                          strokeWidth: 1,
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      titlesData: FlTitlesData(
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 26,
+                            interval: intervaloEixoY,
+                            getTitlesWidget: (value, meta) => Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 10, color: _TelaDashboardState.corTextoSecundario),
+                            ),
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 24,
+                            interval: 1,
+                            getTitlesWidget: (value, meta) {
+                              final i = value.toInt();
+                              if (i < 0 || i >= dados.length) return const SizedBox.shrink();
+                              final dia = dados[i]['data'] as DateTime;
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                  '${dia.day.toString().padLeft(2, '0')}/${dia.month.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(fontSize: 10, color: _TelaDashboardState.corTextoSecundario),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spotsTotal,
+                          isCurved: true,
+                          color: _TelaDashboardState.corAzulMarinho,
+                          barWidth: 3,
+                          dotData: const FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: _TelaDashboardState.corAzulMarinho.withOpacity(0.08),
+                          ),
+                        ),
+                        LineChartBarData(
+                          spots: spotsSuspeitas,
+                          isCurved: true,
+                          color: const Color(0xFFDC2626),
+                          barWidth: 3,
+                          dotData: const FlDotData(show: true),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegendaItem extends StatelessWidget {
+  final Color cor;
+  final String texto;
+  const _LegendaItem({required this.cor, required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          texto,
+          style: const TextStyle(fontSize: 11, color: _TelaDashboardState.corTextoSecundario),
+        ),
+      ],
     );
   }
 }

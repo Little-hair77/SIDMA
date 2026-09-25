@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.utils.dateparse import parse_date
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
@@ -5,6 +6,25 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Animal, RegistroCcs
+
+# Mesma janela usada em alertas/services.py (DURACAO_CICLO_CIO_DIAS) para
+# prever a data do próximo cio a partir do último registrado.
+DURACAO_CICLO_CIO_DIAS = 21
+
+
+def calcular_previsao_cio(a):
+    """Retorna (cio_proximo: bool, previsao: date|None) a partir de data_ultimo_cio.
+    'cio_proximo' usa a mesma janela de alertas/services.verificar_alerta_cio
+    (1 dia antes até 2 dias depois da previsão), para que o selo na Ficha do
+    Animal coincida com o alerta gerado no backend."""
+    if not a.data_ultimo_cio:
+        return False, None
+
+    previsao = a.data_ultimo_cio + timedelta(days=DURACAO_CICLO_CIO_DIAS)
+    hoje = timezone.localdate()
+    janela_inicio = previsao - timedelta(days=1)
+    janela_fim = previsao + timedelta(days=2)
+    return janela_inicio <= hoje <= janela_fim, previsao
 
 
 def calcular_carencia(a):
@@ -33,6 +53,9 @@ def obter_ultima_analise(a):
 
 def serializar_animal(request, a):
     em_carencia, carencia_ate = calcular_carencia(a)
+    cio_proximo, previsao_cio = calcular_previsao_cio(a)
+    ultimo_ccs = a.registros_ccs.order_by('-data_coleta', '-criado_em').first() if hasattr(a, 'registros_ccs') else None
+
     return {
         'id': a.id,
         'brinco': a.brinco,
@@ -48,6 +71,11 @@ def serializar_animal(request, a):
         'carencia_ate': carencia_ate.isoformat() if carencia_ate else None,
         'alerta_reincidencia': calcular_alerta_reincidencia(a),
         'ultima_analise': obter_ultima_analise(a),
+        'data_ultimo_cio': a.data_ultimo_cio.isoformat() if a.data_ultimo_cio else None,
+        'previsao_proximo_cio': previsao_cio.isoformat() if previsao_cio else None,
+        'cio_proximo': cio_proximo,
+        'ultimo_ccs_risco': ultimo_ccs.risco if ultimo_ccs else None,
+        'ultimo_ccs_valor': ultimo_ccs.valor_ccs if ultimo_ccs else None,
     }
 
 
@@ -66,6 +94,7 @@ def animais(request):
         return Response({'status': 'erro', 'mensagem': 'Já existe um animal com esse brinco.'}, status=400)
 
     data_nascimento_raw = request.data.get('data_nascimento')
+    data_ultimo_cio_raw = request.data.get('data_ultimo_cio')
     peso_raw = request.data.get('peso')
 
     animal = Animal.objects.create(
@@ -74,6 +103,7 @@ def animais(request):
         nome=(request.data.get('nome') or '').strip(),
         raca=(request.data.get('raca') or '').strip(),
         data_nascimento=parse_date(data_nascimento_raw) if data_nascimento_raw else None,
+        data_ultimo_cio=parse_date(data_ultimo_cio_raw) if data_ultimo_cio_raw else None,
         sexo=request.data.get('sexo', 'Fêmea'),
         peso=peso_raw if peso_raw else None,
         observacoes=(request.data.get('observacoes') or '').strip(),
@@ -100,6 +130,8 @@ def animal_detalhes(request, animal_id):
 
         data_nascimento_raw = request.data.get('data_nascimento')
         animal.data_nascimento = parse_date(data_nascimento_raw) if data_nascimento_raw else None
+        data_ultimo_cio_raw = request.data.get('data_ultimo_cio')
+        animal.data_ultimo_cio = parse_date(data_ultimo_cio_raw) if data_ultimo_cio_raw else None
 
         animal.sexo = request.data.get('sexo', animal.sexo)
         peso_raw = request.data.get('peso')
