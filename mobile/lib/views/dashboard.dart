@@ -10,6 +10,7 @@ import 'historico.dart';
 import 'login.dart';
 import 'detalhe_analise.dart';
 import 'alerta_bell_button.dart';
+import 'painel_rebanho.dart';
 
 class TelaDashboard extends StatefulWidget {
   const TelaDashboard({Key? key}) : super(key: key);
@@ -28,6 +29,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
   // Métricas calculadas a partir dos dados reais retornados pela API
   int _totalAnimais = 0;
   int _emTratamento = 0;
+  int _totalSituacoesEmAberto = 0;
 
   // Paleta de Cores
   static const Color corVerdePrimaria = Color(0xFF10B981); 
@@ -58,11 +60,17 @@ class _TelaDashboardState extends State<TelaDashboard> {
         .where((a) => a['em_carencia'] == true)
         .length;
 
+    final totalSituacoes = totalEmCarencia +
+        listaAnimais.where((a) => a['cio_proximo'] == true).length +
+        listaAnimais.where((a) => a['ultimo_ccs_risco'] == 'ALTO').length +
+        listaAnimais.where((a) => a['alerta_reincidencia'] == true).length;
+
     setState(() {
       _nomeUsuario = usuario['nome']?.isNotEmpty == true ? usuario['nome']! : (usuario['email'] ?? 'Produtor');
       _analises = historico ?? [];
       _totalAnimais = listaAnimais.length;
       _emTratamento = totalEmCarencia;
+      _totalSituacoesEmAberto = totalSituacoes;
       _carregando = false;
     });
   }
@@ -137,6 +145,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
 
   /// Agrupa as análises dos últimos 7 dias (incluindo hoje) por data,
   /// contando o total de análises e quantas foram sinalizadas como suspeitas.
+  /// Usado para alimentar o gráfico de tendência do Dashboard (RF26).
   List<Map<String, dynamic>> _dadosTendencia() {
     final hoje = DateTime.now();
     final diaBase = DateTime(hoje.year, hoje.month, hoje.day);
@@ -292,14 +301,15 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                 },
                               ),
                               _ModuloCardData(
-                                titulo: 'Tratamentos',
-                                valor: '$_emTratamento',
-                                legenda: 'Animais isolados',
-                                icone: Icons.medical_services_outlined,
-                                corDestaque: const Color(0xFFF59E0B), 
+                                titulo: 'Painel do Rebanho',
+                                valor: '$_totalSituacoesEmAberto',
+                                legenda: _totalSituacoesEmAberto > 0 ? 'Situações em aberto' : 'Tudo em ordem',
+                                icone: Icons.health_and_safety_outlined,
+                                corDestaque: const Color(0xFFF59E0B),
+                                destaqueAlerta: _totalSituacoesEmAberto > 0,
                                 onTap: () {
                                   Navigator.of(context)
-                                      .push(MaterialPageRoute(builder: (_) => const TelaAnimais()))
+                                      .push(MaterialPageRoute(builder: (_) => const TelaPainelRebanho()))
                                       .then((_) => _carregarDados());
                                 },
                               ),
@@ -644,7 +654,7 @@ class _CartaoAnalise extends StatelessWidget {
 }
 
 // ==========================================
-// GRÁFICO DE TENDÊNCIA (RF26)
+// GRÁFICO DE TENDÊNCIA 
 // ==========================================
 
 class _GraficoTendencia extends StatelessWidget {

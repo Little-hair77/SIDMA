@@ -4,6 +4,7 @@ import 'cadastro_animal.dart';
 import 'qrCode_animal.dart';
 import 'detalhe_animal.dart';
 import 'registrar_tratamento.dart';
+import 'painel_rebanho.dart';
 
 class TelaAnimais extends StatefulWidget {
   const TelaAnimais({Key? key}) : super(key: key);
@@ -88,7 +89,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             child: const Text('Excluir', style: TextStyle(color: Colors.white)),
           ),
         ],
-      ),
+      ),  
     );
 
     if (confirmar == true) {
