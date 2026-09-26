@@ -16,6 +16,11 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   bool _carregando = true;
   bool _comErro = false;
 
+  // Filtros (RF22)
+  String? _filtroResultado; // null = todos os resultados
+  DateTimeRange? _filtroPeriodo; // null = todo o período
+  bool get _temFiltroAtivo => _filtroResultado != null || _filtroPeriodo != null;
+
   // Paleta de Cores
   static const Color corVerdePrimaria   = Color(0xFF10B981); 
   static const Color corAzulMarinho     = Color(0xFF1E293B); 
@@ -47,8 +52,15 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       _carregando = true;
       _comErro = false;
     });
-    final historico = await _apiService.buscarHistorico();
-    
+
+    final historico = _temFiltroAtivo
+        ? await _apiService.buscarHistoricoFiltrado(
+            resultado: _filtroResultado,
+            dataInicio: _filtroPeriodo != null ? _formatarDataApi(_filtroPeriodo!.start) : null,
+            dataFim: _filtroPeriodo != null ? _formatarDataApi(_filtroPeriodo!.end) : null,
+          )
+        : await _apiService.buscarHistorico();
+
     if (historico != null) {
       historico.sort((a, b) {
         DateTime dataA = DateTime.tryParse(a['criado_em']?.toString() ?? '') ?? DateTime.now();
@@ -64,6 +76,170 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       _comErro = historico == null;
       _carregando = false;
     });
+  }
+
+  String _formatarDataApi(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  String _formatarDataBr(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  String _rotuloResultado(String? valor) {
+    switch (valor) {
+      case 'Sem indícios de mastite':
+        return 'Sem indícios';
+      case 'Possível presença de mastite':
+        return 'Possível mastite';
+      case 'Necessária avaliação adicional':
+        return 'Avaliação adicional';
+      default:
+        return 'Todos os resultados';
+    }
+  }
+
+  Future<void> _selecionarPeriodo() async {
+    final agora = DateTime.now();
+    final escolhido = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: agora,
+      initialDateRange: _filtroPeriodo,
+      helpText: 'Selecione o período',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: corVerdePrimaria, onPrimary: Colors.white, onSurface: corTextoPrimario),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (escolhido != null) {
+      setState(() => _filtroPeriodo = escolhido);
+      _carregar();
+    }
+  }
+
+  /// Barra de filtro inline, no mesmo lugar/estilo de uma barra de busca:
+  /// uma única caixa branca arredondada, dividida em duas áreas tocáveis
+  /// (Resultado | Período), sem precisar abrir modal.
+  Widget _buildBarraFiltros() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: PopupMenuButton<String?>(
+                  padding: EdgeInsets.zero,
+                  offset: const Offset(0, 46),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (v) {
+                    setState(() => _filtroResultado = v);
+                    _carregar();
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: null, child: Text('Todos os resultados')),
+                    PopupMenuItem(value: 'Sem indícios de mastite', child: Text('Sem indícios')),
+                    PopupMenuItem(value: 'Possível presença de mastite', child: Text('Possível mastite')),
+                    PopupMenuItem(value: 'Necessária avaliação adicional', child: Text('Avaliação adicional')),
+                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, size: 18, color: _filtroResultado != null ? corVerdePrimaria : corTextoSecundario),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _rotuloResultado(_filtroResultado),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: _filtroResultado != null ? FontWeight.w600 : FontWeight.normal,
+                              color: _filtroResultado != null ? corVerdePrimaria : corTextoSecundario,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(Icons.expand_more, size: 18, color: corTextoSecundario),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+              InkWell(
+                onTap: _selecionarPeriodo,
+                borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.date_range_outlined, size: 18, color: _filtroPeriodo != null ? corVerdePrimaria : corTextoSecundario),
+                      const SizedBox(width: 8),
+                      Text(
+                        _filtroPeriodo == null ? 'Período' : '${_formatarDataBr(_filtroPeriodo!.start)} – ${_formatarDataBr(_filtroPeriodo!.end)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: _filtroPeriodo != null ? FontWeight.w600 : FontWeight.normal,
+                          color: _filtroPeriodo != null ? corVerdePrimaria : corTextoSecundario,
+                        ),
+                      ),
+                      if (_filtroPeriodo != null) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => _filtroPeriodo = null);
+                            _carregar();
+                          },
+                          child: const Icon(Icons.clear, size: 16, color: corTextoSecundario),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Linha discreta com a contagem de resultados e atalho para limpar,
+  /// mostrada só quando algum filtro está ativo.
+  Widget _buildBarraResumo() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${_analises.length} resultado(s) encontrado(s)',
+              style: const TextStyle(fontSize: 12, color: corTextoSecundario),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _filtroResultado = null;
+                _filtroPeriodo = null;
+              });
+              _carregar();
+            },
+            child: const Text('Limpar filtros', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: corVerdePrimaria)),
+          ),
+        ],
+      ),
+    );
   }
 
   Map<String, List<dynamic>> _agruparAnalises() {
@@ -121,13 +297,18 @@ class _TelaHistoricoState extends State<TelaHistorico> {
             ),
           ),
           
-          _carregando
-              ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
-              : _comErro
-                  ? _ConstruirEstadoErro(aoTentarNovamente: _carregar)
-                  : _analises.isEmpty
-                  ? const _ConstruirEstadoVazio()
-                  : RefreshIndicator(
+          Column(
+            children: [
+              _buildBarraFiltros(),
+              if (_temFiltroAtivo && !_carregando) _buildBarraResumo(),
+              Expanded(
+                child: _carregando
+                    ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
+                    : _comErro
+                        ? _ConstruirEstadoErro(aoTentarNovamente: _carregar)
+                        : _analises.isEmpty
+                        ? _ConstruirEstadoVazio(filtrado: _temFiltroAtivo)
+                        : RefreshIndicator(
                       color: corVerdePrimaria,
                       onRefresh: _carregar,
                       child: ListView.builder(
@@ -165,6 +346,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                         },
                       ),
                     ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -213,26 +397,37 @@ class _ConstruirEstadoErro extends StatelessWidget {
 }
 
 class _ConstruirEstadoVazio extends StatelessWidget {
-  const _ConstruirEstadoVazio({Key? key}) : super(key: key);
+  final bool filtrado;
+  const _ConstruirEstadoVazio({Key? key, this.filtrado = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_toggle_off_outlined, size: 64, color: const Color(0xFF64748B).withOpacity(0.5)),
+          Icon(
+            filtrado ? Icons.filter_alt_off_outlined : Icons.history_toggle_off_outlined,
+            size: 64,
+            color: const Color(0xFF64748B).withOpacity(0.5),
+          ),
           const SizedBox(height: 16),
-          const Text(
-            'Histórico Vazio',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          Text(
+            filtrado ? 'Nenhum resultado para esse filtro' : 'Histórico Vazio',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'As análises concluídas aparecerão aqui.',
-            style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+          Text(
+            filtrado
+                ? 'Tente ajustar o resultado ou o período selecionado.'
+                : 'As análises concluídas aparecerão aqui.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
           ),
         ],
+        ),
       ),
     );
   }
