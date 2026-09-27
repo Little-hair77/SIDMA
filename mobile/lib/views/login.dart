@@ -337,7 +337,7 @@ class _TelaLoginState extends State<TelaLogin> {
                                 obscureText: !_senhaVisivel,
                                 style: const TextStyle(color: corTextoPrimario, fontSize: 14),
                                 decoration: _estiloCampo(
-                                  rotulo: 'Sua senha de acesso',
+                                  rotulo: 'Senha',
                                   iconePrefixo: Icons.lock_outline,
                                   iconeSufixo: IconButton(
                                     icon: Icon(
