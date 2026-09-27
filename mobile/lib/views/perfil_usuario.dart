@@ -35,8 +35,8 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   }
 
   Future<void> _buscarDadosUsuario() async {
-    // Tenta buscar os dados atualizados do servidor; se não conseguir (ex: sem internet),
-    // cai para o cache salvo localmente no último login.
+    // Tenta buscar os dados atualizados do servidor, caso não consiga
+    // volta o retorno cache do último login.
     final dadosServidor = await _apiService.buscarPerfil();
     final dados = dadosServidor ?? await _apiService.obterUsuarioSalvo();
 
@@ -52,6 +52,155 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$recurso ainda não está disponível nesta versão.')),
     );
+  }
+
+  Future<void> _abrirAlterarSenha() async {
+    final formKey = GlobalKey<FormState>();
+    final senhaAtualController = TextEditingController();
+    final novaSenhaController = TextEditingController();
+    final confirmarSenhaController = TextEditingController();
+    bool ocultarSenhaAtual = true;
+    bool ocultarNovaSenha = true;
+    bool ocultarConfirmarSenha = true;
+    bool enviando = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (contextoSheet) {
+        return StatefulBuilder(
+          builder: (contextoSheet, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(contextoSheet).viewInsets.bottom + 20,
+              ),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Segurança e Senha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: corTextoPrimario)),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: corTextoSecundario),
+                          onPressed: () => Navigator.of(contextoSheet).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: senhaAtualController,
+                      obscureText: ocultarSenhaAtual,
+                      decoration: InputDecoration(
+                        labelText: 'Senha atual',
+                        suffixIcon: IconButton(
+                          icon: Icon(ocultarSenhaAtual ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                          onPressed: () => setModalState(() => ocultarSenhaAtual = !ocultarSenhaAtual),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (v) => (v == null || v.isEmpty) ? 'Informe a senha atual' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: novaSenhaController,
+                      obscureText: ocultarNovaSenha,
+                      decoration: InputDecoration(
+                        labelText: 'Nova senha',
+                        helperText: 'Mínimo de 8 caracteres',
+                        suffixIcon: IconButton(
+                          icon: Icon(ocultarNovaSenha ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                          onPressed: () => setModalState(() => ocultarNovaSenha = !ocultarNovaSenha),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (v) => (v == null || v.length < 8) ? 'Mínimo de 8 caracteres' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: confirmarSenhaController,
+                      obscureText: ocultarConfirmarSenha,
+                      decoration: InputDecoration(
+                        labelText: 'Confirmar nova senha',
+                        suffixIcon: IconButton(
+                          icon: Icon(ocultarConfirmarSenha ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                          onPressed: () => setModalState(() => ocultarConfirmarSenha = !ocultarConfirmarSenha),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (v) => v != novaSenhaController.text ? 'As senhas não coincidem' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: corVerdePrimaria,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: enviando
+                            ? null
+                            : () async {
+                                if (!formKey.currentState!.validate()) return;
+                                setModalState(() => enviando = true);
+
+                                final resultado = await _apiService.alterarSenha(
+                                  senhaAtualController.text,
+                                  novaSenhaController.text,
+                                );
+
+                                setModalState(() => enviando = false);
+                                if (!mounted) return;
+
+                                if (resultado['sucesso'] == true) {
+                                  Navigator.of(contextoSheet).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(resultado['mensagem'] ?? 'Senha alterada com sucesso.'),
+                                      backgroundColor: corVerdePrimaria,
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(contextoSheet).showSnackBar(
+                                    SnackBar(
+                                      content: Text(resultado['mensagem'] ?? 'Não foi possível alterar a senha.'),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
+                              },
+                        child: enviando
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Text('Alterar Senha', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    senhaAtualController.dispose();
+    novaSenhaController.dispose();
+    confirmarSenhaController.dispose();
   }
 
   Future<void> _abrirEdicaoPerfil() async {
@@ -400,7 +549,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                         _buildAcaoMenu(Icons.notifications_none, 'Notificações',
                                             onTap: () => _mostrarIndisponivel('Notificações')),
                                         _buildAcaoMenu(Icons.security, 'Segurança e Senha',
-                                            onTap: () => _mostrarIndisponivel('Segurança e Senha')),
+                                            onTap: _abrirAlterarSenha),
                                         _buildAcaoMenu(Icons.help_outline, 'Suporte SIDMA',
                                             onTap: () => _mostrarIndisponivel('Suporte SIDMA')),
                                         const Divider(height: 1, thickness: 0.5),

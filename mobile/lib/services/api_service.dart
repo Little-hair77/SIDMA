@@ -31,7 +31,7 @@ class ApiService {
   static const _chaveUsuarioEmail = 'usuario_email';
   static const _chaveUsuarioNome = 'usuario_nome';
 
-  // Sicronização offline
+  // Sicronização Offline
   static const _chaveCacheAnimais = 'cache_offline_animais';
   static const _chaveCacheHistorico = 'cache_offline_historico';
   static const _chaveCacheSincronizadoEm = 'cache_offline_sincronizado_em';
@@ -155,6 +155,7 @@ class ApiService {
     try {
       final response = await _dio.put("perfil/", data: {"nome": nome, "email": email});
       if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        // Mantém o storage local sincronizado, já que outras telas (ex: Dashboard) leem daqui
         await _storage.write(key: _chaveUsuarioNome, value: response.data['nome'] ?? '');
         await _storage.write(key: _chaveUsuarioEmail, value: response.data['email'] ?? '');
         return {'sucesso': true, 'nome': response.data['nome'], 'email': response.data['email']};
@@ -443,6 +444,22 @@ class ApiService {
         return {'sucesso': true, 'mensagem': response.data['mensagem'] ?? ''};
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível redefinir a senha.'};
+    } on DioException catch (e) {
+      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      return {'sucesso': false, 'mensagem': mensagem};
+    }
+  }
+
+  Future<Map<String, dynamic>> alterarSenha(String senhaAtual, String novaSenha) async {
+    try {
+      final response = await _dio.post("perfil/alterar-senha/", data: {
+        "senha_atual": senhaAtual,
+        "nova_senha": novaSenha,
+      });
+      if (response.statusCode == 200 && response.data['status'] == 'sucesso') {
+        return {'sucesso': true, 'mensagem': response.data['mensagem'] ?? ''};
+      }
+      return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível alterar a senha.'};
     } on DioException catch (e) {
       final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
       return {'sucesso': false, 'mensagem': mensagem};
