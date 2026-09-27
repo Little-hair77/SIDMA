@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb, ValueNotifier;
@@ -29,6 +30,11 @@ class ApiService {
   static const _chaveRefreshToken = 'refresh_token';
   static const _chaveUsuarioEmail = 'usuario_email';
   static const _chaveUsuarioNome = 'usuario_nome';
+
+  // Sicronização offline
+  static const _chaveCacheAnimais = 'cache_offline_animais';
+  static const _chaveCacheHistorico = 'cache_offline_historico';
+  static const _chaveCacheSincronizadoEm = 'cache_offline_sincronizado_em';
 
   ApiService() {
     _dio.options.baseUrl = _baseUrl;
@@ -186,7 +192,7 @@ class ApiService {
       });
       Response response = await _dio.post("diagnosticar/", data: formData);
       if (response.statusCode == 200) {
-        notificadorAnalises.value++;
+        notificadorAnalises.value++; // avisa Dashboard/Histórico para recarregar
         return response.data;
       }
       return null;
@@ -293,6 +299,53 @@ class ApiService {
       print("Erro ao listar animais: ${e.message}");
       return null;
     }
+  }
+
+  // - SINCRONIZAÇÃO / CACHE OFFLINE (leitura) -
+
+  /// Busca os dados mais recentes do servidor (rebanho + histórico) e guarda
+  /// uma cópia local, para que as telas continuem mostrando algo útil mesmo
+  /// sem internet.
+  Future<bool> sincronizarDadosOffline() async {
+    final animais = await listarAnimais();
+    final historico = await buscarHistorico();
+
+    if (animais == null && historico == null) return false;
+
+    if (animais != null) {
+      await _storage.write(key: _chaveCacheAnimais, value: jsonEncode(animais));
+    }
+    if (historico != null) {
+      await _storage.write(key: _chaveCacheHistorico, value: jsonEncode(historico));
+    }
+    await _storage.write(key: _chaveCacheSincronizadoEm, value: DateTime.now().toIso8601String());
+    return true;
+  }
+
+  Future<List<dynamic>?> obterAnimaisCacheOffline() async {
+    final bruto = await _storage.read(key: _chaveCacheAnimais);
+    if (bruto == null) return null;
+    try {
+      return jsonDecode(bruto) as List<dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<dynamic>?> obterHistoricoCacheOffline() async {
+    final bruto = await _storage.read(key: _chaveCacheHistorico);
+    if (bruto == null) return null;
+    try {
+      return jsonDecode(bruto) as List<dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<DateTime?> obterUltimaSincronizacaoOffline() async {
+    final bruto = await _storage.read(key: _chaveCacheSincronizadoEm);
+    if (bruto == null) return null;
+    return DateTime.tryParse(bruto);
   }
 
   // - MÉTODOS DE ANIMAIS COM FORMDATA 

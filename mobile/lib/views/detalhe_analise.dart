@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 import 'scanner_qr.dart';
 
@@ -56,7 +59,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
     });
   }
 
-  // Estilos sutis de status 
+  // Estilos status
   Map<String, dynamic> get _statusConfig {
     final resultado = _analise?['resultado'] as String? ?? '';
     final resultadoLower = resultado.toLowerCase();
@@ -102,6 +105,74 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
     final hora = data.hour.toString().padLeft(2, '0');
     final minuto = data.minute.toString().padLeft(2, '0');
     return '$dia/$mes/${data.year} às $hora:$minuto';
+  }
+
+  Future<void> _exportarLaudoPdf() async {
+    if (_analise == null) return;
+    final animal = _analise!['animal'];
+    final observacoes = _analise!['observacoes']?.toString() ?? '';
+
+    final documento = pw.Document();
+    documento.addPage(
+      pw.Page(
+        build: (contexto) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text('SIDMA — Laudo de Diagnóstico', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 4),
+            pw.Text(
+              'Gerado em: ${DateTime.now().day.toString().padLeft(2, '0')}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().year}',
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            ),
+            pw.Divider(),
+            pw.SizedBox(height: 8),
+            _linhaPdf('Resultado', _analise!['resultado']?.toString() ?? 'N/I'),
+            _linhaPdf('Confiança da IA', _analise!['confianca']?.toString() ?? 'N/I'),
+            _linhaPdf('Data e hora da análise', _formatarData(_analise!['criado_em']?.toString())),
+            _linhaPdf(
+              'Animal vinculado',
+              animal != null
+                  ? '${(animal['nome']?.toString().isNotEmpty == true) ? animal['nome'] : 'Sem nome'} (Brinco ${animal['brinco']})'
+                  : 'Nenhum animal vinculado',
+            ),
+            if (observacoes.isNotEmpty) ...[
+              pw.SizedBox(height: 12),
+              pw.Text('Observações', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 4),
+              pw.Text(observacoes),
+            ],
+            pw.SizedBox(height: 20),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey400), borderRadius: pw.BorderRadius.circular(6)),
+              child: pw.Text(
+                'Este laudo é gerado por um sistema de apoio à triagem baseado em inteligência artificial e não substitui o diagnóstico clínico ou laboratorial realizado por um médico veterinário.',
+                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey800),
+              ),
+            ),
+            pw.SizedBox(height: 16),
+            pw.Text(
+              'Documento gerado pelo SIDMA — Sistema Inteligente de Auxílio ao Diagnóstico de Mastite.',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (formato) async => documento.save());
+  }
+
+  pw.Widget _linhaPdf(String rotulo, String valor) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Row(
+        children: [
+          pw.SizedBox(width: 160, child: pw.Text(rotulo, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+          pw.Expanded(child: pw.Text(valor)),
+        ],
+      ),
+    );
   }
 
   Future<void> _salvarObservacoes() async {
@@ -183,7 +254,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Nenhum animal cadastrado corresponde a esse código.'),
+          content: Text('Nenhum animal cadastrado corresponds a esse código.'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
@@ -304,6 +375,28 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (value) {
+              if (value == 'exportar') {
+                _exportarLaudoPdf();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'exportar',
+                child: Row(
+                  children: [
+                    Icon(Icons.picture_as_pdf_outlined, color: corTextoPrimario, size: 20),
+                    SizedBox(width: 12),
+                    Text('Exportar PDF'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -535,15 +628,13 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Botão Salvar
-                  if (_alterado)
+                  if (_alterado) ...[
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _salvando ? null : _salvarObservacoes,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: corVerdeEscuro,
-                        minimumSize: const Size(double.infinity, 50),
+                        minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -558,6 +649,30 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                         ),
                       ),
                     ),
+                  ],
+
+                  const SizedBox(height: 28),
+
+                  // Ação de Exportação (Nova Área de Relatório)
+                  OutlinedButton.icon(
+                    onPressed: _analise == null ? null : _exportarLaudoPdf,
+                    icon: const Icon(Icons.picture_as_pdf_outlined, color: corAppBar),
+                    label: const Text(
+                      'Exportar Laudo em PDF',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: corAppBar,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      side: const BorderSide(color: corAppBar, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
 
                   const SizedBox(height: 24),
                 ],

@@ -15,10 +15,11 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   List<dynamic> _analises = [];
   bool _carregando = true;
   bool _comErro = false;
+  bool _usandoCacheOffline = false;
 
-  // Filtros (RF22)
-  String? _filtroResultado; // null = todos os resultados
-  DateTimeRange? _filtroPeriodo; // null = todo o período
+  // Filtros 
+  String? _filtroResultado;
+  DateTimeRange? _filtroPeriodo; 
   bool get _temFiltroAtivo => _filtroResultado != null || _filtroPeriodo != null;
 
   // Paleta de Cores
@@ -53,13 +54,24 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       _comErro = false;
     });
 
-    final historico = _temFiltroAtivo
+    var historico = _temFiltroAtivo
         ? await _apiService.buscarHistoricoFiltrado(
             resultado: _filtroResultado,
             dataInicio: _filtroPeriodo != null ? _formatarDataApi(_filtroPeriodo!.start) : null,
             dataFim: _filtroPeriodo != null ? _formatarDataApi(_filtroPeriodo!.end) : null,
           )
         : await _apiService.buscarHistorico();
+
+    // Sem filtro e sem rede: cai para a última cópia salva por "Sincronizar
+    // Dados Offline" no Dashboard, em vez de mostrar tela de erro vazia.
+    bool usandoCache = false;
+    if (historico == null && !_temFiltroAtivo) {
+      final cache = await _apiService.obterHistoricoCacheOffline();
+      if (cache != null) {
+        historico = cache;
+        usandoCache = true;
+      }
+    }
 
     if (historico != null) {
       historico.sort((a, b) {
@@ -72,8 +84,10 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     if (!mounted) return;
     setState(() {
       _analises = historico ?? [];
-      // null = falha na requisição (rede/autenticação); [] = sem análises mesmo. São coisas diferentes.
+      // null = falha na requisição (rede/autenticação) sem cache disponível;
+      // [] = sem análises mesmo.
       _comErro = historico == null;
+      _usandoCacheOffline = usandoCache;
       _carregando = false;
     });
   }
@@ -120,9 +134,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     }
   }
 
-  /// Barra de filtro inline, no mesmo lugar/estilo de uma barra de busca:
-  /// uma única caixa branca arredondada, dividida em duas áreas tocáveis
-  /// (Resultado | Período), sem precisar abrir modal.
+  // - Barra de Filtro 
   Widget _buildBarraFiltros() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -216,6 +228,28 @@ class _TelaHistoricoState extends State<TelaHistorico> {
 
   /// Linha discreta com a contagem de resultados e atalho para limpar,
   /// mostrada só quando algum filtro está ativo.
+  /// Aviso mostrado quando a lista vem do cache salvo por "Sincronizar Dados
+  /// Offline" (Dashboard), porque não foi possível falar com o servidor agora.
+  Widget _buildBarraOffline() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: const Color(0xFFFFFBEB),
+      child: const Row(
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 15, color: Color(0xFFD97706)),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Sem conexão — mostrando os últimos dados sincronizados.',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFD97706)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBarraResumo() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
@@ -300,6 +334,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           Column(
             children: [
               _buildBarraFiltros(),
+              if (_usandoCacheOffline && !_carregando) _buildBarraOffline(),
               if (_temFiltroAtivo && !_carregando) _buildBarraResumo(),
               Expanded(
                 child: _carregando

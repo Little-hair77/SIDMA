@@ -20,6 +20,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
   List<dynamic> _animaisFiltrados = [];
 
   bool _carregando = true;
+  bool _usandoCacheOffline = false;
   final TextEditingController _buscaController = TextEditingController();
 
   // Paleta de Cores
@@ -43,13 +44,24 @@ class _TelaAnimaisState extends State<TelaAnimais> {
 
   Future<void> _carregar() async {
     setState(() => _carregando = true);
-    final lista = await _apiService.listarAnimais();
+    var lista = await _apiService.listarAnimais();
+
+    bool usandoCache = false;
+    if (lista == null) {
+      final cache = await _apiService.obterAnimaisCacheOffline();
+      if (cache != null) {
+        lista = cache;
+        usandoCache = true;
+      }
+    }
+
     if (!mounted) return;
 
     final termoAtual = _buscaController.text;
 
     setState(() {
       _animais = lista ?? [];
+      _usandoCacheOffline = usandoCache;
       _carregando = false;
     });
 
@@ -89,7 +101,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             child: const Text('Excluir', style: TextStyle(color: Colors.white)),
           ),
         ],
-      ),  
+      ),
     );
 
     if (confirmar == true) {
@@ -178,7 +190,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           
           Column(
             children: [
-              // BARRINHA DE PESQUISA
+              // BARRA DE PESQUISA
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: TextField(
@@ -216,6 +228,29 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                   ),
                 ),
               ),
+
+              if (_usandoCacheOffline && !_carregando)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.cloud_off_outlined, size: 15, color: Color(0xFFD97706)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Sem conexão — mostrando os últimos dados sincronizados.',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFD97706)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // LISTAGEM DE ANIMAIS
               Expanded(
@@ -470,6 +505,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             Text(
               subtitulo,
               textAlign: TextAlign.center,
+
               style: const TextStyle(color: corTextoSecundario, fontSize: 13),
             ),
           ],

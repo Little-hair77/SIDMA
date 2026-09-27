@@ -30,6 +30,8 @@ class _TelaDashboardState extends State<TelaDashboard> {
   int _totalAnimais = 0;
   int _emTratamento = 0;
   int _totalSituacoesEmAberto = 0;
+  bool _sincronizandoOffline = false;
+  DateTime? _ultimaSincronizacaoOffline;
 
   // Paleta de Cores
   static const Color corVerdePrimaria = Color(0xFF10B981); 
@@ -44,6 +46,13 @@ class _TelaDashboardState extends State<TelaDashboard> {
   void initState() {
     super.initState();
     _carregarDados();
+    _carregarUltimaSincronizacao();
+  }
+
+  Future<void> _carregarUltimaSincronizacao() async {
+    final ultima = await _apiService.obterUltimaSincronizacaoOffline();
+    if (!mounted) return;
+    setState(() => _ultimaSincronizacaoOffline = ultima);
   }
 
   Future<void> _carregarDados() async {
@@ -59,7 +68,8 @@ class _TelaDashboardState extends State<TelaDashboard> {
     final totalEmCarencia = listaAnimais
         .where((a) => a['em_carencia'] == true)
         .length;
-
+    // Mesma soma usada em TelaPainelRebanho (por categoria, não por animal
+    // distinto), para que o número do card bata com o da tela de destino.
     final totalSituacoes = totalEmCarencia +
         listaAnimais.where((a) => a['cio_proximo'] == true).length +
         listaAnimais.where((a) => a['ultimo_ccs_risco'] == 'ALTO').length +
@@ -119,9 +129,29 @@ class _TelaDashboardState extends State<TelaDashboard> {
     await Printing.sharePdf(bytes: await documento.save(), filename: 'relatorio_sidma.pdf');
   }
 
-  void _sincronizarDadosOffline() {
+  Future<void> _sincronizarDadosOffline() async {
+    if (_sincronizandoOffline) return;
+    setState(() => _sincronizandoOffline = true);
+
+    final ok = await _apiService.sincronizarDadosOffline();
+    final agora = ok ? DateTime.now() : _ultimaSincronizacaoOffline;
+
+    if (!mounted) return;
+    setState(() {
+      _sincronizandoOffline = false;
+      _ultimaSincronizacaoOffline = agora;
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sincronização offline ainda não está disponível nesta versão.')),
+      SnackBar(
+        content: Text(
+          ok
+              ? 'Dados do rebanho e histórico salvos para consulta offline.'
+              : 'Sem conexão no momento — não foi possível sincronizar agora.',
+        ),
+        backgroundColor: ok ? corVerdePrimaria : Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -145,7 +175,6 @@ class _TelaDashboardState extends State<TelaDashboard> {
 
   /// Agrupa as análises dos últimos 7 dias (incluindo hoje) por data,
   /// contando o total de análises e quantas foram sinalizadas como suspeitas.
-  /// Usado para alimentar o gráfico de tendência do Dashboard (RF26).
   List<Map<String, dynamic>> _dadosTendencia() {
     final hoje = DateTime.now();
     final diaBase = DateTime(hoje.year, hoje.month, hoje.day);
@@ -332,7 +361,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                     ),
                   ),
 
-                  // 2 - GRÁFICO DE TENDÊNCIA (RF26)
+                  // 2 - GRÁFICO DE TENDÊNCIA 
                   SliverPadding(
                     padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
                     sliver: SliverToBoxAdapter(
@@ -347,8 +376,14 @@ class _TelaDashboardState extends State<TelaDashboard> {
                       delegate: SliverChildListDelegate([
                         _AcaoRapidaBotao(
                           titulo: 'Sincronizar Dados Offline',
+                          subtitulo: _sincronizandoOffline
+                              ? 'Sincronizando...'
+                              : _ultimaSincronizacaoOffline != null
+                                  ? 'Última sincronização: ${_ultimaSincronizacaoOffline!.day.toString().padLeft(2, '0')}/${_ultimaSincronizacaoOffline!.month.toString().padLeft(2, '0')} às ${_ultimaSincronizacaoOffline!.hour.toString().padLeft(2, '0')}:${_ultimaSincronizacaoOffline!.minute.toString().padLeft(2, '0')}'
+                                  : 'Nunca sincronizado',
                           icone: Icons.cloud_sync_outlined,
                           destaque: false,
+                          carregando: _sincronizandoOffline,
                           onTap: _sincronizarDadosOffline,
                         ),
                         const SizedBox(height: 10),
@@ -481,21 +516,25 @@ class _ModuloCardData extends StatelessWidget {
 
 class _AcaoRapidaBotao extends StatelessWidget {
   final String titulo;
+  final String? subtitulo;
   final IconData icone;
   final bool destaque;
+  final bool carregando;
   final VoidCallback onTap;
 
   const _AcaoRapidaBotao({
     required this.titulo,
+    this.subtitulo,
     required this.icone,
     this.destaque = false,
+    this.carregando = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: carregando ? null : onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -516,18 +555,45 @@ class _AcaoRapidaBotao extends StatelessWidget {
         child: Row(
           mainAxisAlignment: destaque ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(
-              icone,
-              color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
-              size: 20,
-            ),
+            carregando
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: destaque ? Colors.white : _TelaDashboardState.corVerdePrimaria,
+                    ),
+                  )
+                : Icon(
+                    icone,
+                    color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
+                    size: 20,
+                  ),
             const SizedBox(width: 12),
-            Text(
-              titulo,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    titulo,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
+                    ),
+                  ),
+                  if (subtitulo != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitulo!,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: destaque ? Colors.white.withOpacity(0.85) : _TelaDashboardState.corTextoSecundario,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -653,9 +719,9 @@ class _CartaoAnalise extends StatelessWidget {
   }
 }
 
-// ==========================================
+// =====================
 // GRÁFICO DE TENDÊNCIA 
-// ==========================================
+// =====================
 
 class _GraficoTendencia extends StatelessWidget {
   final List<Map<String, dynamic>> dados;
