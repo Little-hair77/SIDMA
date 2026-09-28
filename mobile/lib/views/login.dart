@@ -206,13 +206,13 @@ class _TelaLoginState extends State<TelaLogin> {
                   child: Column(
                     children: [
                       Image.asset(
-                        'assets/images/logoSIDMA-2.png',
+                        'assets/images/logoSidmaBranca.png',
                         height: 60,
                         fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Bem-vindo de volta',
+                        'Bem-vindo',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

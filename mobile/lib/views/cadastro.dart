@@ -170,13 +170,13 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   child: Column(
                     children: [
                       Image.asset(
-                        'assets/images/logoSIDMA-2.png',
+                        'assets/images/logoSidmaAlternativa.png',
                         height: 60,
                         fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Criar Nova Conta',
+                        'Criar Conta',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
