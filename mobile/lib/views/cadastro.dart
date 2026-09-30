@@ -170,7 +170,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   child: Column(
                     children: [
                       Image.asset(
-                        'assets/images/logoSidmaAlternativa.png',
+                        'assets/images/logoSIDMA-0.png',
                         height: 60,
                         fit: BoxFit.contain,
                       ),

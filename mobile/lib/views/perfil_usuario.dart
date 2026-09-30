@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/cores.dart';
 import '../core/usuario_estado.dart';
+import '../core/tema_estado.dart';
 import '../services/api_service.dart';
 import 'login.dart';
 
@@ -35,8 +36,8 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   }
 
   Future<void> _buscarDadosUsuario() async {
-    // Tenta buscar os dados atualizados do servidor, caso não consiga
-    // volta o retorno cache do último login.
+    // Tenta buscar os dados atualizados do servidor; se não conseguir (ex: sem internet),
+    // cai para o cache salvo localmente no último login.
     final dadosServidor = await _apiService.buscarPerfil();
     final dados = dadosServidor ?? await _apiService.obterUsuarioSalvo();
 
@@ -437,7 +438,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                           child: Opacity(
                             opacity: 0.03,
                             child: Image.asset(
-                              'assets/images/logoSIDMA-2.png',
+                              'assets/images/logoSIDMA-0.png',
                               width: 250,
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),
@@ -546,6 +547,8 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                     child: Column(
                                       children: [
                                         const Divider(height: 1, thickness: 0.5),
+                                        _buildAcaoMenu(Icons.dark_mode_outlined, 'Aparência',
+                                            onTap: _abrirSeletorAparencia),
                                         _buildAcaoMenu(Icons.notifications_none, 'Notificações',
                                             onTap: () => _mostrarIndisponivel('Notificações')),
                                         _buildAcaoMenu(Icons.security, 'Segurança e Senha',
@@ -612,6 +615,83 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   }
 
   // Widget auxiliar para os menus da base do card
+  Future<void> _abrirSeletorAparencia() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (contextoSheet) {
+        return SafeArea(
+          child: ValueListenableBuilder<ThemeMode>(
+            valueListenable: TemaEstado.modoNotifier,
+            builder: (context, modoAtual, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      'Modo',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: corTextoPrimario),
+                    ),
+                  ),
+                  _opcaoAparencia(
+                    icone: Icons.light_mode_outlined,
+                    titulo: 'Claro',
+                    selecionado: modoAtual == ThemeMode.light,
+                    onTap: () {
+                      TemaEstado.definirModo(ThemeMode.light);
+                      Navigator.of(contextoSheet).pop();
+                    },
+                  ),
+                  _opcaoAparencia(
+                    icone: Icons.dark_mode_outlined,
+                    titulo: 'Escuro',
+                    selecionado: modoAtual == ThemeMode.dark,
+                    onTap: () {
+                      TemaEstado.definirModo(ThemeMode.dark);
+                      Navigator.of(contextoSheet).pop();
+                    },
+                  ),
+                  _opcaoAparencia(
+                    icone: Icons.brightness_auto_outlined,
+                    titulo: 'Automático (seguir o sistema)',
+                    selecionado: modoAtual == ThemeMode.system,
+                    onTap: () {
+                      TemaEstado.definirModo(ThemeMode.system);
+                      Navigator.of(contextoSheet).pop();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _opcaoAparencia({
+    required IconData icone,
+    required String titulo,
+    required bool selecionado,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icone, color: selecionado ? corVerdePrimaria : corTextoSecundario),
+      title: Text(
+        titulo,
+        style: TextStyle(
+          fontWeight: selecionado ? FontWeight.bold : FontWeight.w500,
+          color: selecionado ? corVerdePrimaria : corTextoPrimario,
+        ),
+      ),
+      trailing: selecionado ? const Icon(Icons.check_circle, color: corVerdePrimaria) : null,
+      onTap: onTap,
+    );
+  }
+
   Widget _buildAcaoMenu(IconData icon, String titulo, {required VoidCallback onTap, Color? corPersonalizada}) {
     return InkWell(
       onTap: onTap,

@@ -323,7 +323,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
             child: Opacity(
               opacity: 0.03, 
               child: Image.asset(
-                'assets/images/logoSIDMA-2.png',
+                'assets/images/logoSIDMA-0.png',
                 width: 250,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),

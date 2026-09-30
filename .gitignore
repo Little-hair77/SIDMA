@@ -11,6 +11,7 @@ __pycache__/
 backend/media/
 backend/staticfiles/
 backend/amostras
+backend/fotos_animais
 *.log
 
 # Ambientes virtuais

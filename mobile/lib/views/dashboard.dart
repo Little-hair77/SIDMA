@@ -11,6 +11,7 @@ import 'login.dart';
 import 'detalhe_analise.dart';
 import 'alerta_bell_button.dart';
 import 'painel_rebanho.dart';
+import '../core/cores.dart';
 
 class TelaDashboard extends StatefulWidget {
   const TelaDashboard({Key? key}) : super(key: key);
@@ -33,14 +34,14 @@ class _TelaDashboardState extends State<TelaDashboard> {
   bool _sincronizandoOffline = false;
   DateTime? _ultimaSincronizacaoOffline;
 
-  // Paleta de Cores
-  static const Color corVerdePrimaria = Color(0xFF10B981); 
-  static const Color corVerdeEscuro = Color(0xFF059669);   
-  static const Color corVerdeSuave = Color(0xFFECFDF5);    
-  static const Color corAzulMarinho = Color(0xFF1E293B);   
-  static const Color corFundo = Color(0xFFF8FAFC);         
-  static const Color corTextoPrimario = Color(0xFF0F172A); 
-  static const Color corTextoSecundario = Color(0xFF64748B);
+  // Paleta de Cores 
+  Color get corVerdePrimaria => AppColors.of(context).primario;
+  Color get corVerdeEscuro => AppColors.of(context).primarioEscuro;
+  Color get corVerdeSuave => AppColors.of(context).primarioSuave;
+  Color get corAzulMarinho => AppColors.of(context).destaque;
+  Color get corFundo => AppColors.of(context).fundo;
+  Color get corTextoPrimario => AppColors.of(context).textoPrimario;
+  Color get corTextoSecundario => AppColors.of(context).textoSecundario;
 
   @override
   void initState() {
@@ -149,7 +150,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
               ? 'Dados do rebanho e histórico salvos para consulta offline.'
               : 'Sem conexão no momento — não foi possível sincronizar agora.',
         ),
-        backgroundColor: ok ? corVerdePrimaria : Colors.redAccent,
+        backgroundColor: ok ? corVerdePrimaria : AppColors.of(context).erro,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -173,8 +174,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
     return res.contains('possível') || res.contains('suspeita') || res.contains('mastite');
   }
 
-  /// Agrupa as análises dos últimos 7 dias (incluindo hoje) por data,
-  /// contando o total de análises e quantas foram sinalizadas como suspeitas.
+
   List<Map<String, dynamic>> _dadosTendencia() {
     final hoje = DateTime.now();
     final diaBase = DateTime(hoje.year, hoje.month, hoje.day);
@@ -204,11 +204,11 @@ class _TelaDashboardState extends State<TelaDashboard> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.of(context).superficie,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: AppColors.of(context).borda),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               'Nenhuma amostra processada ainda.',
               style: TextStyle(color: corTextoSecundario),
@@ -233,7 +233,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
     return Scaffold(
       backgroundColor: corFundo,
       body: _carregando
-          ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
+          ? Center(child: CircularProgressIndicator(color: corVerdePrimaria))
           : RefreshIndicator(
               color: corVerdePrimaria,
               onRefresh: _carregarDados,
@@ -248,7 +248,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                           height: 210,
                           padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
                           width: double.infinity,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: corAzulMarinho,
                             borderRadius: BorderRadius.only(
                               bottomLeft: Radius.circular(28),
@@ -361,7 +361,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                     ),
                   ),
 
-                  // 2 - GRÁFICO DE TENDÊNCIA 
+                  // 2 - GRÁFICO DE TENDÊNCIA (RF26)
                   SliverPadding(
                     padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
                     sliver: SliverToBoxAdapter(
@@ -402,7 +402,7 @@ class _TelaDashboardState extends State<TelaDashboard> {
                     padding: const EdgeInsets.only(top: 28, left: 20, right: 20, bottom: 40),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        const Text(
+                        Text(
                           'Últimas Análises de Mastite',
                           style: TextStyle(
                             fontSize: 18,
@@ -422,9 +422,9 @@ class _TelaDashboardState extends State<TelaDashboard> {
   }
 }
 
-// ==========================================
+// ========================
 // CARD DE DADOS & MÉTRICAS
-// ==========================================
+// ========================
 
 class _ModuloCardData extends StatelessWidget {
   final String titulo;
@@ -447,16 +447,17 @@ class _ModuloCardData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = AppColors.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cores.superficie,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: destaqueAlerta ? const Color(0xFFFCA5A5) : const Color(0xFFF1F5F9),
+            color: destaqueAlerta ? cores.erro.withOpacity(0.5) : cores.superficieAlt,
             width: destaqueAlerta ? 1.5 : 1,
           ),
           boxShadow: [
@@ -476,10 +477,10 @@ class _ModuloCardData extends StatelessWidget {
               children: [
                 Text(
                   titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: _TelaDashboardState.corTextoSecundario,
+                    color: cores.textoSecundario,
                   ),
                 ),
                 Icon(icone, color: corDestaque, size: 20),
@@ -493,7 +494,7 @@ class _ModuloCardData extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: destaqueAlerta ? const Color(0xFFDC2626) : _TelaDashboardState.corTextoPrimario,
+                    color: destaqueAlerta ? cores.erro : cores.textoPrimario,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -502,7 +503,7 @@ class _ModuloCardData extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: destaqueAlerta ? FontWeight.bold : FontWeight.normal,
-                    color: destaqueAlerta ? const Color(0xFFDC2626) : _TelaDashboardState.corTextoSecundario,
+                    color: destaqueAlerta ? cores.erro : cores.textoSecundario,
                   ),
                 ),
               ],
@@ -533,19 +534,20 @@ class _AcaoRapidaBotao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = AppColors.of(context);
     return InkWell(
       onTap: carregando ? null : onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: destaque ? _TelaDashboardState.corVerdePrimaria : Colors.white,
+          color: destaque ? cores.primario : cores.superficie,
           borderRadius: BorderRadius.circular(12),
-          border: destaque ? null : Border.all(color: const Color(0xFFE2E8F0)),
+          border: destaque ? null : Border.all(color: cores.borda),
           boxShadow: destaque
               ? [
                   BoxShadow(
-                    color: _TelaDashboardState.corVerdePrimaria.withOpacity(0.25),
+                    color: cores.primario.withOpacity(0.25),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   )
@@ -561,12 +563,12 @@ class _AcaoRapidaBotao extends StatelessWidget {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: destaque ? Colors.white : _TelaDashboardState.corVerdePrimaria,
+                      color: destaque ? Colors.white : cores.primario,
                     ),
                   )
                 : Icon(
                     icone,
-                    color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
+                    color: destaque ? Colors.white : cores.textoPrimario,
                     size: 20,
                   ),
             const SizedBox(width: 12),
@@ -580,7 +582,7 @@ class _AcaoRapidaBotao extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: destaque ? Colors.white : _TelaDashboardState.corTextoPrimario,
+                      color: destaque ? Colors.white : cores.textoPrimario,
                     ),
                   ),
                   if (subtitulo != null) ...[
@@ -589,7 +591,7 @@ class _AcaoRapidaBotao extends StatelessWidget {
                       subtitulo!,
                       style: TextStyle(
                         fontSize: 11,
-                        color: destaque ? Colors.white.withOpacity(0.85) : _TelaDashboardState.corTextoSecundario,
+                        color: destaque ? Colors.white.withOpacity(0.85) : cores.textoSecundario,
                       ),
                     ),
                   ],
@@ -607,26 +609,26 @@ class _CartaoAnalise extends StatelessWidget {
   final dynamic analise;
   const _CartaoAnalise({required this.analise});
 
-  Map<String, dynamic> get _statusConfig {
+  Map<String, dynamic> _statusConfig(AppColors cores) {
     final resultado = (analise['resultado'] as String).toLowerCase();
     if (resultado.contains('possível') || resultado.contains('suspeita') || resultado.contains('mastite')) {
       return {
-        'corTexto': const Color(0xFFDC2626),
-        'corFundo': const Color(0xFFFEF2F2),
+        'corTexto': cores.erro,
+        'corFundo': cores.erroFundo,
         'icone': Icons.error_outline,
         'label': 'Suspeita'
       };
     } else if (resultado.contains('adicional') || resultado.contains('atenção')) {
       return {
-        'corTexto': const Color(0xFFD97706),
-        'corFundo': const Color(0xFFFFFBEB),
+        'corTexto': cores.alerta,
+        'corFundo': cores.alertaFundo,
         'icone': Icons.warning_amber_rounded,
         'label': 'Atenção'
       };
     } else {
       return {
-        'corTexto': const Color(0xFF059669),
-        'corFundo': const Color(0xFFECFDF5),
+        'corTexto': cores.primarioEscuro,
+        'corFundo': cores.primarioSuave,
         'icone': Icons.check_circle_outline,
         'label': 'Saudável'
       };
@@ -635,12 +637,13 @@ class _CartaoAnalise extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _statusConfig;
+    final cores = AppColors.of(context);
+    final config = _statusConfig(cores);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cores.superficie,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -649,14 +652,14 @@ class _CartaoAnalise extends StatelessWidget {
             offset: const Offset(0, 2),
           )
         ],
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: cores.superficieAlt),
       ),
       child: Row(
         children: [
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: cores.borda),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
@@ -668,8 +671,8 @@ class _CartaoAnalise extends StatelessWidget {
                 errorBuilder: (_, __, ___) => Container(
                   width: 56,
                   height: 56,
-                  color: const Color(0xFFF8FAFC),
-                  child: const Icon(Icons.science_outlined, color: Color(0xFF94A3B8), size: 24),
+                  color: cores.fundo,
+                  child: Icon(Icons.science_outlined, color: cores.textoDesabilitado, size: 24),
                 ),
               ),
             ),
@@ -704,24 +707,24 @@ class _CartaoAnalise extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Confiança: ${analise['confianca'] ?? 'N/A'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: _TelaDashboardState.corTextoSecundario,
+                    color: cores.textoSecundario,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1)),
+          Icon(Icons.chevron_right, color: cores.textoDesabilitado),
         ],
       ),
     );
   }
 }
 
-// =====================
-// GRÁFICO DE TENDÊNCIA 
-// =====================
+// ====================
+// GRÁFICO DE TENDÊNCIA
+// ====================
 
 class _GraficoTendencia extends StatelessWidget {
   final List<Map<String, dynamic>> dados;
@@ -729,6 +732,7 @@ class _GraficoTendencia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = AppColors.of(context);
     final maiorTotal = dados
         .map((d) => d['total'] as int)
         .fold<int>(0, (a, b) => a > b ? a : b);
@@ -748,9 +752,9 @@ class _GraficoTendencia extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cores.superficie,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: cores.superficieAlt),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -762,31 +766,31 @@ class _GraficoTendencia extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Tendência de Diagnósticos (7 dias)',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: _TelaDashboardState.corTextoPrimario,
+              color: cores.textoPrimario,
             ),
           ),
           const SizedBox(height: 10),
           Row(
-            children: const [
-              _LegendaItem(cor: _TelaDashboardState.corAzulMarinho, texto: 'Total de análises'),
-              SizedBox(width: 16),
-              _LegendaItem(cor: Color(0xFFDC2626), texto: 'Suspeitas'),
+            children: [
+              _LegendaItem(cor: cores.destaque, texto: 'Total de análises'),
+              const SizedBox(width: 16),
+              _LegendaItem(cor: cores.erro, texto: 'Suspeitas'),
             ],
           ),
           const SizedBox(height: 18),
           SizedBox(
             height: 180,
             child: dados.every((d) => (d['total'] as int) == 0)
-                ? const Center(
+                ? Center(
                     child: Text(
                       'Ainda não há análises suficientes\npara exibir a tendência.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: _TelaDashboardState.corTextoSecundario),
+                      style: TextStyle(fontSize: 12, color: cores.textoSecundario),
                     ),
                   )
                 : LineChart(
@@ -799,8 +803,8 @@ class _GraficoTendencia extends StatelessWidget {
                         show: true,
                         drawVerticalLine: false,
                         horizontalInterval: intervaloEixoY,
-                        getDrawingHorizontalLine: (value) => const FlLine(
-                          color: Color(0xFFF1F5F9),
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: cores.superficieAlt,
                           strokeWidth: 1,
                         ),
                       ),
@@ -815,7 +819,7 @@ class _GraficoTendencia extends StatelessWidget {
                             interval: intervaloEixoY,
                             getTitlesWidget: (value, meta) => Text(
                               value.toInt().toString(),
-                              style: const TextStyle(fontSize: 10, color: _TelaDashboardState.corTextoSecundario),
+                              style: TextStyle(fontSize: 10, color: cores.textoSecundario),
                             ),
                           ),
                         ),
@@ -832,7 +836,7 @@ class _GraficoTendencia extends StatelessWidget {
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text(
                                   '${dia.day.toString().padLeft(2, '0')}/${dia.month.toString().padLeft(2, '0')}',
-                                  style: const TextStyle(fontSize: 10, color: _TelaDashboardState.corTextoSecundario),
+                                  style: TextStyle(fontSize: 10, color: cores.textoSecundario),
                                 ),
                               );
                             },
@@ -843,18 +847,18 @@ class _GraficoTendencia extends StatelessWidget {
                         LineChartBarData(
                           spots: spotsTotal,
                           isCurved: true,
-                          color: _TelaDashboardState.corAzulMarinho,
+                          color: cores.destaque,
                           barWidth: 3,
                           dotData: const FlDotData(show: true),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: _TelaDashboardState.corAzulMarinho.withOpacity(0.08),
+                            color: cores.destaque.withOpacity(0.08),
                           ),
                         ),
                         LineChartBarData(
                           spots: spotsSuspeitas,
                           isCurved: true,
-                          color: const Color(0xFFDC2626),
+                          color: cores.erro,
                           barWidth: 3,
                           dotData: const FlDotData(show: true),
                         ),
@@ -886,7 +890,7 @@ class _LegendaItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           texto,
-          style: const TextStyle(fontSize: 11, color: _TelaDashboardState.corTextoSecundario),
+          style: TextStyle(fontSize: 11, color: AppColors.of(context).textoSecundario),
         ),
       ],
     );

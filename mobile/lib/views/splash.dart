@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'login.dart';
 import '../navigation/nav.dart';
+import '../core/cores.dart';
 
 class TelaSplash extends StatefulWidget {
   const TelaSplash({Key? key}) : super(key: key);
@@ -11,8 +12,7 @@ class TelaSplash extends StatefulWidget {
 }
 
 class _TelaSplashState extends State<TelaSplash> with SingleTickerProviderStateMixin {
-  static const Color corFundo = Color(0xFFF8FAFC);
-
+  Color get corFundo => AppColors.of(context).superficie;
   late final AnimationController _controller;
   late final Animation<double> _opacidade;
 
@@ -36,8 +36,7 @@ class _TelaSplashState extends State<TelaSplash> with SingleTickerProviderStateM
   Future<void> _decidirProximaTela() async {
     final apiService = ApiService();
 
-    // Garante um tempo mínimo de exibição da splash, mesmo em conexões rápidas,
-    // para a marca não "piscar" na tela.
+    // Garante um tempo mínimo de exibição da splash, mesmo em conexões rápidas.
     final resultados = await Future.wait([
       apiService.estaLogado(),
       Future.delayed(const Duration(milliseconds: 1600)),
@@ -63,7 +62,7 @@ class _TelaSplashState extends State<TelaSplash> with SingleTickerProviderStateM
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/images/logoSIDMA-2.png',
+                'assets/images/logoSIDMA-0.png',
                 height: 120,
                 errorBuilder: (_, __, ___) => const Icon(Icons.local_hospital, size: 100, color: Color(0xFF0D6EFD)),
               ),
