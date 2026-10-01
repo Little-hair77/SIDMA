@@ -8,6 +8,19 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class ApiService {
   static final ValueNotifier<int> notificadorAnalises = ValueNotifier<int>(0);
 
+  String _mensagemDeErro(DioException e, {String padrao = 'Erro ao conectar com o servidor.'}) {
+    final dados = e.response?.data;
+    if (dados is Map) {
+      final valor = dados['mensagem'] ?? dados['detail'] ?? dados['error'];
+      if (valor != null) return valor.toString();
+    }
+    if (e.response?.statusCode == 403) return 'Sem permissão para realizar esta ação (sessão pode ter expirado).';
+    if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+      return 'Tempo de conexão esgotado. Verifique sua internet e tente novamente.';
+    }
+    return padrao;
+  }
+
   // Detecta automaticamente o endereço correto do backend conforme a plataforma:
   // - Web: 127.0.0.1 (o navegador roda na própria máquina onde o Django está)
   // - Emulador Android: 10.0.2.2 (alias especial que aponta para o localhost do PC hospedeiro)
@@ -31,7 +44,10 @@ class ApiService {
   static const _chaveUsuarioEmail = 'usuario_email';
   static const _chaveUsuarioNome = 'usuario_nome';
 
-  // Sicronização Offline
+  // Cache local para consulta offline (RNF06). O SIDMA depende de conexão
+  // para diagnosticar e registrar dados novos (ver Restrições do Projeto) —
+  // isso cobre só a LEITURA dos últimos dados conhecidos quando não há rede,
+  // não um envio de alterações feitas offline.
   static const _chaveCacheAnimais = 'cache_offline_animais';
   static const _chaveCacheHistorico = 'cache_offline_historico';
   static const _chaveCacheSincronizadoEm = 'cache_offline_sincronizado_em';
@@ -94,7 +110,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao entrar.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -108,7 +124,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao criar conta.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -162,7 +178,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível atualizar o perfil.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -286,7 +302,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao registrar tratamento.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -306,7 +322,7 @@ class ApiService {
 
   /// Busca os dados mais recentes do servidor (rebanho + histórico) e guarda
   /// uma cópia local, para que as telas continuem mostrando algo útil mesmo
-  /// sem internet.
+  /// sem internet. Retorna true se conseguiu atualizar pelo menos um dos dois.
   Future<bool> sincronizarDadosOffline() async {
     final animais = await listarAnimais();
     final historico = await buscarHistorico();
@@ -374,7 +390,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao cadastrar animal.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -403,7 +419,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao atualizar animal.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -428,7 +444,7 @@ class ApiService {
         'mensagem': response.data['mensagem'] ?? '',
       };
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -445,7 +461,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível redefinir a senha.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -461,7 +477,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Não foi possível alterar a senha.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }
@@ -492,7 +508,7 @@ class ApiService {
       }
       return {'sucesso': false, 'mensagem': response.data['mensagem'] ?? 'Erro ao registrar CCS.'};
     } on DioException catch (e) {
-      final mensagem = e.response?.data?['mensagem'] ?? 'Erro ao conectar com o servidor.';
+      final mensagem = _mensagemDeErro(e);
       return {'sucesso': false, 'mensagem': mensagem};
     }
   }

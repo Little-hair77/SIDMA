@@ -34,13 +34,14 @@ class _TelaLoginState extends State<TelaLogin> {
     serverClientId: kIsWeb ? null : _webClientId,
   );
 
-  // Paleta de Cores — agora lida do tema ativo (AppColors), para suportar modo escuro.
+  // Paleta de Cores 
   Color get corVerdePrimaria => AppColors.of(context).primario;
   Color get corAzulMarinho => AppColors.of(context).destaque;
   Color get corTextoPrimario => AppColors.of(context).textoPrimario;
   Color get corTextoSecundario => AppColors.of(context).textoSecundario;
   Color get corCampoFundo => AppColors.of(context).superficieAlt;
-  Color get corFundo => AppColors.of(context).fundo;
+  Color get corCardFundo => Theme.of(context).cardColor;
+  Color get corFundoGeral => AppColors.of(context).fundo;
 
   @override
   void dispose() {
@@ -144,7 +145,7 @@ class _TelaLoginState extends State<TelaLogin> {
       suffixIcon: iconeSufixo,
       filled: true,
       fillColor: corCampoFundo,
-      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -170,7 +171,7 @@ class _TelaLoginState extends State<TelaLogin> {
 
   Widget _rotuloCampo(String texto) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 6.0, left: 2.0),
+      padding: const EdgeInsets.only(bottom: 6.0, left: 2.0),
       child: Text(
         texto,
         style: TextStyle(
@@ -184,373 +185,375 @@ class _TelaLoginState extends State<TelaLogin> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: corAzulMarinho,
+      backgroundColor: isDark ? corFundoGeral : corAzulMarinho,
       body: SafeArea(
-          bottom: false,
-          child: CustomScrollView(
-            slivers: [
-              // Topo visual responsivo
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/images/logoSIDMA-0.png',
-                        height: 60,
-                        fit: BoxFit.contain,
+        bottom: false,
+        child: CustomScrollView(
+          slivers: [
+            // Topo visual
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/logoSIDMA-0.png',
+                      height: 60,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Bem-vindo',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? corTextoPrimario : Colors.white,
+                        letterSpacing: 0.5,
                       ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Bem-vindo',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Acesse sua conta para utilizar o SIDMA',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? corTextoSecundario : AppColors.of(context).textoDesabilitado,
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Acesse sua conta para utilizar o SIDMA',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.of(context).textoDesabilitado,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
 
-              // Card expansível e responsivo
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(28),
-                      topRight: Radius.circular(28),
-                    ),
+            // Card principal
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: corCardFundo,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: 420),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Seleção de Abas
-                              Container(
-                                padding: EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: corCampoFundo,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(vertical: 10),
-                                        decoration: BoxDecoration(
-                                          color: corAzulMarinho,
-                                          borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Seleção de Abas (Entrar / Cadastrar)
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: corCampoFundo,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: corVerdePrimaria,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        'Entrar',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
                                         ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).pushReplacement(
+                                          PageRouteBuilder(
+                                            pageBuilder: (_, __, ___) => const TelaCadastro(),
+                                            transitionDuration: Duration.zero,
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        color: Colors.transparent,
                                         child: Text(
-                                          'Entrar',
+                                          'Cadastrar',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                            color: corTextoSecundario,
+                                            fontWeight: FontWeight.w600,
                                             fontSize: 14,
                                           ),
                                         ),
                                       ),
                                     ),
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.of(context).pushReplacement(
-                                            PageRouteBuilder(
-                                              pageBuilder: (_, __, ___) => TelaCadastro(),
-                                              transitionDuration: Duration.zero,
-                                            ),
-                                          );
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 10),
-                                          color: Colors.transparent,
-                                          child: Text(
-                                            'Cadastrar',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: corTextoSecundario,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 24),
-
-                              // Campo: E-mail
-                              _rotuloCampo('E-mail *'),
-                              TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                style: TextStyle(color: corTextoPrimario, fontSize: 14),
-                                decoration: _estiloCampo(
-                                  rotulo: 'seuemail@exemplo.com',
-                                  iconePrefixo: Icons.email_outlined,
-                                ),
-                                validator: (valor) {
-                                  if (valor == null || valor.trim().isEmpty) return 'Informe seu e-mail';
-                                  if (!valor.contains('@')) return 'Formato de e-mail inválido';
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 16),
-
-                              // Campo: Senha
-                              _rotuloCampo('Senha *'),
-                              TextFormField(
-                                controller: _senhaController,
-                                obscureText: !_senhaVisivel,
-                                style: TextStyle(color: corTextoPrimario, fontSize: 14),
-                                decoration: _estiloCampo(
-                                  rotulo: 'Sua senha de acesso',
-                                  iconePrefixo: Icons.lock_outline,
-                                  iconeSufixo: IconButton(
-                                    icon: Icon(
-                                      _senhaVisivel
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                      color: corTextoSecundario,
-                                      size: 20,
-                                    ),
-                                    onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
-                                  ),
-                                ),
-                                validator: (valor) {
-                                  if (valor == null || valor.isEmpty) return 'Informe sua senha';
-                                  if (valor.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 16),
-
-                              // Opções: Manter conectado & Esqueceu senha
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      SizedBox(
-                                        height: 22,
-                                        width: 22,
-                                        child: Checkbox(
-                                          value: _lembrarMe,
-                                          activeColor: corVerdePrimaria,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          onChanged: (val) {
-                                            setState(() => _lembrarMe = val ?? false);
-                                          },
-                                        ),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Manter conectado',
-                                        style: TextStyle(
-                                          color: corTextoSecundario,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => TelaRecuperarSenha(),
-                                        ),
-                                      );
-                                    },
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      'Esqueceu a senha?',
-                                      style: TextStyle(
-                                        color: corVerdePrimaria,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 24),
+                            ),
+                            const SizedBox(height: 24),
 
-                              // Botão Entrar
-                              if (_carregando)
-                                Center(
-                                  child: CircularProgressIndicator(color: corVerdePrimaria),
-                                )
-                              else ...[
-                                ElevatedButton(
-                                  onPressed: _entrarComEmailSenha,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: corVerdePrimaria,
-                                    foregroundColor: Colors.white,
-                                    minimumSize: Size(double.infinity, 52),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                            // Campo: E-mail
+                            _rotuloCampo('E-mail *'),
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              style: TextStyle(color: corTextoPrimario, fontSize: 14),
+                              decoration: _estiloCampo(
+                                rotulo: 'seuemail@exemplo.com',
+                                iconePrefixo: Icons.email_outlined,
+                              ),
+                              validator: (valor) {
+                                if (valor == null || valor.trim().isEmpty) return 'Informe seu e-mail';
+                                if (!valor.contains('@')) return 'Formato de e-mail inválido';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Campo: Senha
+                            _rotuloCampo('Senha *'),
+                            TextFormField(
+                              controller: _senhaController,
+                              obscureText: !_senhaVisivel,
+                              style: TextStyle(color: corTextoPrimario, fontSize: 14),
+                              decoration: _estiloCampo(
+                                rotulo: 'Sua senha',
+                                iconePrefixo: Icons.lock_outline,
+                                iconeSufixo: IconButton(
+                                  icon: Icon(
+                                    _senhaVisivel
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: corTextoSecundario,
+                                    size: 20,
                                   ),
-                                  child: Text(
-                                    'ENTRAR',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
+                                  onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
                                 ),
-                                SizedBox(height: 20),
+                              ),
+                              validator: (valor) {
+                                if (valor == null || valor.isEmpty) return 'Informe sua senha';
+                                if (valor.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
 
-                                // Divisor visual
+                            // Opções: Manter conectado & Esqueceu senha
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
                                 Row(
                                   children: [
-                                    Expanded(child: Divider(color: AppColors.of(context).borda, thickness: 1)),
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 12),
-                                      child: Text(
-                                        'OU CONTINUE COM',
-                                        style: TextStyle(
-                                          color: corTextoSecundario,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.5,
+                                    SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: Checkbox(
+                                        value: _lembrarMe,
+                                        activeColor: corVerdePrimaria,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
+                                        onChanged: (val) {
+                                          setState(() => _lembrarMe = val ?? false);
+                                        },
                                       ),
                                     ),
-                                    Expanded(child: Divider(color: AppColors.of(context).borda, thickness: 1)),
-                                  ],
-                                ),
-                                SizedBox(height: 20),
-
-                                // Botão Google
-                                OutlinedButton.icon(
-                                  onPressed: _entrarComGoogle,
-                                  icon: Image.asset(
-                                    'assets/images/logoGoogle.png',
-                                    height: 18,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  label: Text(
-                                    'Continuar com Google',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: corTextoPrimario,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: Size(double.infinity, 50),
-                                    side: BorderSide(color: AppColors.of(context).borda),
-                                    backgroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 20),
-
-                                // Ir para Cadastro
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Novo por aqui? ',
+                                      'Manter conectado',
                                       style: TextStyle(
                                         color: corTextoSecundario,
                                         fontSize: 13,
                                       ),
                                     ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.of(context).pushReplacement(
-                                          PageRouteBuilder(
-                                            pageBuilder: (_, __, ___) => TelaCadastro(),
-                                            transitionDuration: Duration.zero,
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        'Crie uma conta',
-                                        style: TextStyle(
-                                          color: corVerdePrimaria,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
+                                  ],
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const TelaRecuperarSenha(),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Esqueceu a senha?',
+                                    style: TextStyle(
+                                      color: corVerdePrimaria,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Botão Entrar
+                            if (_carregando)
+                              Center(
+                                child: CircularProgressIndicator(color: corVerdePrimaria),
+                              )
+                            else ...[
+                              ElevatedButton(
+                                onPressed: _entrarComEmailSenha,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: corVerdePrimaria,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 52),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Entrar',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Divisor visual
+                              Row(
+                                children: [
+                                  Expanded(child: Divider(color: AppColors.of(context).borda, thickness: 1)),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: Text(
+                                      'OU CONTINUE COM',
+                                      style: TextStyle(
+                                        color: corTextoSecundario,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(child: Divider(color: AppColors.of(context).borda, thickness: 1)),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Botão Google
+                              OutlinedButton.icon(
+                                onPressed: _entrarComGoogle,
+                                icon: Image.asset(
+                                  'assets/images/logoGoogle.png',
+                                  height: 18,
+                                  fit: BoxFit.contain,
+                                ),
+                                label: Text(
+                                  'Continuar com o Google',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: corTextoPrimario,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 50),
+                                  side: BorderSide(color: AppColors.of(context).borda),
+                                  backgroundColor: corCampoFundo,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Ir para Cadastro
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Novo por aqui? ',
+                                    style: TextStyle(
+                                      color: corTextoSecundario,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).pushReplacement(
+                                        PageRouteBuilder(
+                                          pageBuilder: (_, __, ___) => const TelaCadastro(),
+                                          transitionDuration: Duration.zero,
                                         ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Crie uma conta',
+                                      style: TextStyle(
+                                        color: corVerdePrimaria,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+
+                            // Área de Erro
+                            if (_erro != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.of(context).erroFundo,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.of(context).erro.withOpacity(0.4)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.error_outline, color: AppColors.of(context).erro, size: 18),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        _erro!,
+                                        style: TextStyle(color: AppColors.of(context).erro, fontSize: 12.5),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-
-                              // Área de Erro
-                              if (_erro != null) ...[
-                                SizedBox(height: 16),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.of(context).erroFundo,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: AppColors.of(context).erro.withOpacity(0.4)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.error_outline, color: AppColors.of(context).erro, size: 18),
-                                      SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          _erro!,
-                                          style: TextStyle(color: AppColors.of(context).erro, fontSize: 12.5),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              SizedBox(height: 12),
+                              ),
                             ],
-                          ),
+                            const SizedBox(height: 12),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 }
