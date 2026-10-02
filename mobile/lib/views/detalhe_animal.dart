@@ -460,7 +460,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                   Opacity(
                     opacity: 0.4,
                     child: Image.asset(
-                      'assets/images/logoSIDMA-1.png', 
+                      'assets/images/logoSIDMA-0.png', 
                       height: 36,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: corTextoSuave, size: 28),

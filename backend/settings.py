@@ -18,6 +18,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Caminho onde o modelo de IA treinado (ai/train_model.py) é procurado.
 # Enquanto os arquivos nao existirem, o backend usa classificacao simulada.
 AI_MODELS_DIR = BASE_DIR / "ai" / "models"
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "backend"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -29,6 +31,19 @@ SECRET_KEY = 'django-insecure-)%@wog$c7c9ht!_$9na2c146nbn!wglr#9zu@ph)h+ex6s51k2
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2']
+
+# E-mail (usado pela recuperação de senha — RF07).
+# Em desenvolvimento (DEBUG=True) os e-mails são só IMPRESSOS no console do
+# servidor Django, não enviados de verdade — dá pra testar o fluxo inteiro
+# sem precisar de credenciais de SMTP. Para produção, troque para:
+#   EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#   EMAIL_HOST = 'smtp.seuprovedor.com'
+#   EMAIL_PORT = 587
+#   EMAIL_USE_TLS = True
+#   EMAIL_HOST_USER = 'seu-usuario'
+#   EMAIL_HOST_PASSWORD = 'sua-senha-de-app'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'SIDMA <nao-responda@sidma.local>'
 
 # Segunda camada de proteção mais robusta do CSRF, resolvendo na raiz
 CSRF_TRUSTED_ORIGINS = [

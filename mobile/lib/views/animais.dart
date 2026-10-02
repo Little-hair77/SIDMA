@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../core/cores.dart'; 
 import 'cadastro_animal.dart';
 import 'qrCode_animal.dart';
 import 'detalhe_animal.dart';
 import 'registrar_tratamento.dart';
+import 'painel_rebanho.dart';
 
 class TelaAnimais extends StatefulWidget {
-  const TelaAnimais({super.key});
+  const TelaAnimais({Key? key}) : super(key: key);
+
   @override
   State<TelaAnimais> createState() => _TelaAnimaisState();
 }
@@ -21,6 +22,13 @@ class _TelaAnimaisState extends State<TelaAnimais> {
   bool _carregando = true;
   bool _usandoCacheOffline = false;
   final TextEditingController _buscaController = TextEditingController();
+
+  // Paleta de Cores
+  static const Color corVerdePrimaria   = Color(0xFF10B981); 
+  static const Color corAzulMarinho     = Color(0xFF1E293B); 
+  static const Color corTextoPrimario   = Color(0xFF0F172A); 
+  static const Color corTextoSecundario = Color(0xFF64748B); 
+  static const Color corFundo           = Color(0xFFF8FAFC); 
 
   @override
   void initState() {
@@ -76,31 +84,19 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     });
   }
 
-  Future<void> _confirmarExclusao(BuildContext context, dynamic animal) async {
-    final colors = AppColors.of(context);
-
+  Future<void> _confirmarExclusao(dynamic animal) async {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: colors.superficie,
-        title: Text(
-          'Excluir Animal?',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: colors.textoPrimario,
-          ),
-        ),
-        content: Text(
-          'Tem certeza que deseja remover o animal brinco ${animal['brinco']} do rebanho? O histórico de análises não será apagado, apenas deixará de estar vinculado a esse animal.',
-          style: TextStyle(color: colors.textoSecundario),
-        ),
+        title: const Text('Excluir Animal?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('Tem certeza que deseja remover o animal brinco ${animal['brinco']} do rebanho? O histórico de análises não será apagado, apenas deixará de estar vinculado a esse animal.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancelar', style: TextStyle(color: colors.textoSecundario)),
+            child: const Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: colors.erro),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Excluir', style: TextStyle(color: Colors.white)),
           ),
@@ -119,18 +115,12 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         await _carregar();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Animal removido com sucesso.'),
-            backgroundColor: colors.erro,
-          ),
+          const SnackBar(content: Text('Animal removido com sucesso.'), backgroundColor: Colors.redAccent),
         );
       } else {
         setState(() => _carregando = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Não foi possível excluir o animal. Tente novamente.'),
-            backgroundColor: colors.erro,
-          ),
+          const SnackBar(content: Text('Não foi possível excluir o animal. Tente novamente.'), backgroundColor: Colors.redAccent),
         );
       }
     }
@@ -138,16 +128,17 @@ class _TelaAnimaisState extends State<TelaAnimais> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
     List<dynamic> listaTratamento = [];
     List<dynamic> listaAlerta = [];
     List<dynamic> listaSaudaveis = [];
 
     for (var animal in _animaisFiltrados) {
+      final bool temRiscoCcs = animal['ultimo_ccs_risco'] == 'ALTO' || animal['ultimo_ccs_risco'] == 'MODERADO';
+      final bool temCioProximo = animal['cio_proximo'] == true;
+
       if (animal['em_carencia'] == true) {
         listaTratamento.add(animal);
-      } else if (animal['alerta_reincidencia'] == true) {
+      } else if (animal['alerta_reincidencia'] == true || temRiscoCcs || temCioProximo) {
         listaAlerta.add(animal);
       } else {
         listaSaudaveis.add(animal);
@@ -155,11 +146,11 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     }
 
     return Scaffold(
-      backgroundColor: colors.fundo,
-
+      backgroundColor: corFundo,
+      
       // APP BAR
       appBar: AppBar(
-        backgroundColor: colors.destaque,
+        backgroundColor: corAzulMarinho,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -172,10 +163,21 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             bottom: Radius.circular(24),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard_outlined),
+            tooltip: 'Painel do Rebanho',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TelaPainelRebanho()),
+              );
+            },
+          ),
+        ],
       ),
-
+      
       floatingActionButton: FloatingActionButton(
-        backgroundColor: colors.primario,
+        backgroundColor: corVerdePrimaria,
         onPressed: () async {
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const TelaCadastroAnimal()),
@@ -184,7 +186,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
-
+      
       body: Stack(
         children: [
           // Marca d'água
@@ -192,34 +194,30 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             child: Opacity(
               opacity: 0.03,
               child: Image.asset(
-                'assets/images/logoSIDMA-0.png',
+                'assets/images/logoSIDMA-2.png',
                 width: 250,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.pets,
-                  size: 200,
-                  color: colors.borda,
-                ),
+                errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),
               ),
             ),
           ),
-
+          
           Column(
             children: [
-              // BARRA DE PESQUISA
+              // BARRINHA DE PESQUISA
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: TextField(
                   controller: _buscaController,
                   onChanged: _filtrarAnimais,
-                  style: TextStyle(color: colors.textoPrimario, fontSize: 14),
+                  style: const TextStyle(color: corTextoPrimario, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Buscar por nome ou brinco...',
-                    hintStyle: TextStyle(color: colors.textoSecundario, fontSize: 14),
-                    prefixIcon: Icon(Icons.search, color: colors.primario),
+                    hintStyle: const TextStyle(color: corTextoSecundario, fontSize: 14),
+                    prefixIcon: const Icon(Icons.search, color: corVerdePrimaria),
                     suffixIcon: _buscaController.text.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear, color: colors.textoSecundario),
+                            icon: const Icon(Icons.clear, color: corTextoSecundario),
                             onPressed: () {
                               _buscaController.clear();
                               _filtrarAnimais('');
@@ -227,19 +225,19 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                           )
                         : null,
                     filled: true,
-                    fillColor: colors.superficie,
+                    fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: colors.borda),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: colors.borda),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: colors.primario, width: 1.5),
+                      borderSide: const BorderSide(color: corVerdePrimaria, width: 1.5),
                     ),
                   ),
                 ),
@@ -251,21 +249,17 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: colors.alertaFundo,
+                    color: const Color(0xFFFFFBEB),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      Icon(Icons.cloud_off_outlined, size: 15, color: colors.alerta),
-                      const SizedBox(width: 8),
+                      Icon(Icons.cloud_off_outlined, size: 15, color: Color(0xFFD97706)),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Sem conexão — mostrando os últimos dados sincronizados.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: colors.alerta,
-                          ),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFD97706)),
                         ),
                       ),
                     ],
@@ -275,53 +269,30 @@ class _TelaAnimaisState extends State<TelaAnimais> {
               // LISTAGEM DE ANIMAIS
               Expanded(
                 child: _carregando
-                    ? Center(child: CircularProgressIndicator(color: colors.primario))
+                    ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
                     : _animais.isEmpty
-                        ? _buildEmptyState(
-                            colors,
-                            'Nenhum animal cadastrado',
-                            'Toque no "+" para adicionar o primeiro animal do rebanho.',
-                          )
+                        ? _buildEmptyState('Nenhum animal cadastrado', 'Toque no "+" para adicionar o primeiro animal do rebanho.')
                         : _animaisFiltrados.isEmpty
-                            ? _buildEmptyState(
-                                colors,
-                                'Nenhum resultado encontrado',
-                                'Tente buscar por outro nome ou número de brinco.',
-                              )
+                            ? _buildEmptyState('Nenhum resultado encontrado', 'Tente buscar por outro nome ou número de brinco.')
                             : RefreshIndicator(
-                                color: colors.primario,
+                                color: corVerdePrimaria,
                                 onRefresh: _carregar,
                                 child: ListView(
                                   padding: const EdgeInsets.all(16),
                                   children: [
                                     if (listaTratamento.isNotEmpty) ...[
-                                      _buildSectionHeader(
-                                        colors,
-                                        'Em Tratamento',
-                                        colors.erro,
-                                        'Animais com período de carência ativo',
-                                      ),
-                                      ...listaTratamento.map((a) => _buildAnimalCard(context, colors, a)).toList(),
+                                      _buildSectionHeader('Em Tratamento', Colors.redAccent, 'Animais com período de carência ativo'),
+                                      ...listaTratamento.map((a) => _buildAnimalCard(a)).toList(),
                                       const SizedBox(height: 16),
                                     ],
                                     if (listaAlerta.isNotEmpty) ...[
-                                      _buildSectionHeader(
-                                        colors,
-                                        'Em Análise / Alerta',
-                                        colors.alerta,
-                                        'Atenção necessária ou reincidência',
-                                      ),
-                                      ...listaAlerta.map((a) => _buildAnimalCard(context, colors, a)).toList(),
+                                      _buildSectionHeader('Em Análise / Alerta', Colors.amber.shade800, 'Atenção necessária ou reincidência'),
+                                      ...listaAlerta.map((a) => _buildAnimalCard(a)).toList(),
                                       const SizedBox(height: 16),
                                     ],
                                     if (listaSaudaveis.isNotEmpty) ...[
-                                      _buildSectionHeader(
-                                        colors,
-                                        'Rebanho Saudável',
-                                        colors.primario,
-                                        'Sem anomalias recentes registradas',
-                                      ),
-                                      ...listaSaudaveis.map((a) => _buildAnimalCard(context, colors, a)).toList(),
+                                      _buildSectionHeader('Rebanho Saudável', corVerdePrimaria, 'Sem anomalias recentes registradas'),
+                                      ...listaSaudaveis.map((a) => _buildAnimalCard(a)).toList(),
                                     ],
                                   ],
                                 ),
@@ -334,7 +305,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     );
   }
 
-  Widget _buildSectionHeader(AppColors colors, String titulo, Color cor, String subtitulo) {
+  Widget _buildSectionHeader(String titulo, Color cor, String subtitulo) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 4),
       child: Column(
@@ -351,9 +322,9 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           const SizedBox(height: 2),
           Text(
             subtitulo,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: colors.textoSecundario,
+              color: corTextoSecundario,
             ),
           ),
         ],
@@ -373,99 +344,109 @@ class _TelaAnimaisState extends State<TelaAnimais> {
         children: [
           Icon(icone, size: 12, color: corTexto),
           const SizedBox(width: 4),
-          Text(
-            texto,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: corTexto,
-            ),
-          ),
+          Text(texto, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: corTexto)),
         ],
       ),
     );
   }
 
-  Widget _buildAnimalCard(BuildContext context, AppColors colors, dynamic animal) {
+  Widget _buildAnimalCard(dynamic animal) {
     final bool emCarencia = animal['em_carencia'] == true;
     final bool alertaReincidencia = animal['alerta_reincidencia'] == true;
     final bool ccsElevado = animal['ultimo_ccs_risco'] == 'ALTO';
+    final bool ccsAtencao = animal['ultimo_ccs_risco'] == 'MODERADO';
     final bool cioProximo = animal['cio_proximo'] == true;
 
-    final Color corBorda = emCarencia
-        ? colors.erro
-        : (alertaReincidencia ? colors.alerta : Colors.transparent);
+    // Selo principal do card: ordem de prioridade entre as situações
+    // possíveis. Só uma aparece como selo principal por vez; as demais (se
+    // houver mais de uma ao mesmo tempo) aparecem como selos extras abaixo.
+    late final String textoTag;
+    late final Color corTextoTag;
+    late final Color corFundoTag;
+    late final Color corBorda;
+    late final IconData iconeTag;
 
-    final Color corFundoTag = emCarencia
-        ? colors.erroFundo
-        : (alertaReincidencia ? colors.alertaFundo : colors.primarioSuave);
+    if (emCarencia) {
+      textoTag = 'Em Tratamento';
+      corTextoTag = Colors.red.shade700;
+      corFundoTag = Colors.red.shade50;
+      corBorda = Colors.redAccent;
+      iconeTag = Icons.medical_information;
+    } else if (alertaReincidencia) {
+      textoTag = 'Alerta / Reincidência';
+      corTextoTag = Colors.amber.shade900;
+      corFundoTag = Colors.amber.shade50;
+      corBorda = Colors.amber.shade700;
+      iconeTag = Icons.warning_amber_rounded;
+    } else if (ccsElevado) {
+      textoTag = 'CCS Elevado';
+      corTextoTag = const Color(0xFF1D4ED8);
+      corFundoTag = const Color(0xFFEFF6FF);
+      corBorda = const Color(0xFF2563EB);
+      iconeTag = Icons.biotech_outlined;
+    } else if (ccsAtencao) {
+      textoTag = 'CCS em Atenção';
+      corTextoTag = Colors.amber.shade900;
+      corFundoTag = Colors.amber.shade50;
+      corBorda = Colors.amber.shade700;
+      iconeTag = Icons.biotech_outlined;
+    } else if (cioProximo) {
+      textoTag = 'Cio Previsto';
+      corTextoTag = const Color(0xFFBE185D);
+      corFundoTag = const Color(0xFFFCE7F3);
+      corBorda = const Color(0xFFDB2777);
+      iconeTag = Icons.favorite_outline;
+    } else {
+      textoTag = 'Saudável';
+      corTextoTag = corVerdePrimaria;
+      corFundoTag = corVerdePrimaria.withOpacity(0.12);
+      corBorda = Colors.transparent;
+      iconeTag = Icons.check_circle_outline;
+    }
 
-    final Color corTextoTag = emCarencia
-        ? colors.erro
-        : (alertaReincidencia ? colors.alerta : colors.primario);
-
-    final String textoTag = emCarencia
-        ? 'Em Tratamento'
-        : (alertaReincidencia ? 'Alerta / Reincidência' : 'Saudável');
-
-    final IconData iconeTag = emCarencia
-        ? Icons.medical_information
-        : (alertaReincidencia ? Icons.warning_amber_rounded : Icons.check_circle_outline);
+    // Evita mostrar o mesmo motivo duas vezes (uma como selo principal,
+    // outra como selo extra) quando ele já é o motivo escolhido acima.
+    final bool mostrarMiniCcsElevado = ccsElevado && textoTag != 'CCS Elevado';
+    final bool mostrarMiniCcsAtencao = ccsAtencao && textoTag != 'CCS em Atenção';
+    final bool mostrarMiniCio = cioProximo && textoTag != 'Cio Previsto';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: colors.superficie,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
         ],
         border: Border(
-          left: BorderSide(
-            color: corBorda != Colors.transparent ? corBorda : colors.borda,
-            width: corBorda != Colors.transparent ? 4 : 1,
-          ),
-          top: BorderSide(color: colors.borda, width: 1),
-          right: BorderSide(color: colors.borda, width: 1),
-          bottom: BorderSide(color: colors.borda, width: 1),
+          left: BorderSide(color: corBorda != Colors.transparent ? corBorda : const Color(0xFFE2E8F0), width: corBorda != Colors.transparent ? 4 : 1),
+          top: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          right: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          bottom: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.only(left: 12, right: 4, top: 8, bottom: 8),
         leading: CircleAvatar(
           radius: 26,
-          backgroundColor: colors.fundo,
+          backgroundColor: corFundo,
           backgroundImage: animal['foto'] != null ? NetworkImage(animal['foto']) : null,
-          child: animal['foto'] == null
-              ? Icon(Icons.pets, color: colors.textoSecundario)
-              : null,
+          child: animal['foto'] == null ? const Icon(Icons.pets, color: corTextoSecundario) : null,
         ),
         title: Row(
           children: [
             Expanded(
               child: Text(
                 animal['nome']?.isNotEmpty == true ? animal['nome'] : 'Brinco ${animal['brinco']}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colors.textoPrimario,
-                  fontSize: 15,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: corTextoPrimario, fontSize: 15),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (emCarencia || alertaReincidencia)
+            if (textoTag != 'Saudável')
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
-                child: Icon(
-                  Icons.warning_amber_rounded,
-                  color: emCarencia ? colors.erro : colors.alerta,
-                  size: 18,
-                ),
+                child: Icon(Icons.warning_amber_rounded, color: corBorda != Colors.transparent ? corBorda : corTextoTag, size: 18),
               ),
           ],
         ),
@@ -475,7 +456,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
             const SizedBox(height: 4),
             Text(
               'Brinco: ${animal['brinco']} · ${animal['total_analises'] ?? 0} análise(s)',
-              style: TextStyle(color: colors.textoSecundario, fontSize: 13),
+              style: const TextStyle(color: corTextoSecundario, fontSize: 13),
             ),
             const SizedBox(height: 8),
             Container(
@@ -491,120 +472,72 @@ class _TelaAnimaisState extends State<TelaAnimais> {
                   const SizedBox(width: 4),
                   Text(
                     textoTag,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: corTextoTag,
-                    ),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: corTextoTag),
                   ),
                 ],
               ),
             ),
-            if (ccsElevado || cioProximo) ...[
+            if (mostrarMiniCcsElevado || mostrarMiniCcsAtencao || mostrarMiniCio) ...[
               const SizedBox(height: 6),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: [
-                  if (ccsElevado)
-                    _buildMiniTag('CCS Elevado', Icons.biotech_outlined, colors.info, colors.infoFundo),
-                  if (cioProximo)
-                    _buildMiniTag('Cio Previsto', Icons.favorite_outline, colors.rosa, colors.rosaFundo),
+                  if (mostrarMiniCcsElevado) _buildMiniTag('CCS Elevado', Icons.biotech_outlined, const Color(0xFF2563EB), const Color(0xFFEFF6FF)),
+                  if (mostrarMiniCcsAtencao) _buildMiniTag('CCS em Atenção', Icons.biotech_outlined, Colors.amber.shade800, Colors.amber.shade50),
+                  if (mostrarMiniCio) _buildMiniTag('Cio Previsto', Icons.favorite_outline, const Color(0xFFDB2777), const Color(0xFFFCE7F3)),
                 ],
               ),
             ],
           ],
         ),
         trailing: PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: colors.textoSecundario),
-          color: colors.superficie,
-          surfaceTintColor: colors.superficie,
+          icon: const Icon(Icons.more_vert, color: corTextoSecundario),
+          color: Colors.white,
+          surfaceTintColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           onSelected: (value) async {
             if (value == 'visualizar') {
-              await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => TelaDetalheAnimal(animal: animal)),
-              );
+              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaDetalheAnimal(animal: animal)));
               _carregar();
             } else if (value == 'tratamento') {
-              await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => TelaRegistrarTratamento(
-                    animalId: animal['id'],
-                    nomeAnimal: animal['nome']?.toString().isNotEmpty == true
-                        ? animal['nome']
-                        : animal['brinco'],
-                  ),
+              await Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => TelaRegistrarTratamento(
+                  animalId: animal['id'],
+                  nomeAnimal: animal['nome']?.toString().isNotEmpty == true ? animal['nome'] : animal['brinco'],
                 ),
-              );
+              ));
               _carregar();
             } else if (value == 'editar') {
-              await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => TelaCadastroAnimal(animal: animal)),
-              );
+              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaCadastroAnimal(animal: animal)));
               _carregar();
             } else if (value == 'qrcode') {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => TelaQrCodeAnimal(animal: animal)),
-              );
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => TelaQrCodeAnimal(animal: animal)));
             } else if (value == 'excluir') {
-              _confirmarExclusao(context, animal);
+              _confirmarExclusao(animal);
             }
           },
           itemBuilder: (BuildContext context) => [
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'visualizar',
-              child: Row(
-                children: [
-                  Icon(Icons.visibility_outlined, size: 20, color: colors.destaque),
-                  const SizedBox(width: 12),
-                  Text('Ver Ficha', style: TextStyle(color: colors.textoPrimario)),
-                ],
-              ),
+              child: Row(children: [Icon(Icons.visibility_outlined, size: 20, color: corAzulMarinho), SizedBox(width: 12), Text('Ver Ficha')]),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'tratamento',
-              child: Row(
-                children: [
-                  Icon(Icons.medical_services_outlined, size: 20, color: colors.primario),
-                  const SizedBox(width: 12),
-                  Text('Registrar Tratamento', style: TextStyle(color: colors.textoPrimario)),
-                ],
-              ),
+              child: Row(children: [Icon(Icons.medical_services_outlined, size: 20, color: corVerdePrimaria), SizedBox(width: 12), Text('Registrar Tratamento')]),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'editar',
-              child: Row(
-                children: [
-                  Icon(Icons.edit_outlined, size: 20, color: colors.textoPrimario),
-                  const SizedBox(width: 12),
-                  Text('Editar', style: TextStyle(color: colors.textoPrimario)),
-                ],
-              ),
+              child: Row(children: [Icon(Icons.edit_outlined, size: 20, color: corTextoPrimario), SizedBox(width: 12), Text('Editar')]),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'qrcode',
-              child: Row(
-                children: [
-                  Icon(Icons.qr_code, size: 20, color: colors.textoPrimario),
-                  const SizedBox(width: 12),
-                  Text('QR Code', style: TextStyle(color: colors.textoPrimario)),
-                ],
-              ),
+              child: Row(children: [Icon(Icons.qr_code, size: 20, color: corTextoPrimario), SizedBox(width: 12), Text('QR Code')]),
             ),
             const PopupMenuDivider(),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'excluir',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, size: 20, color: colors.erro),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Excluir',
-                    style: TextStyle(color: colors.erro, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+              child: Row(children: [Icon(Icons.delete_outline, size: 20, color: Colors.redAccent), SizedBox(width: 12), Text('Excluir', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))]),
             ),
           ],
         ),
@@ -618,28 +551,24 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     );
   }
 
-  Widget _buildEmptyState(AppColors colors, String titulo, String subtitulo) {
+  Widget _buildEmptyState(String titulo, String subtitulo) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.pets_outlined, size: 64, color: colors.textoSecundario.withOpacity(0.5)),
+            Icon(Icons.pets_outlined, size: 64, color: corTextoSecundario.withOpacity(0.5)),
             const SizedBox(height: 16),
             Text(
               titulo,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: colors.textoPrimario,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: corTextoPrimario),
             ),
             const SizedBox(height: 8),
             Text(
               subtitulo,
               textAlign: TextAlign.center,
-              style: TextStyle(color: colors.textoSecundario, fontSize: 13),
+              style: const TextStyle(color: corTextoSecundario, fontSize: 13),
             ),
           ],
         ),
