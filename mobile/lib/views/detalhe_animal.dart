@@ -88,13 +88,20 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
             _linhaPdf('Data de nascimento', _animal['data_nascimento'] ?? 'N/I'),
             _linhaPdf('Total de análises', '${_animal['total_analises'] ?? 0}'),
             _linhaPdf('Situação de carência', emCarencia ? 'Em carência até ${_animal['carencia_ate']}' : 'Sem restrição'),
-            if ((_animal['sexo'] ?? '') == 'Fêmea')
+            if ((_animal['sexo'] ?? '') == 'Fêmea') ...[
               _linhaPdf(
                 'Ciclo reprodutivo',
                 _animal['data_ultimo_cio'] != null
                     ? 'Último cio em ${_animal['data_ultimo_cio']} — previsão do próximo: ${_animal['previsao_proximo_cio'] ?? 'N/I'}'
                     : 'Sem registro de cio',
               ),
+              _linhaPdf(
+                'CCS (Contagem de Células Somáticas)',
+                _animal['ultimo_ccs_valor'] != null
+                    ? '${_animal['ultimo_ccs_valor']} céls/mL — ${_rotuloRiscoCcs(_animal['ultimo_ccs_risco'] as String?)} (coleta em ${_animal['ultimo_ccs_data'] ?? 'N/I'})'
+                    : 'Nenhum registro de CCS',
+              ),
+            ],
             _linhaPdf('Última análise', ultimaAnalise != null ? '${ultimaAnalise['resultado']} (${ultimaAnalise['confianca']}) em ${ultimaAnalise['criado_em']}' : 'Nenhuma análise registrada'),
             if (_animal['observacoes']?.toString().isNotEmpty == true) ...[
               pw.SizedBox(height: 12),
@@ -144,12 +151,30 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
     return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}';
   }
 
+  // Mesmos rótulos de RegistroCcs.Risco no backend (rebanho/models.py),
+  // pra não ter dois textos diferentes descrevendo o mesmo risco no app.
+  String _rotuloRiscoCcs(String? risco) {
+    switch (risco) {
+      case 'ALTO':
+        return 'Risco de mastite subclínica';
+      case 'MODERADO':
+        return 'Atenção';
+      case 'BAIXO':
+        return 'Dentro do normal';
+      default:
+        return 'N/I';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool emCarencia = _animal['em_carencia'] == true;
     final bool alertaReincidencia = _animal['alerta_reincidencia'] == true;
     final bool cioProximo = _animal['cio_proximo'] == true;
     final bool ehFemea = (_animal['sexo'] ?? '') == 'Fêmea';
+    final String? ccsRisco = _animal['ultimo_ccs_risco'] as String?;
+    final bool ccsAlto = ccsRisco == 'ALTO';
+    final bool ccsAtencao = ccsRisco == 'MODERADO';
 
     return Scaffold(
       backgroundColor: corFundo,
@@ -295,6 +320,10 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                           const _Badge(texto: 'REINCIDÊNCIA', corFundo: Color(0xFFFFEDD5), corTexto: Color(0xFFF97316), icone: Icons.repeat_rounded),
                                         if (cioProximo)
                                           const _Badge(texto: 'CIO PREVISTO', corFundo: Color(0xFFFCE7F3), corTexto: Color(0xFFDB2777), icone: Icons.favorite_outline),
+                                        if (ccsAlto)
+                                          const _Badge(texto: 'CCS ALTO', corFundo: Color(0xFFEFF6FF), corTexto: Color(0xFF2563EB), icone: Icons.biotech_outlined),
+                                        if (ccsAtencao)
+                                          const _Badge(texto: 'CCS EM ATENÇÃO', corFundo: Color(0xFFFFFBEB), corTexto: Color(0xFFD97706), icone: Icons.biotech_outlined),
                                       ],
                                     ),
                                   ],
@@ -337,6 +366,13 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                         valor: _animal['data_ultimo_cio'] != null
                                             ? 'Último cio: ${_formatarDataSimples(_animal['data_ultimo_cio'])}\nPrevisão: ${_formatarDataSimples(_animal['previsao_proximo_cio'])}'
                                             : 'Sem registro de cio',
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _TextoInfo(
+                                        rotulo: 'CCS (Contagem de Células Somáticas)',
+                                        valor: _animal['ultimo_ccs_valor'] != null
+                                            ? '${_animal['ultimo_ccs_valor']} céls/mL — ${_rotuloRiscoCcs(ccsRisco)}\nColeta: ${_formatarDataSimples(_animal['ultimo_ccs_data'])}'
+                                            : 'Nenhum registro de CCS',
                                       ),
                                     ],
                                   ],
@@ -460,7 +496,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                   Opacity(
                     opacity: 0.4,
                     child: Image.asset(
-                      'assets/images/logoSIDMA-0.png', 
+                      'assets/images/logoSIDMA-1.png', 
                       height: 36,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: corTextoSuave, size: 28),

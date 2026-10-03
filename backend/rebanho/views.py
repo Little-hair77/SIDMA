@@ -76,6 +76,7 @@ def serializar_animal(request, a):
         'cio_proximo': cio_proximo,
         'ultimo_ccs_risco': ultimo_ccs.risco if ultimo_ccs else None,
         'ultimo_ccs_valor': ultimo_ccs.valor_ccs if ultimo_ccs else None,
+        'ultimo_ccs_data': ultimo_ccs.data_coleta.isoformat() if ultimo_ccs else None,
     }
 
 
@@ -130,6 +131,10 @@ def animal_detalhes(request, animal_id):
 
         data_nascimento_raw = request.data.get('data_nascimento')
         animal.data_nascimento = parse_date(data_nascimento_raw) if data_nascimento_raw else None
+
+        # OBS: segue o mesmo padrão de data_nascimento — se o app não enviar
+        # o campo, ele é limpo para None. O app sempre reenvia o valor atual na
+        # edição, então isso só apaga a data se o usuário deliberadamente limpá-la.
         data_ultimo_cio_raw = request.data.get('data_ultimo_cio')
         animal.data_ultimo_cio = parse_date(data_ultimo_cio_raw) if data_ultimo_cio_raw else None
 
