@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data'; 
 import '../core/usuario_estado.dart'; 
+import '../core/cores.dart';
 import '../views/dashboard.dart';
 import '../views/animais.dart';
 import '../views/historico.dart';
@@ -17,11 +18,15 @@ class TelaPrincipal extends StatefulWidget {
 class _TelaPrincipalState extends State<TelaPrincipal> {
   int _indiceAtual = 0;
 
-  // Paleta de Cores
-  static const Color corVerdePrimaria = Color(0xFF10B981); 
-  static const Color corAzulMarinho = Color(0xFF1E293B);   
-  static const Color corCinzaInativo = Color(0xFF94A3B8);  
-  static const Color corFundo = Color(0xFFF8FAFC);        
+  // Paleta de Cores 
+  AppColors get _cores => AppColors.of(context);
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get corVerdePrimaria => _cores.primario;
+  Color get corFundo => _cores.fundo;
+
+  Color get corSelecionado => _isDark ? _cores.primarioEscuro : _cores.destaque;
+  Color get corCinzaInativo => _isDark ? _cores.textoSecundario : _cores.textoDesabilitado;
 
   final List<Widget> _telas = const [
     TelaDashboard(),
@@ -73,8 +78,12 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
       
       // BARRA INFERIOR 
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          boxShadow: [
+        decoration: BoxDecoration(
+          // No escuro a sombra some, então uma linha fina separa a barra do conteúdo.
+          border: Border(
+            top: BorderSide(color: _isDark ? _cores.borda : Colors.transparent),
+          ),
+          boxShadow: const [
             BoxShadow(
               color: Color(0x0F000000),
               blurRadius: 16,
@@ -85,8 +94,8 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
         child: BottomAppBar(
           shape: const CircularNotchedRectangle(), 
           notchMargin: 8.0, 
-          color: Colors.white,
-          surfaceTintColor: Colors.white,
+          color: _cores.superficie,
+          surfaceTintColor: _cores.superficie,
           elevation: 0,
           height: 68,
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -141,7 +150,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
             Icon(
               isSelected ? selectedIcon : icon, 
               size: 22,
-              color: isSelected ? corAzulMarinho : corCinzaInativo,
+              color: isSelected ? corSelecionado : corCinzaInativo,
             ),
             const SizedBox(height: 3),
             Text(
@@ -149,7 +158,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? corAzulMarinho : corCinzaInativo,
+                color: isSelected ? corSelecionado : corCinzaInativo,
               ),
             ),
           ],
@@ -179,7 +188,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? corAzulMarinho : Colors.transparent,
+                        color: isSelected ? corSelecionado : Colors.transparent,
                         width: 1.5,
                       ),
                     ),
@@ -192,7 +201,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
                 return Icon(
                   isSelected ? Icons.person : Icons.person_outline, 
                   size: 22,
-                  color: isSelected ? corAzulMarinho : corCinzaInativo,
+                  color: isSelected ? corSelecionado : corCinzaInativo,
                 );
               },
             ),
@@ -202,7 +211,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? corAzulMarinho : corCinzaInativo,
+                color: isSelected ? corSelecionado : corCinzaInativo,
               ),
             ),
           ],

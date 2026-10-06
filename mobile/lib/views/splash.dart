@@ -64,13 +64,13 @@ class _TelaSplashState extends State<TelaSplash> with SingleTickerProviderStateM
               Image.asset(
                 'assets/images/logoSIDMA-0.png',
                 height: 120,
-                errorBuilder: (_, __, ___) => const Icon(Icons.local_hospital, size: 100, color: Color(0xFF0D6EFD)),
+                errorBuilder: (_, __, ___) => Icon(Icons.local_hospital, size: 100, color: AppColors.of(context).primario),
               ),
               const SizedBox(height: 24),
-              const SizedBox(
+              SizedBox(
                 width: 28,
                 height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF0D6EFD)),
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.of(context).primario),
               ),
             ],
           ),

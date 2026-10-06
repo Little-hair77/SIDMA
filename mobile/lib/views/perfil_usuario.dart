@@ -22,12 +22,15 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   String _email = 'Carregando...';
   bool _carregandoDados = true;
 
-  // Paleta de Cores
-  static const Color corVerdePrimaria   = Color(0xFF10B981);
-  static const Color corAzulMarinho     = Color(0xFF1E293B); 
-  static const Color corTextoPrimario   = Color(0xFF0F172A); 
-  static const Color corTextoSecundario = Color(0xFF64748B); 
-  static const Color corFundo           = Color(0xFFF8FAFC); 
+  // Paleta de Cores 
+  AppColors get _cores => AppColors.of(context);
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get corVerdePrimaria   => _cores.primario;
+  Color get corAzulMarinho     => _cores.destaque;
+  Color get corTextoPrimario   => _cores.textoPrimario;
+  Color get corTextoSecundario => _cores.textoSecundario;
+  Color get corFundo           => _cores.fundo;
 
   @override
   void initState() {
@@ -68,7 +71,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: _cores.superficie,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (contextoSheet) {
         return StatefulBuilder(
@@ -89,9 +92,9 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Segurança e Senha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: corTextoPrimario)),
+                        Text('Segurança e Senha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: corTextoPrimario)),
                         IconButton(
-                          icon: const Icon(Icons.close, color: corTextoSecundario),
+                          icon: Icon(Icons.close, color: corTextoSecundario),
                           onPressed: () => Navigator.of(contextoSheet).pop(),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -245,7 +248,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
               actions: [
                 TextButton(
                   onPressed: salvando ? null : () => Navigator.of(context).pop(false),
-                  child: const Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
+                  child: Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: corVerdePrimaria),
@@ -319,7 +322,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   void _mostrarOpcoesFoto() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: _cores.superficie,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -328,15 +331,15 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   'Foto de Perfil',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: corTextoPrimario),
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: corVerdePrimaria),
+                leading: Icon(Icons.camera_alt_outlined, color: corVerdePrimaria),
                 title: const Text('Tirar Foto'),
                 onTap: () {
                   Navigator.pop(context);
@@ -344,7 +347,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.image_search_outlined, color: corVerdePrimaria),
+                leading: Icon(Icons.image_search_outlined, color: corVerdePrimaria),
                 title: const Text('Escolher da Galeria'),
                 onTap: () {
                   Navigator.pop(context);
@@ -386,7 +389,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
+            child: Text('Cancelar', style: TextStyle(color: corTextoSecundario)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -425,7 +428,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
       ),
       
       body: _carregandoDados
-          ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
+          ? Center(child: CircularProgressIndicator(color: corVerdePrimaria))
           : CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
@@ -441,7 +444,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                               'assets/images/logoSIDMA-0.png',
                               width: 250,
                               fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: Colors.grey.shade400),
+                              errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: corTextoSecundario),
                             ),
                           ),
                         ),
@@ -459,7 +462,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                     Container(
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 4),
+                                        border: Border.all(color: _cores.superficie, width: 4),
                                         boxShadow: [
                                           BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4)),
                                         ],
@@ -469,7 +472,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                         backgroundColor: corVerdePrimaria.withOpacity(0.12),
                                         backgroundImage: fotoBytes != null ? MemoryImage(fotoBytes) : null,
                                         child: fotoBytes == null
-                                            ? const Icon(Icons.person, size: 54, color: corVerdePrimaria)
+                                            ? Icon(Icons.person, size: 54, color: corVerdePrimaria)
                                             : null,
                                       ),
                                     ),
@@ -479,7 +482,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 2), 
+                                          border: Border.all(color: _cores.superficie, width: 2), 
                                         ),
                                         child: CircleAvatar(
                                           radius: 18,
@@ -501,24 +504,24 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                             // - DADOS DO USUÁRIO 
                             Text(
                               _nome,
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: corTextoPrimario),
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: corTextoPrimario),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               _email,
-                              style: const TextStyle(fontSize: 14, color: corTextoSecundario),
+                              style: TextStyle(fontSize: 14, color: corTextoSecundario),
                             ),
                             const SizedBox(height: 28),
 
                             // - CARD DE INFORMAÇÕES E CONFIGURAÇÕES
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: _cores.superficie,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
                                 ],
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(color: _cores.borda),
                               ),
                               child: Column(
                                 children: [
@@ -537,16 +540,16 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                     ),
                                   ),
                                   Container(
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFF1F5F9),
-                                      borderRadius: BorderRadius.only(
+                                    decoration: BoxDecoration(
+                                      color: _cores.superficieAlt,
+                                      borderRadius: const BorderRadius.only(
                                         bottomLeft: Radius.circular(16),
                                         bottomRight: Radius.circular(16),
                                       ),
                                     ),
                                     child: Column(
                                       children: [
-                                        const Divider(height: 1, thickness: 0.5),
+                                        Divider(height: 1, thickness: 0.5, color: _isDark ? _cores.fundo : _cores.borda),
                                         _buildAcaoMenu(Icons.dark_mode_outlined, 'Aparência',
                                             onTap: _abrirSeletorAparencia),
                                         _buildAcaoMenu(Icons.notifications_none, 'Notificações',
@@ -555,7 +558,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                                             onTap: _abrirAlterarSenha),
                                         _buildAcaoMenu(Icons.help_outline, 'Suporte SIDMA',
                                             onTap: () => _mostrarIndisponivel('Suporte SIDMA')),
-                                        const Divider(height: 1, thickness: 0.5),
+                                        Divider(height: 1, thickness: 0.5, color: _isDark ? _cores.fundo : _cores.borda),
                                         _buildAcaoMenu(
                                           Icons.exit_to_app, 
                                           'Sair', 
@@ -586,7 +589,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                       padding: const EdgeInsets.only(bottom: 24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Text(
                             'SIDMA • VERSÃO 1.0.0',
                             style: TextStyle(
@@ -596,7 +599,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
                               letterSpacing: 1.5,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             'Gestão Sanitária Inteligente',
                             style: TextStyle(
@@ -618,7 +621,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   Future<void> _abrirSeletorAparencia() async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: _cores.superficie,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (contextoSheet) {
         return SafeArea(
@@ -628,8 +631,8 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
                       'Modo',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: corTextoPrimario),
@@ -687,7 +690,7 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
           color: selecionado ? corVerdePrimaria : corTextoPrimario,
         ),
       ),
-      trailing: selecionado ? const Icon(Icons.check_circle, color: corVerdePrimaria) : null,
+      trailing: selecionado ? Icon(Icons.check_circle, color: corVerdePrimaria) : null,
       onTap: onTap,
     );
   }
