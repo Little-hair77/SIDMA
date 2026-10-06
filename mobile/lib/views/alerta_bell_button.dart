@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 import 'alertas.dart';
 
 class BotaoSinoAlertas extends StatefulWidget {
-  final Color corIcone;
+  
+  final Color? corIcone;
 
-  const BotaoSinoAlertas({Key? key, this.corIcone = Colors.black87}) : super(key: key);
+  const BotaoSinoAlertas({Key? key, this.corIcone}) : super(key: key);
 
   @override
   State<BotaoSinoAlertas> createState() => _BotaoSinoAlertasState();
@@ -38,6 +40,9 @@ class _BotaoSinoAlertasState extends State<BotaoSinoAlertas> {
 
   @override
   Widget build(BuildContext context) {
+    final cores = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: _abrirAlertas,
       customBorder: const CircleBorder(),
@@ -46,7 +51,7 @@ class _BotaoSinoAlertasState extends State<BotaoSinoAlertas> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Icon(Icons.notifications_outlined, color: widget.corIcone, size: 28),
+            Icon(Icons.notifications_outlined, color: widget.corIcone ?? cores.textoPrimario, size: 28),
             if (_quantidade > 0)
               Positioned(
                 right: -2,
@@ -54,11 +59,11 @@ class _BotaoSinoAlertasState extends State<BotaoSinoAlertas> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   constraints: const BoxConstraints(minWidth: 16),
-                  decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: cores.erro, shape: BoxShape.circle),
                   child: Text(
                     _quantidade > 9 ? '9+' : '$_quantidade',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: isDark ? cores.fundo : Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

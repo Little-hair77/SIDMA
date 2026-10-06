@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 import 'detalhe_animal.dart';
 
@@ -12,9 +13,13 @@ class TelaAlertas extends StatefulWidget {
 class _TelaAlertasState extends State<TelaAlertas> {
   final ApiService _apiService = ApiService();
 
-  static const Color corFundo = Color(0xFFF4F6F8);
-  static const Color corTextoPrimario = Color(0xFF1E293B);
-  static const Color corVerdePrincipal = Color(0xFF74C319);
+  AppColors get _cores => AppColors.of(context);
+  // Dark mode
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  // Paleta de Cores 
+  Color get corFundo => _cores.fundo;
+  Color get corTextoPrimario => _cores.textoPrimario;
+  Color get corVerdePrincipal => _cores.primario;
 
   List<dynamic> _alertas = [];
   bool _carregando = true;
@@ -79,15 +84,15 @@ class _TelaAlertasState extends State<TelaAlertas> {
   ({IconData icone, Color cor}) _estiloPorTipo(String? tipo) {
     switch (tipo) {
       case 'REINCIDENCIA':
-        return (icone: Icons.repeat, cor: Colors.redAccent);
+        return (icone: Icons.repeat, cor: _cores.erro);
       case 'CARENCIA':
-        return (icone: Icons.medical_information_outlined, cor: Colors.blueAccent);
+        return (icone: Icons.medical_information_outlined, cor: _cores.info);
       case 'CIO':
-        return (icone: Icons.favorite_border, cor: Colors.pinkAccent);
+        return (icone: Icons.favorite_border, cor: _cores.rosa);
       case 'CCS_ELEVADO':
-        return (icone: Icons.science_outlined, cor: Colors.deepOrange);
+        return (icone: Icons.science_outlined, cor: _cores.laranja);
       default:
-        return (icone: Icons.notifications_outlined, cor: Colors.grey);
+        return (icone: Icons.notifications_outlined, cor: _cores.textoSecundario);
     }
   }
 
@@ -104,16 +109,16 @@ class _TelaAlertasState extends State<TelaAlertas> {
       appBar: AppBar(
         backgroundColor: corFundo,
         elevation: 0,
-        iconTheme: const IconThemeData(color: corTextoPrimario),
+        iconTheme: IconThemeData(color: corTextoPrimario),
         title: Row(
           children: [
-            const Text('Alertas', style: TextStyle(color: corTextoPrimario, fontWeight: FontWeight.bold)),
+            Text('Alertas', style: TextStyle(color: corTextoPrimario, fontWeight: FontWeight.bold)),
             if (_alertas.isNotEmpty) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(20)),
-                child: Text('${_alertas.length}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(color: _cores.erro, borderRadius: BorderRadius.circular(20)),
+                child: Text('${_alertas.length}', style: TextStyle(color: _isDark ? _cores.fundo : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
             ],
           ],
@@ -124,7 +129,7 @@ class _TelaAlertasState extends State<TelaAlertas> {
   }
 
   Widget _construirCorpo() {
-    if (_carregando) return const Center(child: CircularProgressIndicator());
+    if (_carregando) return Center(child: CircularProgressIndicator(color: corVerdePrincipal));
 
     if (_erro != null) {
       return Center(
@@ -133,9 +138,9 @@ class _TelaAlertasState extends State<TelaAlertas> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.error_outline, size: 48, color: _cores.textoDesabilitado),
               const SizedBox(height: 16),
-              Text(_erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
+              Text(_erro!, textAlign: TextAlign.center, style: TextStyle(color: _cores.textoSecundario)),
               const SizedBox(height: 16),
               ElevatedButton(onPressed: _carregarAlertas, child: const Text('Tentar novamente')),
             ],
@@ -155,10 +160,10 @@ class _TelaAlertasState extends State<TelaAlertas> {
                 children: [
                   Icon(Icons.check_circle_outline, size: 64, color: corVerdePrincipal.withOpacity(0.6)),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Nenhum alerta ativo no momento.\nSeu rebanho está em dia!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
+                    style: TextStyle(color: _cores.textoSecundario),
                   ),
                 ],
               ),
@@ -186,10 +191,10 @@ class _TelaAlertasState extends State<TelaAlertas> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cores.superficie,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: estilo.cor.withOpacity(0.3)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(_isDark ? 0.2 : 0.03), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -218,19 +223,19 @@ class _TelaAlertasState extends State<TelaAlertas> {
                         ),
                       ),
                       if (animal != null)
-                        Text('#${animal['brinco']}', style: const TextStyle(color: Colors.black45, fontSize: 12)),
+                        Text('#${animal['brinco']}', style: TextStyle(color: _cores.textoSecundario, fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(alerta['mensagem'] ?? '', style: const TextStyle(color: corTextoPrimario, fontSize: 13, height: 1.3)),
+                  Text(alerta['mensagem'] ?? '', style: TextStyle(color: corTextoPrimario, fontSize: 13, height: 1.3)),
                   const SizedBox(height: 6),
-                  Text(_formatarData(alerta['criado_em']), style: const TextStyle(color: Colors.black38, fontSize: 11)),
+                  Text(_formatarData(alerta['criado_em']), style: TextStyle(color: _cores.textoDesabilitado, fontSize: 11)),
                 ],
               ),
             ),
             IconButton(
               tooltip: 'Marcar como resolvido',
-              icon: const Icon(Icons.check_circle_outline, color: Colors.grey),
+              icon: Icon(Icons.check_circle_outline, color: _cores.textoDesabilitado),
               onPressed: () => _resolverAlerta(alerta),
             ),
           ],
