@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 
 /// Tela de histórico e registro de Contagem de Células Somáticas (CCS)
@@ -23,10 +24,13 @@ class TelaRegistrarCcs extends StatefulWidget {
 class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
   final ApiService _apiService = ApiService();
 
-  static const Color corVerdeEscuro = Color.fromARGB(255, 29, 177, 86);
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
-  static const Color corFundo = Color(0xFFF4F6F8);
-  static const Color corTextoPrimario = Color(0xFF1E293B);
+  AppColors get _cores => AppColors.of(context);
+  // Dark mode
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  // Paleta de Cores 
+  Color get corVerdeEscuro => _cores.primario;
+  Color get corFundo => _cores.fundo;
+  Color get corTextoPrimario => _cores.textoPrimario;
 
   List<dynamic> _registros = [];
   bool _carregando = true;
@@ -50,9 +54,9 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
   Color _corDoRisco(String? risco) {
     switch (risco) {
       case 'ALTO':
-        return Colors.redAccent;
+        return _cores.erro;
       case 'MODERADO':
-        return Colors.orange;
+        return _cores.alerta;
       default:
         return corVerdeEscuro;
     }
@@ -95,7 +99,7 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
         content: const Text('Deseja excluir este registro de CCS?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Excluir', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text('Excluir', style: TextStyle(color: _cores.erro))),
         ],
       ),
     );
@@ -118,6 +122,7 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: _cores.superficie,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (contextoModal) {
         return StatefulBuilder(
@@ -135,9 +140,9 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Novo registro de CCS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: corTextoPrimario)),
+                    Text('Novo registro de CCS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: corTextoPrimario)),
                     const SizedBox(height: 4),
-                    Text('Animal: ${widget.animal['brinco']}', style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                    Text('Animal: ${widget.animal['brinco']}', style: TextStyle(color: _cores.textoSecundario, fontSize: 13)),
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: valorController,
@@ -182,7 +187,7 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
                     ),
                     if (erro != null) ...[
                       const SizedBox(height: 12),
-                      Text(erro!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+                      Text(erro!, style: TextStyle(color: _cores.erro, fontSize: 13)),
                     ],
                     const SizedBox(height: 24),
                     ElevatedButton(
@@ -243,17 +248,18 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
       appBar: AppBar(
         backgroundColor: corFundo,
         elevation: 0,
-        iconTheme: const IconThemeData(color: corTextoPrimario),
-        title: Text('CCS — ${widget.animal['brinco']}', style: const TextStyle(color: corTextoPrimario, fontWeight: FontWeight.bold)),
+        iconTheme: IconThemeData(color: corTextoPrimario),
+        title: Text('CCS — ${widget.animal['brinco']}', style: TextStyle(color: corTextoPrimario, fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _abrirFormularioNovoRegistro,
         backgroundColor: corVerdeEscuro,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Novo registro'),
       ),
       body: _carregando
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: corVerdeEscuro))
           : _registros.isEmpty
               ? _construirEstadoVazio()
               : RefreshIndicator(
@@ -274,12 +280,12 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.science_outlined, size: 64, color: Colors.grey.shade400),
+            Icon(Icons.science_outlined, size: 64, color: _cores.textoDesabilitado),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Nenhum registro de CCS ainda.\nToque em "Novo registro" para adicionar o primeiro resultado laboratorial.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: _cores.textoSecundario),
             ),
           ],
         ),
@@ -295,10 +301,10 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cores.superficie,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: cor.withOpacity(0.3)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(_isDark ? 0.2 : 0.03), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
@@ -312,7 +318,7 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
                   children: [
                     Text(
                       '${_formatarValor(registro['valor_ccs'])} céls/mL',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: corTextoPrimario),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: corTextoPrimario),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -326,18 +332,18 @@ class _TelaRegistrarCcsState extends State<TelaRegistrarCcs> {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('Coleta: ${_formatarData(registro['data_coleta'])}', style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                Text('Coleta: ${_formatarData(registro['data_coleta'])}', style: TextStyle(color: _cores.textoSecundario, fontSize: 13)),
                 if ((registro['laboratorio'] ?? '').toString().isNotEmpty)
-                  Text('Laboratório: ${registro['laboratorio']}', style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                  Text('Laboratório: ${registro['laboratorio']}', style: TextStyle(color: _cores.textoSecundario, fontSize: 13)),
                 if ((registro['observacoes'] ?? '').toString().isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(registro['observacoes'], style: const TextStyle(color: Colors.black87, fontSize: 13, fontStyle: FontStyle.italic)),
+                  Text(registro['observacoes'], style: TextStyle(color: corTextoPrimario, fontSize: 13, fontStyle: FontStyle.italic)),
                 ],
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.grey),
+            icon: Icon(Icons.delete_outline, color: _cores.textoDesabilitado),
             onPressed: () => _confirmarExclusao(registro['id']),
           ),
         ],
