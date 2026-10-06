@@ -22,10 +22,11 @@ class _TelaPerfilUsuarioState extends State<TelaPerfilUsuario> {
   String _email = 'Carregando...';
   bool _carregandoDados = true;
 
-  // Paleta de Cores 
   AppColors get _cores => AppColors.of(context);
-  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
+  // Dark mode
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  // Paleta de Cores 
   Color get corVerdePrimaria   => _cores.primario;
   Color get corAzulMarinho     => _cores.destaque;
   Color get corTextoPrimario   => _cores.textoPrimario;

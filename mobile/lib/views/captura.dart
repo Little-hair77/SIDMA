@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 import 'scanner_qr.dart';
 
@@ -25,16 +26,17 @@ class _TelaCapturaState extends State<TelaCaptura> {
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
 
+
+  AppColors get _cores => AppColors.of(context);
   // Paleta de Cores 
-  static const Color corFundoDark = Color(0xFF0F172A); // Slate 900
-  static const Color corCardDark = Color(0xFF1E293B); // Slate 800
-  static const Color corBordaDark = Color(0xFF334155); // Slate 700
-  static const Color corTextoClaro = Color(0xFFF8FAFC); // Slate 50
-  static const Color corTextoSecundario = Color(0xFF94A3B8); // Slate 400
-  
-  // Cor de Destaque / Ação (Verde Esmeralda Moderado e Moderno)
-  static const Color corPrimary = Color(0xFF10B981); 
-  static const Color corPrimaryHover = Color(0xFF059669);
+  Color get corFundo => _cores.fundo;
+  Color get corCard => _cores.superficie;
+  Color get corBorda => _cores.borda;
+  Color get corTexto => _cores.textoPrimario;
+  Color get corTextoSecundario => _cores.textoSecundario;
+
+  // Cor de Destaque / Ação
+  Color get corPrimary => _cores.primario;
 
   @override
   void initState() {
@@ -138,9 +140,9 @@ class _TelaCapturaState extends State<TelaCaptura> {
     final resultadoStr = (_resultadoIA!['resultado'] as String).toLowerCase();
 
     if (resultadoStr.contains('possível') || resultadoStr.contains('suspeita') || resultadoStr.contains('mastite')) {
-      return {'corBase': const Color(0xFFEF4444), 'icone': Icons.error_outline, 'titulo': 'ALERTA DETECTADO'};
+      return {'corBase': _cores.erro, 'icone': Icons.error_outline, 'titulo': 'ALERTA DETECTADO'};
     } else if (resultadoStr.contains('adicional') || resultadoStr.contains('atenção')) {
-      return {'corBase': const Color(0xFFF59E0B), 'icone': Icons.warning_amber_rounded, 'titulo': 'ATENÇÃO NECESSÁRIA'};
+      return {'corBase': _cores.alerta, 'icone': Icons.warning_amber_rounded, 'titulo': 'ATENÇÃO NECESSÁRIA'};
     } else {
       return {'corBase': corPrimary, 'icone': Icons.check_circle_outline, 'titulo': 'LAUDO SAUDÁVEL'};
     }
@@ -149,15 +151,15 @@ class _TelaCapturaState extends State<TelaCaptura> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: corFundoDark,
+      backgroundColor: corFundo,
       appBar: AppBar(
-        backgroundColor: corFundoDark,
-        foregroundColor: corTextoClaro,
+        backgroundColor: corFundo,
+        foregroundColor: corTexto,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Nova Análise',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: corTextoClaro),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: corTexto),
         ),
       ),
       body: SafeArea(
@@ -167,17 +169,17 @@ class _TelaCapturaState extends State<TelaCaptura> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Cabeçalho Clean
-              const Text(
+              Text(
                 'Captura de Amostra',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: corTextoClaro,
+                  color: corTexto,
                   letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Posicione a amostra em um local bem iluminado para garantir a precisão da análise.',
                 style: TextStyle(
                   fontSize: 14,
@@ -191,31 +193,31 @@ class _TelaCapturaState extends State<TelaCaptura> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
-                  color: corCardDark,
+                  color: corCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: corBordaDark),
+                  border: Border.all(color: corBorda),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.pets_outlined, color: corTextoSecundario, size: 20),
+                    Icon(Icons.pets_outlined, color: corTextoSecundario, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<dynamic>(
-                          dropdownColor: corCardDark,
+                          dropdownColor: corCard,
                           isExpanded: true,
                           value: _animalSelecionado,
-                          hint: const Text(
+                          hint: Text(
                             'Vincular animal (opcional)',
                             style: TextStyle(color: corTextoSecundario, fontSize: 14),
                           ),
-                          icon: const Icon(Icons.keyboard_arrow_down, color: corTextoSecundario),
+                          icon: Icon(Icons.keyboard_arrow_down, color: corTextoSecundario),
                           items: _animais.map<DropdownMenuItem<dynamic>>((a) {
                             return DropdownMenuItem(
                               value: a,
                               child: Text(
                                 a['nome']?.isNotEmpty == true ? '${a['nome']} (${a['brinco']})' : a['brinco'],
-                                style: const TextStyle(color: corTextoClaro, fontSize: 14),
+                                style: TextStyle(color: corTexto, fontSize: 14),
                               ),
                             );
                           }).toList(),
@@ -224,7 +226,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.qr_code_scanner, color: corTextoClaro, size: 20),
+                      icon: Icon(Icons.qr_code_scanner, color: corTexto, size: 20),
                       tooltip: 'Escanear QR Code',
                       onPressed: _escanearAnimal,
                     ),
@@ -240,10 +242,10 @@ class _TelaCapturaState extends State<TelaCaptura> {
                   width: double.infinity,
                   height: 260,
                   decoration: BoxDecoration(
-                    color: corCardDark,
+                    color: corCard,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: _imagem != null ? corPrimary : corBordaDark,
+                      color: _imagem != null ? corPrimary : corBorda,
                       width: 1.5,
                     ),
                   ),
@@ -270,18 +272,18 @@ class _TelaCapturaState extends State<TelaCaptura> {
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.add_a_photo_outlined, size: 40, color: corTextoSecundario),
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                               Text(
                                 'Tirar Foto da Amostra',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: corTextoClaro,
+                                  color: corTexto,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 'Toque para abrir a câmera',
                                 style: TextStyle(fontSize: 13, color: corTextoSecundario),
@@ -298,18 +300,18 @@ class _TelaCapturaState extends State<TelaCaptura> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withOpacity(0.1),
+                    color: _cores.erro.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.3)),
+                    border: Border.all(color: _cores.erro.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                      Icon(Icons.error_outline, color: _cores.erro, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _erroAcesso!,
-                          style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13),
+                          style: TextStyle(color: _cores.erro, fontSize: 13),
                         ),
                       ),
                     ],
@@ -380,8 +382,8 @@ class _TelaCapturaState extends State<TelaCaptura> {
                     height: 46,
                     child: TextButton.icon(
                       onPressed: _tirarFoto,
-                      icon: const Icon(Icons.refresh, color: corTextoSecundario, size: 18),
-                      label: const Text(
+                      icon: Icon(Icons.refresh, color: corTextoSecundario, size: 18),
+                      label: Text(
                         'Refazer Foto',
                         style: TextStyle(
                           fontSize: 14,
@@ -405,23 +407,23 @@ class _TelaCapturaState extends State<TelaCaptura> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: corCardDark,
+        color: corCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: corBordaDark),
+        border: Border.all(color: corBorda),
       ),
       child: Column(
-        children: const [
+        children: [
           SizedBox(
             height: 28,
             width: 28,
             child: CircularProgressIndicator(color: corPrimary, strokeWidth: 2.5),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Processando Amostra',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: corTextoClaro),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: corTexto),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             'A IA está analisando a amostra...',
             style: TextStyle(color: corTextoSecundario, fontSize: 13),
@@ -439,7 +441,7 @@ class _TelaCapturaState extends State<TelaCaptura> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: corCardDark,
+        color: corCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: cor.withOpacity(0.5), width: 1.5),
       ),
@@ -460,20 +462,20 @@ class _TelaCapturaState extends State<TelaCaptura> {
           Text(
             _resultadoIA!['resultado'] ?? 'Sem dados',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: corTextoClaro),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: corTexto),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: corBordaDark, thickness: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: corBorda, thickness: 1),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.analytics_outlined, size: 18, color: corTextoSecundario),
+              Icon(Icons.analytics_outlined, size: 18, color: corTextoSecundario),
               const SizedBox(width: 6),
               Text(
                 'Confiança: ${_resultadoIA!['confianca'] ?? 'N/A'}',
-                style: const TextStyle(fontSize: 14, color: corTextoSecundario),
+                style: TextStyle(fontSize: 14, color: corTextoSecundario),
               ),
             ],
           ),
@@ -484,8 +486,8 @@ class _TelaCapturaState extends State<TelaCaptura> {
             child: OutlinedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: OutlinedButton.styleFrom(
-                foregroundColor: corTextoClaro,
-                side: const BorderSide(color: corBordaDark),
+                foregroundColor: corTexto,
+                side: BorderSide(color: corBorda),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Concluir', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),

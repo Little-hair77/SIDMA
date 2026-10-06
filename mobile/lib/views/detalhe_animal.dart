@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 import 'cadastro_animal.dart';
 import 'registrar_tratamento.dart';
 import 'registrar_ccs.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 
 class TelaDetalheAnimal extends StatefulWidget {
@@ -17,15 +18,20 @@ class TelaDetalheAnimal extends StatefulWidget {
 }
 
 class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
+  
+  AppColors get _cores => AppColors.of(context);
+  // Dark mode
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
   // Paleta de Cores 
-  static const Color corVerdePrimaria = Color(0xFF059669);
-  static const Color corVerdeSecundaria = Color(0xFF10B981);
-  static const Color corAzulMarinho = Color(0xFF1E293B); 
-  static const Color corFundo = Color(0xFFF8FAFC);
-  static const Color corCardFundo = Colors.white;
-  static const Color corTextoEscuro = Color(0xFF0F172A);
-  static const Color corTextoSuave = Color(0xFF64748B);
-  static const Color corBorda = Color(0xFFE2E8F0);
+  Color get corVerdePrimaria => _isDark ? _cores.primario : _cores.primarioEscuro;
+  Color get corVerdeSecundaria => _cores.primario;
+  Color get corAzulMarinho => _cores.destaque;
+  Color get corFundo => _cores.fundo;
+  Color get corCardFundo => _cores.superficie;
+  Color get corTextoEscuro => _cores.textoPrimario;
+  Color get corTextoSuave => _cores.textoSecundario;
+  Color get corBorda => _cores.borda;
 
   late Map<String, dynamic> _animal;
   final ApiService _apiService = ApiService();
@@ -41,19 +47,19 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Excluir animal', style: TextStyle(color: corTextoEscuro, fontWeight: FontWeight.bold)),
-        content: const Text(
+        title: Text('Excluir animal', style: TextStyle(color: corTextoEscuro, fontWeight: FontWeight.bold)),
+        content: Text(
           'Tem certeza? As análises já feitas não serão apagadas, mas deixarão de estar vinculadas a esse animal.',
           style: TextStyle(color: corTextoSuave),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar', style: TextStyle(color: corTextoSuave)),
+            child: Text('Cancelar', style: TextStyle(color: corTextoSuave)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold)),
+            child: Text('Excluir', style: TextStyle(color: _cores.erro, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -188,13 +194,13 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                   height: 180,
                   width: double.infinity,
                   padding: const EdgeInsets.only(top: 48, left: 16, right: 16),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [corAzulMarinho, corAzulMarinho],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(28),
                       bottomRight: Radius.circular(28),
                     ),
@@ -236,7 +242,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                       border: Border.all(color: corBorda, width: 1),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0F172A).withOpacity(0.03),
+                          color: Colors.black.withOpacity(_isDark ? 0.2 : 0.03),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -267,18 +273,18 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                         borderRadius: BorderRadius.circular(15),
                                         child: _animal['foto'] != null && _animal['foto'].toString().isNotEmpty
                                             ? Image.network(_animal['foto'], fit: BoxFit.cover)
-                                            : const Icon(Icons.pets, size: 36, color: corTextoSuave),
+                                            : Icon(Icons.pets, size: 36, color: corTextoSuave),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    const Text(
+                                    Text(
                                       'RAÇA / COR',
                                       style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: corTextoSuave, letterSpacing: 0.5),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       _animal['raca']?.toString().toUpperCase() ?? 'N/I',
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: corTextoEscuro),
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: corTextoEscuro),
                                       textAlign: TextAlign.center,
                                     ),
                                   ],
@@ -311,19 +317,19 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                       runSpacing: 6,
                                       children: [
                                         if (_animal['peso'] != null)
-                                          _Badge(texto: '${_animal['peso']} Kg', corFundo: const Color(0xFFF1F5F9), corTexto: corTextoSuave),
+                                          _Badge(texto: '${_animal['peso']} Kg', corFundo: _cores.superficieAlt, corTexto: corTextoSuave),
                                         if (_animal['sexo'] != null)
-                                          _Badge(texto: _animal['sexo'].toString().toUpperCase(), corFundo: const Color(0xFFEFF6FF), corTexto: const Color(0xFF2563EB)),
+                                          _Badge(texto: _animal['sexo'].toString().toUpperCase(), corFundo: _cores.infoFundo, corTexto: _cores.info),
                                         if (emCarencia)
-                                          const _Badge(texto: 'CARÊNCIA', corFundo: Color(0xFFFEF2F2), corTexto: Color(0xFFEF4444), icone: Icons.warning_amber_rounded),
+                                          _Badge(texto: 'CARÊNCIA', corFundo: _cores.erroFundo, corTexto: _cores.erro, icone: Icons.warning_amber_rounded),
                                         if (alertaReincidencia)
-                                          const _Badge(texto: 'REINCIDÊNCIA', corFundo: Color(0xFFFFEDD5), corTexto: Color(0xFFF97316), icone: Icons.repeat_rounded),
+                                          _Badge(texto: 'REINCIDÊNCIA', corFundo: _cores.laranja.withOpacity(0.15), corTexto: _cores.laranja, icone: Icons.repeat_rounded),
                                         if (cioProximo)
-                                          const _Badge(texto: 'CIO PREVISTO', corFundo: Color(0xFFFCE7F3), corTexto: Color(0xFFDB2777), icone: Icons.favorite_outline),
+                                          _Badge(texto: 'CIO PREVISTO', corFundo: _cores.rosaFundo, corTexto: _cores.rosa, icone: Icons.favorite_outline),
                                         if (ccsAlto)
-                                          const _Badge(texto: 'CCS ALTO', corFundo: Color(0xFFEFF6FF), corTexto: Color(0xFF2563EB), icone: Icons.biotech_outlined),
+                                          _Badge(texto: 'CCS ALTO', corFundo: _cores.infoFundo, corTexto: _cores.info, icone: Icons.biotech_outlined),
                                         if (ccsAtencao)
-                                          const _Badge(texto: 'CCS EM ATENÇÃO', corFundo: Color(0xFFFFFBEB), corTexto: Color(0xFFD97706), icone: Icons.biotech_outlined),
+                                          _Badge(texto: 'CCS EM ATENÇÃO', corFundo: _cores.alertaFundo, corTexto: _cores.alerta, icone: Icons.biotech_outlined),
                                       ],
                                     ),
                                   ],
@@ -332,8 +338,8 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                             ],
                           ),
                           
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
                             child: Divider(height: 1, thickness: 1, color: corBorda),
                           ),
 
@@ -383,23 +389,23 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
 
                           // OBSERVAÇÕES
                           if (_animal['observacoes'] != null && _animal['observacoes'].toString().isNotEmpty) ...[
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 18),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
                               child: Divider(height: 1, thickness: 1, color: corBorda),
                             ),
-                            const Text(
+                            Text(
                               'OBSERVAÇÕES VETERINÁRIAS',
                               style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: corTextoSuave, letterSpacing: 0.5),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               _animal['observacoes'],
-                              style: const TextStyle(fontSize: 13, color: corTextoEscuro, height: 1.4),
+                              style: TextStyle(fontSize: 13, color: corTextoEscuro, height: 1.4),
                             ),
                           ],
 
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
                             child: Divider(height: 1, thickness: 1, color: corBorda),
                           ),
 
@@ -411,8 +417,8 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                 children: [
                                   _BotaoAcaoIcone(
                                     icone: Icons.delete_outline_rounded,
-                                    corFundo: const Color(0xFFFEF2F2),
-                                    corIcone: const Color(0xFFEF4444),
+                                    corFundo: _cores.erroFundo,
+                                    corIcone: _cores.erro,
                                     onTap: _confirmarExclusao,
                                   ),
                                   const SizedBox(width: 8),
@@ -425,8 +431,8 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                   const SizedBox(width: 8),
                                   _BotaoAcaoIcone(
                                     icone: Icons.biotech_outlined,
-                                    corFundo: const Color(0xFFEFF6FF),
-                                    corIcone: const Color(0xFF2563EB),
+                                    corFundo: _cores.infoFundo,
+                                    corIcone: _cores.info,
                                     onTap: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
@@ -455,6 +461,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                     label: const Text('Tratamentos\ne Pesagem', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.1)),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: corVerdePrimaria,
+                                      foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                     ),
@@ -470,6 +477,7 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                                     label: const Text('Editar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: corVerdeSecundaria,
+                                      foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                                     ),
@@ -494,16 +502,15 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
               child: Column(
                 children: [
                   Opacity(
-                    opacity: 0.4,
-                    child: Image.asset(
-                      'assets/images/logoSIDMA-1.png', 
+                    opacity: _isDark ? 0.7 : 0.4,
+                    child: Image.asset('assets/images/logoSIDMA-0.png',
                       height: 36,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: corTextoSuave, size: 28),
+                      errorBuilder: (_, __, ___) => Icon(Icons.pets, color: corTextoSuave, size: 28),
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'GESTÃO INTELIGENTE DE GERENCIAMENTO',
                     style: TextStyle(
                       color: corTextoSuave,
@@ -515,8 +522,8 @@ class _TelaDetalheAnimalState extends State<TelaDetalheAnimal> {
                   const SizedBox(height: 2),
                   Text(
                     'Registro do Animal ID: #${_animal['id'] ?? 'N/A'}',
-                    style: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                    style: TextStyle(
+                      color: _isDark ? _cores.textoSecundario : _cores.textoDesabilitado,
                       fontSize: 10,
                     ),
                   ),
@@ -538,17 +545,19 @@ class _TextoInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = AppColors.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           rotulo,
-          style: const TextStyle(fontSize: 11, color: _TelaDetalheAnimalState.corTextoSuave, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 11, color: cores.textoSecundario, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 3),
         Text(
           valor,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _TelaDetalheAnimalState.corTextoEscuro, height: 1.2),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cores.textoPrimario, height: 1.2),
         ),
       ],
     );

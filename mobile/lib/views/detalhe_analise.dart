@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 import 'scanner_qr.dart';
 
@@ -24,13 +25,18 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
   bool _salvando = false;
   bool _alterado = false;
 
+  AppColors get _cores => AppColors.of(context);
+  // Dark mode
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
   // Paleta de Cores 
-  static const Color corVerdeEscuro = Color(0xFF1DB156);
-  static const Color corAppBar = Color(0xFF1E2A38);
-  static const Color corFundo = Color(0xFFF8FAFC);
-  static const Color corTextoPrimario = Color(0xFF0F172A);
-  static const Color corTextoSecundario = Color(0xFF64748B);
-  static const Color corBorda = Color(0xFFE2E8F0);
+  Color get corVerdeEscuro => _cores.primario;
+  Color get corAppBar => _cores.destaque;
+  Color get corFundo => _cores.fundo;
+  Color get corTextoPrimario => _cores.textoPrimario;
+  Color get corTextoSecundario => _cores.textoSecundario;
+  Color get corBorda => _cores.borda;
+
+  Color get corAcaoNeutra => _isDark ? _cores.textoPrimario : _cores.destaque;
 
   @override
   void initState() {
@@ -68,9 +74,9 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
         resultadoLower.contains('suspeita') ||
         resultadoLower.contains('mastite')) {
       return {
-        'corFundo': const Color(0xFFFEF2F2),
-        'corBorda': const Color(0xFFFCA5A5),
-        'corDestaque': const Color(0xFFDC2626),
+        'corFundo': _cores.erroFundo,
+        'corBorda': _cores.erro.withOpacity(0.4),
+        'corDestaque': _cores.erro,
         'icone': Icons.warning_amber_rounded,
         'titulo': 'ALERTA: Suspeita Detectada',
         'detalhe': resultado,
@@ -78,18 +84,18 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
     } else if (resultadoLower.contains('adicional') ||
         resultadoLower.contains('atenção')) {
       return {
-        'corFundo': const Color(0xFFFFFBEB),
-        'corBorda': const Color(0xFFFDE68A),
-        'corDestaque': const Color(0xFFD97706),
+        'corFundo': _cores.alertaFundo,
+        'corBorda': _cores.alerta.withOpacity(0.4),
+        'corDestaque': _cores.alerta,
         'icone': Icons.info_outline,
         'titulo': 'ATENÇÃO: Requer Cuidados',
         'detalhe': resultado,
       };
     } else {
       return {
-        'corFundo': const Color(0xFFF0FDF4),
-        'corBorda': const Color(0xFF86EFAC),
-        'corDestaque': const Color(0xFF16A34A),
+        'corFundo': _cores.primarioSuave,
+        'corBorda': _cores.primario.withOpacity(0.4),
+        'corDestaque': _cores.primarioEscuro,
         'icone': Icons.check_circle_outline,
         'titulo': 'LAUDO NORMAL: Saudável',
         'detalhe': resultado,
@@ -265,7 +271,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
   void _mostrarSeletorDeAnimal() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: _cores.superficie,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -273,8 +279,8 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 'Vincular Animal ao Laudo',
                 style: TextStyle(
@@ -285,7 +291,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.qr_code_scanner, color: corVerdeEscuro),
+              leading: Icon(Icons.qr_code_scanner, color: corVerdeEscuro),
               title: const Text(
                 'Escanear QR Code',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -306,7 +312,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundColor: corVerdeEscuro.withOpacity(0.1),
-                        child: const Icon(Icons.pets, color: corVerdeEscuro, size: 20),
+                        child: Icon(Icons.pets, color: corVerdeEscuro, size: 20),
                       ),
                       title: Text(
                         nomeAnimal,
@@ -331,7 +337,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
   @override
   Widget build(BuildContext context) {
     if (_carregando) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: corFundo,
         body: Center(
           child: CircularProgressIndicator(color: corVerdeEscuro),
@@ -340,10 +346,10 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
     }
 
     if (_analise == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: corFundo,
         body: Center(
-          child: Text('Não foi possível carregar essa análise.'),
+          child: Text('Não foi possível carregar essa análise.', style: TextStyle(color: corTextoSecundario)),
         ),
       );
     }
@@ -378,19 +384,21 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
+            color: _cores.superficie,
+            surfaceTintColor: _cores.superficie,
             onSelected: (value) {
               if (value == 'exportar') {
                 _exportarLaudoPdf();
               }
             },
             itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'exportar',
                 child: Row(
                   children: [
                     Icon(Icons.picture_as_pdf_outlined, color: corTextoPrimario, size: 20),
-                    SizedBox(width: 12),
-                    Text('Exportar PDF'),
+                    const SizedBox(width: 12),
+                    Text('Exportar PDF', style: TextStyle(color: corTextoPrimario)),
                   ],
                 ),
               ),
@@ -406,8 +414,8 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
             Container(
               width: double.infinity,
               height: 220,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: _cores.superficie,
                 border: Border(bottom: BorderSide(color: corBorda)),
               ),
               child: Image.network(
@@ -416,12 +424,12 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                 height: 220,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey[100],
-                  child: const Column(
+                  color: _cores.superficieAlt,
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.image_not_supported, size: 40, color: corTextoSecundario),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text('Imagem indisponível', style: TextStyle(color: corTextoSecundario)),
                     ],
                   ),
@@ -465,15 +473,15 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                         const SizedBox(height: 8),
                         Text(
                           detalheStatus,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             color: corTextoPrimario,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Divider(height: 1, color: corBorda),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1, color: corBordaStatus),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -481,14 +489,14 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Confiança IA',
                                   style: TextStyle(fontSize: 12, color: corTextoSecundario),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '${_analise!['confianca']}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     color: corTextoPrimario,
@@ -499,14 +507,14 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                const Text(
+                                Text(
                                   'Data do Exame',
                                   style: TextStyle(fontSize: 12, color: corTextoSecundario),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   _formatarData(_analise!['criado_em'] as String?),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                     color: corTextoPrimario,
@@ -523,7 +531,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                   const SizedBox(height: 24),
 
                   // Vínculo Zootécnico
-                  const Text(
+                  Text(
                     'Vínculo Zootécnico',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -535,7 +543,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: _cores.superficie,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: corBorda),
                     ),
@@ -544,7 +552,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                         CircleAvatar(
                           backgroundColor: corVerdeEscuro.withOpacity(0.08),
                           radius: 20,
-                          child: const Icon(Icons.pets, color: corVerdeEscuro, size: 20),
+                          child: Icon(Icons.pets, color: corVerdeEscuro, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -562,7 +570,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                               if (animalVinculado != null)
                                 Text(
                                   'Brinco: ${animalVinculado['brinco']}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: corTextoSecundario,
                                     fontSize: 13,
                                   ),
@@ -580,7 +588,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                           onPressed: _salvando ? null : _mostrarSeletorDeAnimal,
                           child: Text(
                             animalVinculado != null ? 'Trocar' : 'Vincular',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: corVerdeEscuro,
                               fontWeight: FontWeight.bold,
                             ),
@@ -593,7 +601,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                   const SizedBox(height: 24),
 
                   // Observações Clínicas
-                  const Text(
+                  Text(
                     'Observações Clínicas',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -606,24 +614,24 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                     controller: _observacoesController,
                     maxLines: 4,
                     onChanged: (_) => setState(() => _alterado = true),
-                    style: const TextStyle(color: corTextoPrimario, fontSize: 14),
+                    style: TextStyle(color: corTextoPrimario, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Ex: Teste de caneca realizado. Prescrição médica...',
-                      hintStyle: const TextStyle(color: corTextoSecundario, fontSize: 14),
+                      hintStyle: TextStyle(color: corTextoSecundario, fontSize: 14),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: _cores.superficie,
                       contentPadding: const EdgeInsets.all(16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: corBorda),
+                        borderSide: BorderSide(color: corBorda),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: corBorda),
+                        borderSide: BorderSide(color: corBorda),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: corVerdeEscuro, width: 1.5),
+                        borderSide: BorderSide(color: corVerdeEscuro, width: 1.5),
                       ),
                     ),
                   ),
@@ -634,6 +642,7 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                       onPressed: _salvando ? null : _salvarObservacoes,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: corVerdeEscuro,
+                        foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -656,18 +665,18 @@ class _TelaDetalheAnaliseState extends State<TelaDetalheAnalise> {
                   // Ação de Exportação (Nova Área de Relatório)
                   OutlinedButton.icon(
                     onPressed: _analise == null ? null : _exportarLaudoPdf,
-                    icon: const Icon(Icons.picture_as_pdf_outlined, color: corAppBar),
-                    label: const Text(
+                    icon: Icon(Icons.picture_as_pdf_outlined, color: corAcaoNeutra),
+                    label: Text(
                       'Exportar Laudo em PDF',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: corAppBar,
+                        color: corAcaoNeutra,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
-                      side: const BorderSide(color: corAppBar, width: 1.5),
+                      side: BorderSide(color: corAcaoNeutra, width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

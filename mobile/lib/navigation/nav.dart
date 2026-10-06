@@ -18,10 +18,10 @@ class TelaPrincipal extends StatefulWidget {
 class _TelaPrincipalState extends State<TelaPrincipal> {
   int _indiceAtual = 0;
 
-  // Paleta de Cores 
   AppColors get _cores => AppColors.of(context);
+  // Dark mode
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
-
+  // Paleta de Cores 
   Color get corVerdePrimaria => _cores.primario;
   Color get corFundo => _cores.fundo;
 
