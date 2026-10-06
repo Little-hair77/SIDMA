@@ -309,7 +309,10 @@ class _TelaDashboardState extends State<TelaDashboard> {
                                 valor: '$_totalAnimais',
                                 legenda: 'Cabeças ativas',
                                 icone: Icons.agriculture_outlined,
-                                corDestaque: corAzulMarinho,
+                                // O azul-marinho é igual ao fundo do cartão no escuro.
+                                corDestaque: Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.of(context).textoPrimario
+                                    : corAzulMarinho,
                                 onTap: () {
                                   Navigator.of(context)
                                       .push(MaterialPageRoute(builder: (_) => const TelaAnimais()))
@@ -733,6 +736,7 @@ class _GraficoTendencia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cores = AppColors.of(context);
+    final corTotal = Theme.of(context).brightness == Brightness.dark ? cores.info : cores.destaque;
     final maiorTotal = dados
         .map((d) => d['total'] as int)
         .fold<int>(0, (a, b) => a > b ? a : b);
@@ -777,7 +781,7 @@ class _GraficoTendencia extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _LegendaItem(cor: cores.destaque, texto: 'Total de análises'),
+              _LegendaItem(cor: corTotal, texto: 'Total de análises'),
               const SizedBox(width: 16),
               _LegendaItem(cor: cores.erro, texto: 'Suspeitas'),
             ],
@@ -847,12 +851,12 @@ class _GraficoTendencia extends StatelessWidget {
                         LineChartBarData(
                           spots: spotsTotal,
                           isCurved: true,
-                          color: cores.destaque,
+                          color: corTotal,
                           barWidth: 3,
                           dotData: const FlDotData(show: true),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: cores.destaque.withOpacity(0.08),
+                            color: corTotal.withOpacity(0.08),
                           ),
                         ),
                         LineChartBarData(
