@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 import 'detalhe_analise.dart';
 
@@ -23,8 +24,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   bool get _temFiltroAtivo => _filtroResultado != null || _filtroPeriodo != null;
 
   // Paleta de Cores 
-  static const Color corVerdePrimaria   = Color(0xFF10B981);
-  static const Color corAzulMarinho     = Color(0xFF1E293B);
+  AppColors get _cores => AppColors.of(context);
+  Color get corVerdePrimaria => _cores.primario;
+  Color get corAzulMarinho   => _cores.destaque;
 
   @override
   void initState() {
@@ -119,16 +121,16 @@ class _TelaHistoricoState extends State<TelaHistorico> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: isDark
-                ? const ColorScheme.dark(
-                    primary: corVerdePrimaria,
+                ? ColorScheme.dark(
+                    primary: _cores.primario,
                     onPrimary: Colors.white,
-                    surface: Color(0xFF1E293B),
-                    onSurface: Colors.white,
+                    surface: _cores.superficie,
+                    onSurface: _cores.textoPrimario,
                   )
-                : const ColorScheme.light(
-                    primary: corVerdePrimaria,
+                : ColorScheme.light(
+                    primary: _cores.primario,
                     onPrimary: Colors.white,
-                    onSurface: Color(0xFF0F172A),
+                    onSurface: _cores.textoPrimario,
                   ),
           ),
           child: child!,
@@ -141,10 +143,10 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     }
   }
 
-  Widget _buildBarraFiltros(bool isDark) {
-    final colorTextoSecundario = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final colorCard = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final colorBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Widget _buildBarraFiltros() {
+    final colorTextoSecundario = _cores.textoSecundario;
+    final colorCard = _cores.superficie;
+    final colorBorder = _cores.borda;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -170,19 +172,19 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: null,
-                      child: Text('Todos os resultados', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                      child: Text('Todos os resultados', style: TextStyle(color: _cores.textoPrimario)),
                     ),
                     PopupMenuItem(
                       value: 'Sem indícios de mastite',
-                      child: Text('Sem indícios', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                      child: Text('Sem indícios', style: TextStyle(color: _cores.textoPrimario)),
                     ),
                     PopupMenuItem(
                       value: 'Possível presença de mastite',
-                      child: Text('Possível mastite', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                      child: Text('Possível mastite', style: TextStyle(color: _cores.textoPrimario)),
                     ),
                     PopupMenuItem(
                       value: 'Necessária avaliação adicional',
-                      child: Text('Avaliação adicional', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                      child: Text('Avaliação adicional', style: TextStyle(color: _cores.textoPrimario)),
                     ),
                   ],
                   child: Padding(
@@ -259,14 +261,14 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     );
   }
 
-  Widget _buildBarraOffline(bool isDark) {
+  Widget _buildBarraOffline() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: isDark ? const Color(0xFF451A03) : const Color(0xFFFFFBEB),
+      color: _cores.alertaFundo,
       child: Row(
         children: [
-          Icon(Icons.cloud_off_outlined, size: 15, color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706)),
+          Icon(Icons.cloud_off_outlined, size: 15, color: _cores.alerta),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -274,7 +276,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+                color: _cores.alerta,
               ),
             ),
           ),
@@ -283,8 +285,8 @@ class _TelaHistoricoState extends State<TelaHistorico> {
     );
   }
 
-  Widget _buildBarraResumo(bool isDark) {
-    final colorTextoSecundario = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Widget _buildBarraResumo() {
+    final colorTextoSecundario = _cores.textoSecundario;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
@@ -304,7 +306,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
               });
               _carregar();
             },
-            child: const Text(
+            child: Text(
               'Limpar filtros',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: corVerdePrimaria),
             ),
@@ -333,13 +335,13 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final corFundo = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final corFundo = _cores.fundo;
     final analisesAgrupadas = _agruparAnalises();
 
     return Scaffold(
       backgroundColor: corFundo,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF020617) : corAzulMarinho,
+        backgroundColor: corAzulMarinho,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -361,22 +363,22 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                 'assets/images/logoSIDMA-0.png',
                 width: 250,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: isDark ? Colors.grey.shade700 : Colors.grey.shade400),
+                errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 200, color: _cores.textoDesabilitado),
               ),
             ),
           ),
           Column(
             children: [
-              _buildBarraFiltros(isDark),
-              if (_usandoCacheOffline && !_carregando) _buildBarraOffline(isDark),
-              if (_temFiltroAtivo && !_carregando) _buildBarraResumo(isDark),
+              _buildBarraFiltros(),
+              if (_usandoCacheOffline && !_carregando) _buildBarraOffline(),
+              if (_temFiltroAtivo && !_carregando) _buildBarraResumo(),
               Expanded(
                 child: _carregando
-                    ? const Center(child: CircularProgressIndicator(color: corVerdePrimaria))
+                    ? Center(child: CircularProgressIndicator(color: corVerdePrimaria))
                     : _comErro
-                        ? _ConstruirEstadoErro(aoTentarNovamente: _carregar, isDark: isDark)
+                        ? _ConstruirEstadoErro(aoTentarNovamente: _carregar)
                         : _analises.isEmpty
-                            ? _ConstruirEstadoVazio(filtrado: _temFiltroAtivo, isDark: isDark)
+                            ? _ConstruirEstadoVazio(filtrado: _temFiltroAtivo)
                             : RefreshIndicator(
                                 color: corVerdePrimaria,
                                 onRefresh: _carregar,
@@ -397,14 +399,13 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: isDark ? Colors.white : corAzulMarinho,
+                                              color: isDark ? _cores.textoPrimario : corAzulMarinho,
                                             ),
                                           ),
                                         ),
                                         ...analisesDoMes.map(
                                           (a) => _CartaoHistoricoDetalhado(
                                             analise: a,
-                                            isDark: isDark,
                                             aoClicar: () async {
                                               await Navigator.of(context).push(
                                                 MaterialPageRoute(
@@ -431,28 +432,29 @@ class _TelaHistoricoState extends State<TelaHistorico> {
 
 class _ConstruirEstadoErro extends StatelessWidget {
   final VoidCallback aoTentarNovamente;
-  final bool isDark;
-  const _ConstruirEstadoErro({Key? key, required this.aoTentarNovamente, required this.isDark}) : super(key: key);
+  const _ConstruirEstadoErro({Key? key, required this.aoTentarNovamente}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final cores = AppColors.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_outlined, size: 64, color: Colors.redAccent.withOpacity(0.6)),
+            Icon(Icons.cloud_off_outlined, size: 64, color: cores.erro.withOpacity(0.6)),
             const SizedBox(height: 16),
             Text(
               'Não foi possível carregar o histórico',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cores.textoPrimario),
             ),
             const SizedBox(height: 8),
             Text(
               'Verifique sua conexão com a internet e se o servidor está acessível.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), fontSize: 13),
+              style: TextStyle(color: cores.textoSecundario, fontSize: 13),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
@@ -460,7 +462,7 @@ class _ConstruirEstadoErro extends StatelessWidget {
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: cores.primario,
                 foregroundColor: Colors.white,
               ),
             ),
@@ -473,12 +475,12 @@ class _ConstruirEstadoErro extends StatelessWidget {
 
 class _ConstruirEstadoVazio extends StatelessWidget {
   final bool filtrado;
-  final bool isDark;
-  const _ConstruirEstadoVazio({Key? key, this.filtrado = false, required this.isDark}) : super(key: key);
+  const _ConstruirEstadoVazio({Key? key, this.filtrado = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final colorTextoSecundario = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cores = AppColors.of(context);
+    final colorTextoSecundario = cores.textoSecundario;
 
     return Center(
       child: Padding(
@@ -494,7 +496,7 @@ class _ConstruirEstadoVazio extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               filtrado ? 'Nenhum resultado para esse filtro' : 'Histórico Vazio',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cores.textoPrimario),
             ),
             const SizedBox(height: 8),
             Text(
@@ -513,40 +515,39 @@ class _ConstruirEstadoVazio extends StatelessWidget {
 
 class _CartaoHistoricoDetalhado extends StatelessWidget {
   final dynamic analise;
-  final bool isDark;
   final VoidCallback aoClicar;
 
   const _CartaoHistoricoDetalhado({
     Key? key,
     required this.analise,
-    required this.isDark,
     required this.aoClicar,
   }) : super(key: key);
 
-  Map<String, dynamic> get _statusConfig {
+  // Mesma convenção do Dashboard: erro / alerta / primário.
+  Map<String, dynamic> _statusConfig(AppColors cores) {
     final resultado = (analise['resultado']?.toString() ?? 'Desconhecido').toLowerCase();
 
     if (resultado.contains('possível') || resultado.contains('suspeita') || resultado.contains('mastite')) {
       return {
-        'corBorda': Colors.redAccent,
-        'corFundoTag': isDark ? Colors.red.shade900.withOpacity(0.4) : Colors.red.shade50,
-        'corTextoTag': isDark ? Colors.red.shade200 : Colors.red.shade700,
+        'corBorda': cores.erro,
+        'corFundoTag': cores.erroFundo,
+        'corTextoTag': cores.erro,
         'icone': Icons.error_outline,
         'label': 'Suspeita Detectada'
       };
     } else if (resultado.contains('adicional') || resultado.contains('atenção')) {
       return {
-        'corBorda': Colors.amber.shade700,
-        'corFundoTag': isDark ? Colors.amber.shade900.withOpacity(0.4) : Colors.amber.shade50,
-        'corTextoTag': isDark ? Colors.amber.shade200 : Colors.amber.shade900,
+        'corBorda': cores.alerta,
+        'corFundoTag': cores.alertaFundo,
+        'corTextoTag': cores.alerta,
         'icone': Icons.warning_amber_rounded,
         'label': 'Atenção Necessária'
       };
     } else {
       return {
-        'corBorda': const Color(0xFF10B981),
-        'corFundoTag': const Color(0xFF10B981).withOpacity(isDark ? 0.2 : 0.12),
-        'corTextoTag': isDark ? const Color(0xFF34D399) : const Color(0xFF10B981),
+        'corBorda': cores.primario,
+        'corFundoTag': cores.primarioSuave,
+        'corTextoTag': cores.primarioEscuro,
         'icone': Icons.check_circle_outline,
         'label': 'Laudo Saudável'
       };
@@ -561,12 +562,14 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _statusConfig;
+    final cores = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final config = _statusConfig(cores);
     final String imageUrl = analise['imagem_url']?.toString() ?? '';
-    final colorCard = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final colorBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final colorTextoPrimario = isDark ? Colors.white : const Color(0xFF0F172A);
-    final colorTextoSecundario = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final colorCard = cores.superficie;
+    final colorBorder = cores.borda;
+    final colorTextoPrimario = cores.textoPrimario;
+    final colorTextoSecundario = cores.textoSecundario;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -603,7 +606,7 @@ class _CartaoHistoricoDetalhado extends StatelessWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                    color: cores.fundo,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: colorBorder, width: 1),
                   ),
