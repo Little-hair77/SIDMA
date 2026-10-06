@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../core/cores.dart';
 
 class TelaScannerQr extends StatefulWidget {
   const TelaScannerQr({Key? key}) : super(key: key);
@@ -13,8 +14,6 @@ class _TelaScannerQrState extends State<TelaScannerQr> {
     detectionSpeed: DetectionSpeed.noDuplicates,
   );
   bool _jaLeu = false;
-
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
 
   @override
   void dispose() {
@@ -39,6 +38,7 @@ class _TelaScannerQrState extends State<TelaScannerQr> {
   @override
   Widget build(BuildContext context) {
     const double tamanhoQuadrado = 260.0;
+    final cores = AppColors.of(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -47,7 +47,7 @@ class _TelaScannerQrState extends State<TelaScannerQr> {
           'Escanear Código',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        backgroundColor: corAzulPrincipal,
+        backgroundColor: cores.destaque,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -120,7 +120,7 @@ class _TelaScannerQrState extends State<TelaScannerQr> {
               width: tamanhoQuadrado,
               height: tamanhoQuadrado,
               decoration: BoxDecoration(
-                border: Border.all(color: corAzulPrincipal, width: 3),
+                border: Border.all(color: cores.primario, width: 3),
                 borderRadius: BorderRadius.circular(20),
               ),
             ),

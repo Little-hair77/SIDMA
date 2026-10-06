@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/cores.dart';
 import '../services/api_service.dart';
 
 /// Tela de recuperação de senha do SIDMA.
@@ -23,11 +24,13 @@ class TelaRecuperarSenha extends StatefulWidget {
 class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
   final ApiService _apiService = ApiService();
 
-  // Paleta de Cores (mesma paleta usada em login.dart)
-  static const Color corAzulPrincipal = Color(0xFF0D6EFD);
-  static const Color corVerdePrincipal = Color(0xFF74C319);
-  static const Color corTextoPrimario = Color(0xFF1E293B);
-  static const Color corFundo = Colors.white;
+  // Paleta de Cores 
+  AppColors get _cores => AppColors.of(context);
+
+  Color get corVerdePrincipal => _cores.primario;
+  Color get corTextoPrimario => _cores.textoPrimario;
+  Color get corTextoSecundario => _cores.textoSecundario;
+  Color get corFundo => _cores.fundo;
 
   final _formKeyEmail = GlobalKey<FormState>();
   final _formKeyCodigo = GlobalKey<FormState>();
@@ -111,11 +114,11 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.check_circle, color: corVerdePrincipal),
-            SizedBox(width: 8),
-            Text('Senha redefinida'),
+            const SizedBox(width: 8),
+            const Text('Senha redefinida'),
           ],
         ),
         content: const Text('Sua senha foi alterada com sucesso. Faça login novamente com a nova senha.'),
@@ -135,21 +138,21 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
   InputDecoration _estiloCampo({required String rotulo, required IconData iconePrefixo, Widget? iconeSufixo}) {
     return InputDecoration(
       labelText: rotulo,
-      labelStyle: const TextStyle(color: Colors.grey),
-      prefixIcon: Icon(iconePrefixo, color: corAzulPrincipal),
+      labelStyle: TextStyle(color: corTextoSecundario),
+      prefixIcon: Icon(iconePrefixo, color: corTextoSecundario),
       suffixIcon: iconeSufixo,
       filled: true,
-      fillColor: Colors.grey[100],
+      fillColor: _cores.superficieAlt,
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: corAzulPrincipal, width: 2),
+        borderSide: BorderSide(color: corVerdePrincipal, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+        borderSide: BorderSide(color: _cores.erro, width: 1),
       ),
     );
   }
@@ -161,8 +164,8 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
       appBar: AppBar(
         backgroundColor: corFundo,
         elevation: 0,
-        iconTheme: const IconThemeData(color: corTextoPrimario),
-        title: const Text('Recuperar senha', style: TextStyle(color: corTextoPrimario, fontWeight: FontWeight.bold)),
+        iconTheme: IconThemeData(color: corTextoPrimario),
+        title: Text('Recuperar senha', style: TextStyle(color: corTextoPrimario, fontWeight: FontWeight.bold)),
       ),
       body: SafeArea(
         child: Center(
@@ -184,18 +187,18 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.lock_reset, size: 64, color: corAzulPrincipal),
+          Icon(Icons.lock_reset, size: 64, color: corVerdePrincipal),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Informe o e-mail da sua conta. Enviaremos um código de verificação válido por 15 minutos.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.4),
+            style: TextStyle(fontSize: 14, color: corTextoSecundario, height: 1.4),
           ),
           const SizedBox(height: 32),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(color: corTextoPrimario),
+            style: TextStyle(color: corTextoPrimario),
             decoration: _estiloCampo(rotulo: 'E-mail', iconePrefixo: Icons.email_outlined),
             validator: (valor) {
               if (valor == null || valor.trim().isEmpty) return 'Informe seu e-mail';
@@ -206,9 +209,9 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
           const SizedBox(height: 24),
           _construirMensagens(),
           if (_carregando)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator(color: corVerdePrincipal)),
             )
           else
             ElevatedButton(
@@ -233,19 +236,19 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.mark_email_read_outlined, size: 64, color: corAzulPrincipal),
+          Icon(Icons.mark_email_read_outlined, size: 64, color: corVerdePrincipal),
           const SizedBox(height: 16),
           Text(
             'Enviamos um código para ${_emailController.text.trim()}. Informe-o abaixo junto com a nova senha.',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Colors.black54, height: 1.4),
+            style: TextStyle(fontSize: 14, color: corTextoSecundario, height: 1.4),
           ),
           const SizedBox(height: 32),
           TextFormField(
             controller: _codigoController,
             keyboardType: TextInputType.number,
             maxLength: 6,
-            style: const TextStyle(color: corTextoPrimario, fontSize: 20, letterSpacing: 8, fontWeight: FontWeight.bold),
+            style: TextStyle(color: corTextoPrimario, fontSize: 20, letterSpacing: 8, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
             decoration: _estiloCampo(rotulo: 'Código de 6 dígitos', iconePrefixo: Icons.pin_outlined).copyWith(counterText: ''),
             validator: (valor) {
@@ -257,12 +260,12 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
           TextFormField(
             controller: _novaSenhaController,
             obscureText: !_senhaVisivel,
-            style: const TextStyle(color: corTextoPrimario),
+            style: TextStyle(color: corTextoPrimario),
             decoration: _estiloCampo(
               rotulo: 'Nova senha',
               iconePrefixo: Icons.lock_outline,
               iconeSufixo: IconButton(
-                icon: Icon(_senhaVisivel ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.grey),
+                icon: Icon(_senhaVisivel ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: corTextoSecundario),
                 onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
               ),
             ),
@@ -276,7 +279,7 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
           TextFormField(
             controller: _confirmarSenhaController,
             obscureText: !_senhaVisivel,
-            style: const TextStyle(color: corTextoPrimario),
+            style: TextStyle(color: corTextoPrimario),
             decoration: _estiloCampo(rotulo: 'Confirmar nova senha', iconePrefixo: Icons.lock_outline),
             validator: (valor) {
               if (valor == null || valor.isEmpty) return 'Confirme a nova senha';
@@ -288,15 +291,15 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _carregando ? null : _solicitarCodigo,
-              style: TextButton.styleFrom(foregroundColor: corAzulPrincipal),
+              style: TextButton.styleFrom(foregroundColor: corVerdePrincipal),
               child: const Text('Reenviar código', style: TextStyle(fontSize: 13)),
             ),
           ),
           _construirMensagens(),
           if (_carregando)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator(color: corVerdePrincipal)),
             )
           else
             ElevatedButton(
@@ -323,18 +326,18 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: ehErro ? Colors.red[50] : Colors.green[50],
+          color: ehErro ? _cores.erroFundo : _cores.primarioSuave,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: ehErro ? Colors.redAccent : corVerdePrincipal, width: 0.5),
+          border: Border.all(color: ehErro ? _cores.erro : corVerdePrincipal, width: 0.5),
         ),
         child: Row(
           children: [
-            Icon(ehErro ? Icons.error_outline : Icons.check_circle_outline, color: ehErro ? Colors.redAccent : corVerdePrincipal, size: 20),
+            Icon(ehErro ? Icons.error_outline : Icons.check_circle_outline, color: ehErro ? _cores.erro : corVerdePrincipal, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 ehErro ? _erro! : _sucesso!,
-                style: TextStyle(color: ehErro ? Colors.redAccent : Colors.green[800], fontSize: 13),
+                style: TextStyle(color: ehErro ? _cores.erro : _cores.primarioEscuro, fontSize: 13),
               ),
             ),
           ],
