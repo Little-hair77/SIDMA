@@ -63,6 +63,7 @@ Thumbs.db
 # Imagens são pesadas e não fazem parte do código-fonte — não sobem pro GitHub.
 ai/dataset/
 ai/dataset_split/
+ai/dataset_padronizado
 relatorio_dataset.json
 ai/models
 
